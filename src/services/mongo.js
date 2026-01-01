@@ -12,7 +12,8 @@ async function getClient() {
 }
 
 function sanitizeDbName(user) {
-  return `overlay_${String(user || "user").replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const sanitized = String(user || "user").replace(/[^a-zA-Z0-9_-]/g, "_");
+  return sanitized || "user";
 }
 
 export async function getDbForUser(user) {
