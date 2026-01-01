@@ -57,7 +57,7 @@ jobs:
             tar --no-same-owner --no-same-permissions -xzf /tmp/release.tar.gz -C $APP_DIR
             cd $APP_DIR
             npm install --omit=dev || true
-            npm install -g pm2
-            pm2 ls
-            pm2 restart vibespixapi || pm2 start npm --name vibespixapi -- start
-            pm2 save
+            npm install pm2
+            npx pm2 ls
+            npx pm2 restart vibespixapi || npx pm2 start npm --name vibespixapi -- start
+            npx pm2 save
