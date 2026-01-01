@@ -6,6 +6,7 @@ import { buildConfigRoutes } from "./configRoutes.js";
 import { buildUploadRoutes } from "./uploadRoutes.js";
 import { buildCheckoutRoutes } from "./checkoutRoutes.js";
 import { buildPageRoutes } from "./pageRoutes.js";
+import { buildInitDbRoutes } from "./initDbRoutes.js";
 
 export function buildUserRouter(rootDir, upload) {
   const router = express.Router({ mergeParams: true });
@@ -15,6 +16,7 @@ export function buildUserRouter(rootDir, upload) {
   router.use(buildWebhookRoutes(rootDir));
 
   router.use("/api", buildConfigRoutes(rootDir));
+  router.use("/api", buildInitDbRoutes());
   router.use("/api", buildUploadRoutes(rootDir, upload));
   router.use("/api", buildCheckoutRoutes(rootDir));
 

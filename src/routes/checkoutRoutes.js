@@ -1,6 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
-import { generateOrderNsu, readConfig, writeConfig } from "../utils/config.js";
+import { generateOrderNsu, readConfig, upsertBuyer } from "../utils/config.js";
 
 export function buildCheckoutRoutes(rootDir) {
   const router = express.Router({ mergeParams: true });
@@ -14,7 +14,7 @@ export function buildCheckoutRoutes(rootDir) {
     const selfWebhook = `${protocol}://${host}/${user}/api/webhook`;
     const selfThanks = `${protocol}://${host}/${user}/thanks`;
 
-    const config = readConfig(rootDir, user);
+    const config = await readConfig(rootDir, user);
     if (!config) {
       return res.status(404).json({ error: "Config não encontrada" });
     }
@@ -45,18 +45,12 @@ export function buildCheckoutRoutes(rootDir) {
       body: JSON.stringify(payload)
     });
 
-    writeConfig(rootDir, user, current => {
-      const list = Array.isArray(current.current_buyers)
-        ? current.current_buyers
-        : [];
-      const entry = {
-        order_nsu: orderNsu,
-        username: body.customer_name || "Cliente",
-        tts_message: body.tts_text || ""
-      };
-      const nextList = [...list.filter(b => b.order_nsu !== orderNsu), entry].slice(-50);
-      return { ...current, current_buyers: nextList };
-    });
+    const entry = {
+      order_nsu: orderNsu,
+      username: body.customer_name || "Cliente",
+      tts_message: body.tts_text || ""
+    };
+    await upsertBuyer(rootDir, user, entry);
 
     const rawBody = await response.text();
     let parsed = null;

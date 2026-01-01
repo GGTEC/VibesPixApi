@@ -12,6 +12,7 @@
     "body-parser": "latest",
     "cors": "latest",
     "express": "latest",
+    "mongodb": "latest",
     "multer": "latest",
     "node-fetch": "latest",
     "rcon-client": "latest",

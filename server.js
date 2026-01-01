@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { WebSocket } from "ws";
 import fetch from "node-fetch";
 import { createApp } from "./src/app.js";
+import "./src/services/mongo.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,5 +31,5 @@ if (typeof Promise.withResolvers !== "function") {
 const app = createApp(__dirname);
 
 app.listen(3000, () => {
-  console.log("Overlay multi-usuár rodando na porta 3000");
+  console.log("Overlay multi-usuário rodando na porta 3000");
 });

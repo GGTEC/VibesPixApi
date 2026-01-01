@@ -1,16 +1,14 @@
 import express from "express";
-import path from "path";
-import fs from "fs";
-import { readConfig } from "../utils/config.js";
+import { readConfig, writeConfig } from "../utils/config.js";
 
 export function buildConfigRoutes(rootDir) {
   const router = express.Router({ mergeParams: true });
 
-  router.get("/config", (req, res) => {
+  router.get("/config", async (req, res) => {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
 
-    const config = readConfig(rootDir, user);
+    const config = await readConfig(rootDir, user);
     if (!config) {
       return res.status(404).json({ error: "Config não encontrada" });
     }
@@ -26,22 +24,13 @@ export function buildConfigRoutes(rootDir) {
     res.json(rest);
   });
 
-  router.post("/config", (req, res) => {
+  router.post("/config", async (req, res) => {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
     const newConfig = req.body;
-
-    const configPath = path.join(rootDir, "users", user, "config.json");
-
-    if (!fs.existsSync(configPath)) {
+    const current = await readConfig(rootDir, user);
+    if (!current) {
       return res.status(404).json({ error: "Config não encontrada" });
-    }
-
-    let current;
-    try {
-      current = JSON.parse(fs.readFileSync(configPath));
-    } catch {
-      return res.status(500).json({ error: "Config inválida" });
     }
 
     if (apiKey !== current.apiKey) {
@@ -52,18 +41,11 @@ export function buildConfigRoutes(rootDir) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
-    fs.writeFileSync(
-      configPath,
-      JSON.stringify(
-        {
-          ...current,
-          rcon: newConfig.rcon,
-          produtos: newConfig.produtos
-        },
-        null,
-        2
-      )
-    );
+    await writeConfig(rootDir, user, () => ({
+      ...current,
+      rcon: newConfig.rcon,
+      produtos: newConfig.produtos
+    }));
 
     res.json({ success: true });
   });

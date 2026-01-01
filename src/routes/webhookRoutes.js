@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { Rcon } from "rcon-client";
-import { readConfig, writeConfig } from "../utils/config.js";
+import { readConfig, removeBuyer } from "../utils/config.js";
 import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
 
@@ -26,7 +26,7 @@ export function buildWebhookRoutes(rootDir) {
     }
 
     const orderNsu = payload?.order_nsu || null;
-    const configForUser = readConfig(rootDir, user);
+    const configForUser = await readConfig(rootDir, user);
     const savedBuyer = configForUser?.current_buyers?.find?.(b => b.order_nsu === orderNsu);
     const player = savedBuyer?.username || payload?.player || "cliente";
     const ttsTexto = savedBuyer?.tts_message || null;
@@ -125,13 +125,7 @@ export function buildWebhookRoutes(rootDir) {
       res.json({ status: "OK", audioUrl, soundUrl });
 
       if (orderNsu) {
-        writeConfig(rootDir, user, current => {
-          const list = Array.isArray(current.current_buyers) ? current.current_buyers : [];
-          return {
-            ...current,
-            current_buyers: list.filter(b => b.order_nsu !== orderNsu)
-          };
-        });
+        await removeBuyer(rootDir, user, orderNsu);
       }
     } catch (err) {
       console.error("RCON ERROR:", err);
