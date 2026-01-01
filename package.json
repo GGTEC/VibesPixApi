@@ -8,14 +8,14 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@echristian/edge-tts": "^0.0.14",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "multer": "^1.4.5-lts.1",
-    "node-fetch": "^3.3.2",
-    "rcon-client": "^4.3.5",
-    "ws": "^8.16.0"
+    "@echristian/edge-tts": "latest",
+    "body-parser": "latest",
+    "cors": "latest",
+    "express": "latest",
+    "multer": "latest",
+    "node-fetch": "latest",
+    "rcon-client": "latest",
+    "ws": "latest"
   },
   "engines": {
     "node": ">=18"
