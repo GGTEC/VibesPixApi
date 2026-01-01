@@ -47,6 +47,9 @@ export function createApp(rootDir) {
     return res.sendFile(path.join(rootDir, "public", "index.html"));
   });
 
+  // Assets públicos compartilhados
+  app.use(express.static(path.join(rootDir, "public")));
+
   const userRouter = express.Router({ mergeParams: true });
 
   // Assets e estáticos do usuário
