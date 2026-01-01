@@ -17,7 +17,7 @@ jobs:
           node-version: 18
 
       - name: Install deps
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build --if-present
@@ -48,5 +48,5 @@ jobs:
             mkdir -p $APP_DIR
             tar xzf /tmp/release.tar.gz -C $APP_DIR
             cd $APP_DIR
-            npm ci --omit=dev || true
+            npm install --omit=dev || true
             pm2 restart vibespixapi || pm2 start npm --name vibespixapi -- start
