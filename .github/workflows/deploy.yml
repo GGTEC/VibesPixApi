@@ -23,7 +23,14 @@ jobs:
         run: npm run build --if-present
 
       - name: Package artifact
-        run: tar czf release.tar.gz --exclude=release.tar.gz --exclude=node_modules --exclude=.git .
+        run: |
+          status=0
+          tar --warning=no-file-changed -czf release.tar.gz \
+            --exclude=release.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            . || status=$?
+          if [ $status -gt 1 ]; then exit $status; fi
 
       - name: Copy to server
         uses: appleboy/scp-action@v0.1.7
