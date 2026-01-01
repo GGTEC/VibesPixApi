@@ -30,5 +30,5 @@ if (typeof Promise.withResolvers !== "function") {
 const app = createApp(__dirname);
 
 app.listen(3000, () => {
-  console.log("Overlay multi-usuário rodando na porta 3000");
+  console.log("Overlay multi-usuár rodando na porta 3000");
 });
