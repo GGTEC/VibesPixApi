@@ -42,6 +42,11 @@ export function createApp(rootDir) {
     limits: { fileSize: 5 * 1024 * 1024 }
   });
 
+  // Página pública raiz
+  app.get("/", (req, res) => {
+    return res.sendFile(path.join(rootDir, "public", "index.html"));
+  });
+
   const userRouter = express.Router({ mergeParams: true });
 
   // Assets e estáticos do usuário
