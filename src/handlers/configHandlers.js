@@ -1,10 +1,7 @@
-import express from "express";
 import { readConfig, writeConfig } from "../utils/config.js";
 
-export function buildConfigRoutes(rootDir) {
-  const router = express.Router({ mergeParams: true });
-
-  router.get("/config", async (req, res) => {
+export function makeGetConfigHandler(rootDir) {
+  return async function getConfig(req, res) {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
 
@@ -20,14 +17,17 @@ export function buildConfigRoutes(rootDir) {
       return res.json(config);
     }
 
-    const { apiKey: _, webhookSecret, rcon, ...rest } = config;
-    res.json(rest);
-  });
+    const { apiKey: _ignored, webhookSecret, rcon, ...rest } = config;
+    return res.json(rest);
+  };
+}
 
-  router.post("/config", async (req, res) => {
+export function makeUpdateConfigHandler(rootDir) {
+  return async function updateConfig(req, res) {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
     const newConfig = req.body;
+
     const current = await readConfig(rootDir, user);
     if (!current) {
       return res.status(404).json({ error: "Config não encontrada" });
@@ -37,7 +37,7 @@ export function buildConfigRoutes(rootDir) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 
-    if (!newConfig.rcon || !newConfig.produtos) {
+    if (!newConfig?.rcon || !newConfig?.produtos) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
@@ -47,8 +47,6 @@ export function buildConfigRoutes(rootDir) {
       produtos: newConfig.produtos
     }));
 
-    res.json({ success: true });
-  });
-
-  return router;
+    return res.json({ success: true });
+  };
 }

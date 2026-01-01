@@ -1,17 +1,13 @@
-import express from "express";
 import { getDbForUser } from "../services/mongo.js";
 
 function toArrayFromMap(produtosObj = {}) {
   return Object.entries(produtosObj).map(([key, value]) => ({ key, ...value }));
 }
 
-export function buildInitDbRoutes() {
-  const router = express.Router({ mergeParams: true });
-
-  router.post("/init-db", async (req, res) => {
+export function makeInitDbHandler() {
+  return async function initDb(req, res) {
     const user = req.params.user;
 
-    // Defaults gerados automaticamente
     const rcon = { host: "", port: "", password: "" };
     const produtos = {};
     const current_buyers = [];
@@ -76,7 +72,5 @@ export function buildInitDbRoutes() {
       console.error("INIT-DB ERROR", err);
       return res.status(500).json({ error: "Erro ao inicializar banco", detail: err?.message || String(err) });
     }
-  });
-
-  return router;
+  };
 }

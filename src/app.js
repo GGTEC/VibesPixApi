@@ -4,7 +4,14 @@ import bodyParser from "body-parser";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { buildUserRouter } from "./routes/userRoutes.js";
+import { makeGetConfigHandler, makeUpdateConfigHandler } from "./handlers/configHandlers.js";
+import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
+import { makeUploadImageHandler } from "./handlers/uploadHandlers.js";
+import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
+import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
+import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMiddleware, makeRootOverlayHandler } from "./handlers/pageHandlers.js";
+import { makeOverlayFallback, makeOverlayStatic, makePainelStatic, makeUserAssetsStatic } from "./handlers/staticHandlers.js";
+import { makeSseHandler } from "./handlers/sseHandlers.js";
 
 function createUserStorage(rootDir) {
   return multer.diskStorage({
@@ -35,7 +42,42 @@ export function createApp(rootDir) {
     limits: { fileSize: 5 * 1024 * 1024 }
   });
 
-  app.use("/:user", buildUserRouter(rootDir, upload));
+  const userRouter = express.Router({ mergeParams: true });
+
+  // Assets e estáticos do usuário
+  userRouter.use(makeOverlayStatic(rootDir));
+  userRouter.use(makeOverlayFallback(rootDir));
+  userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));
+  userRouter.use("/sounds", makeUserAssetsStatic(rootDir, "sounds"));
+  userRouter.use("/images", makeUserAssetsStatic(rootDir, "images"));
+  userRouter.use("/painel", makePainelStatic(rootDir));
+
+  // Streams e eventos
+  userRouter.get("/events", makeSseHandler());
+
+  // APIs
+  userRouter.post("/api/webhook", makeWebhookHandler(rootDir));
+  userRouter.get("/api/config", makeGetConfigHandler(rootDir));
+  userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
+  userRouter.post("/api/init-db", makeInitDbHandler());
+  userRouter.post(
+    "/api/upload-image",
+    upload.single("file"),
+    makeUploadImageHandler(rootDir)
+  );
+  userRouter.post(
+    "/api/create_checkout_infinitepay",
+    makeCreateCheckoutHandler(rootDir)
+  );
+
+  // Páginas
+  userRouter.get("/painel", makePainelHandler(rootDir));
+  userRouter.use("/loja", makeLojaMiddleware(rootDir));
+  userRouter.use("/thanks", makeThanksMiddleware(rootDir));
+  userRouter.get("/overlay", makeOverlayHandler(rootDir));
+  userRouter.get("/", makeRootOverlayHandler(rootDir));
+
+  app.use("/:user", userRouter);
 
   return app;
 }

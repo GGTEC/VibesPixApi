@@ -1,10 +1,7 @@
-import express from "express";
 import { addClient, removeClient } from "../services/clients.js";
 
-export function buildSseRoutes() {
-  const router = express.Router({ mergeParams: true });
-
-  router.get("/events", (req, res) => {
+export function makeSseHandler() {
+  return function sse(req, res) {
     const { user } = req.params;
 
     res.setHeader("Content-Type", "text/event-stream");
@@ -23,7 +20,5 @@ export function buildSseRoutes() {
       clearInterval(heartbeat);
       removeClient(user, res);
     });
-  });
-
-  return router;
+  };
 }

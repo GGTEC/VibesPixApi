@@ -1,11 +1,8 @@
-import express from "express";
 import fetch from "node-fetch";
 import { generateOrderNsu, readConfig, upsertBuyer } from "../utils/config.js";
 
-export function buildCheckoutRoutes(rootDir) {
-  const router = express.Router({ mergeParams: true });
-
-  router.post("/create_checkout_infinitepay", async (req, res) => {
+export function makeCreateCheckoutHandler(rootDir) {
+  return async function createCheckout(req, res) {
     const user = req.params.user;
     const body = req.body || {};
 
@@ -56,7 +53,5 @@ export function buildCheckoutRoutes(rootDir) {
     let parsed = null;
     parsed = JSON.parse(rawBody);
     return res.status(response.status).json(parsed || rawBody || {});
-  });
-
-  return router;
+  };
 }
