@@ -44,6 +44,7 @@ export function createApp(rootDir) {
 
   // Página pública raiz
   app.get("/", (req, res) => {
+    console.log("Acessada página raiz pública", rootDir);
     return res.sendFile(path.join(rootDir, "public", "index.html"));
   });
 
