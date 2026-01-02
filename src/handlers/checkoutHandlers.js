@@ -66,7 +66,18 @@ export function makeCreateCheckoutHandler(rootDir) {
 
     const rawBody = await response.text();
     let parsed = null;
-    parsed = JSON.parse(rawBody);
-    return res.status(response.status).json(parsed || rawBody || {});
+    try {
+      parsed = JSON.parse(rawBody);
+    } catch {/* keep raw string */}
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: parsed?.error || parsed?.message || rawBody || "Erro ao criar checkout",
+        status: response.status,
+        details: parsed || rawBody || null
+      });
+    }
+
+    return res.status(response.status).json(parsed || rawBody || { ok: true });
   };
 }
