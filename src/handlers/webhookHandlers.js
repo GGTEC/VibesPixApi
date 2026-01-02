@@ -53,8 +53,13 @@ async function dispatchCommands(rconClient, config, items, player) {
           .replace("{username}", player)
           .replace("%username%", player);
 
-        await rconClient.send(finalCmd);
-        console.info(`RCON sent: produto=${produto} qty=${qtd} cmd=${finalCmd}`);
+        try {
+          const resp = await rconClient.send(finalCmd);
+          console.info(`RCON sent: produto=${produto} qty=${qtd} cmd=${finalCmd} resp=${resp ?? "(no resp)"}`);
+        } catch (err) {
+          console.error(`RCON send failed: produto=${produto} cmd=${finalCmd}`, err);
+          throw err;
+        }
       }
     }
   }
