@@ -21,12 +21,11 @@ export function makeCreateCheckoutHandler(rootDir) {
     const normalizedItems = incomingItems
       .map((item, idx) => {
         const quantity = Number(item?.quantity ?? 1) || 1;
-        const amount = Number(item?.amount ?? 0);
+        const price = Number(item?.amount ?? 0);
         const description = item?.description;
-        return { description, quantity, amount };
+        return { description, quantity, price };
       })
-      .filter(entry => entry.amount > 0 && entry.quantity > 0);
-
+      .filter(entry => entry.price > 0 && entry.quantity > 0);
     if (!normalizedItems.length) {
       return res.status(400).json({ error: "Itens inválidos para checkout" });
     }
