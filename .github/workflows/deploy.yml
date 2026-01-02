@@ -11,11 +11,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
       - name: Install deps
         run: npm install
 
@@ -52,12 +47,20 @@ jobs:
           script: |
             set -e
             APP_DIR=/var/www/VibesPixApi
-            export PM2_HOME=$APP_DIR/.pm2
-            mkdir -p $APP_DIR
             tar --no-same-owner --no-same-permissions -xzf /tmp/release.tar.gz -C $APP_DIR
             cd $APP_DIR
-            npm install --omit=dev || true
-            npm install pm2
-            npx pm2 ls
-            npx pm2 restart vibespixapi || npx pm2 start npm --name vibespixapi -- start --env MONGO_URI="${{ secrets.MONGO_URI }}"
-            npx pm2 save
+            if [ -f package-lock.json ]; then
+              npm ci --omit=dev || npm install --omit=dev
+            else
+              npm install --omit=dev || true
+            fi
+
+            # Export envs for pm2 start/restart
+            export MONGO_URI="${{ secrets.MONGO_URI }}"
+
+            # Ensure pm2 knows about existing process; start if missing
+            if pm2 pid vibespixapi >/dev/null 2>&1; then
+              pm2 restart vibespixapi --update-env
+            else
+              pm2 start server.js --name vibespixapi --update-env
+            fi
