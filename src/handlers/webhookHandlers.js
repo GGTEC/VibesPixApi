@@ -78,13 +78,13 @@ export function makeWebhookHandler(rootDir) {
       console.warn("Webhook log write failed", err);
     }
 
-    logEvent(rootDir, { level: "info", user: user || null, message: "webhook_received" });
+    logEvent(rootDir, { level: "info", user: user || null, message: `webhook_received ${JSON.stringify(payload)}` });
 
-    const orderNsu = payload?.order_nsu || null;
+    const orderNsu = payload?.order_nsu;
     const configForUser = await readConfig(rootDir, user);
     const savedBuyer = configForUser?.current_buyers?.find?.(b => b.order_nsu === orderNsu);
-    const player = savedBuyer?.username || payload?.player || "cliente";
-    const ttsTexto = savedBuyer?.tts_message || null;
+    const player = savedBuyer?.username;
+    const ttsTexto = savedBuyer?.tts_message;
 
     if (!payload || !player) {
       const reasons = [];
@@ -111,7 +111,7 @@ export function makeWebhookHandler(rootDir) {
 
       rcon.end();
 
-      const mensagemTTS = ttsTexto || `${player} comprou itens`;
+      const mensagemTTS = ttsTexto;
       const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
 
       const soundFile = config.sound || null;
