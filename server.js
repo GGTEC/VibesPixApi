@@ -4,6 +4,7 @@ import { WebSocket } from "ws";
 import fetch from "node-fetch";
 import { createApp } from "./src/app.js";
 import "./src/services/mongo.js";
+import { logEvent } from "./src/services/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,4 +33,5 @@ const app = createApp(__dirname);
 
 app.listen(3000, () => {
   console.log("Overlay multi-usuário rodando na porta 3000 versão 2.0.1");
+  logEvent(__dirname, { level: "info", message: "server_started" });
 });

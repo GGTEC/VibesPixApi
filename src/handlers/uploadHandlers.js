@@ -1,4 +1,5 @@
 import { readConfig } from "../utils/config.js";
+import { logEvent } from "../services/logger.js";
 
 export function makeUploadImageHandler(rootDir) {
   return async function uploadImage(req, res) {
@@ -19,6 +20,7 @@ export function makeUploadImageHandler(rootDir) {
     }
 
     const url = `/${user}/images/${req.file.filename}`;
+    logEvent(rootDir, { level: "info", user, message: "image_uploaded" });
     return res.json({ url });
   };
 }

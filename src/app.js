@@ -12,6 +12,7 @@ import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
 import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMiddleware, makeRootOverlayHandler } from "./handlers/pageHandlers.js";
 import { makeOverlayFallback, makeOverlayStatic, makePainelStatic, makeUserAssetsStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
+import { logEvent, readRecentLogs } from "./services/logger.js";
 
 function createUserStorage(rootDir) {
   return multer.diskStorage({
@@ -55,7 +56,14 @@ export function createApp(rootDir) {
       console.error("index.html não encontrado em", indexPath);
       return res.status(500).send("index público ausente");
     }
+    logEvent(rootDir, { level: "info", message: "status_page_view" });
     return res.sendFile(indexPath);
+  });
+
+  // Logs públicos (sanitizados e limitados)
+  app.get("/status/logs", (req, res) => {
+    const logs = readRecentLogs(rootDir, 120);
+    return res.json({ logs });
   });
 
   const userRouter = express.Router({ mergeParams: true });
@@ -75,7 +83,7 @@ export function createApp(rootDir) {
   userRouter.post("/api/webhook", makeWebhookHandler(rootDir));
   userRouter.get("/api/config", makeGetConfigHandler(rootDir));
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
-  userRouter.post("/api/init-db", makeInitDbHandler());
+  userRouter.post("/api/init-db", makeInitDbHandler(rootDir));
   userRouter.post(
     "/api/upload-image",
     upload.single("file"),

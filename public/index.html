@@ -119,6 +119,21 @@
       font-size: 13px;
       color: var(--text);
     }
+    .logs {
+      max-height: 260px;
+      overflow: auto;
+      margin-top: 8px;
+      padding-right: 4px;
+    }
+    .log-line {
+      font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .log-line strong { color: var(--text); }
     footer {
       margin-top: 18px;
       color: var(--muted);
@@ -138,29 +153,8 @@
 
     <div class="grid">
       <section class="panel">
-        <h3>Saúde</h3>
-        <p>Processo Node ativo via PM2. Acesse <code>/events</code> para SSE e <code>/api/config</code> para configuração.</p>
-      </section>
-
-      <section class="panel">
-        <h3>Entradas principais</h3>
-        <ul>
-          <li><code>/</code> status público</li>
-          <li><code>/:user/overlay</code> overlay do usuário</li>
-          <li><code>/:user/api/webhook</code> webhook de compra</li>
-          <li><code>/:user/api/config</code> config (GET/POST)</li>
-          <li><code>/:user/api/create_checkout_infinitepay</code> checkout</li>
-        </ul>
-      </section>
-
-      <section class="panel">
-        <h3>Assets</h3>
-        <p>Arquivos públicos em <code>public/</code>. Assets por usuário em <code>users/&lt;user&gt;/...</code> (overlay, sounds, tts, images).</p>
-      </section>
-
-      <section class="panel">
-        <h3>Ambiente</h3>
-        <p>Variáveis esperadas: <code>MONGO_URI</code> (banco), opcionalmente configurações por usuário dentro do Mongo.</p>
+        <h3>Logs de eventos</h3>
+        <p class="logs" id="logs">Carregando logs...</p>
       </section>
     </div>
 
@@ -168,5 +162,30 @@
       Se algo parecer fora do ar, verifique PM2 (<code>pm2 ls</code>) e logs (<code>pm2 logs vibespixapi</code>).
     </footer>
   </main>
+  <script>
+    async function loadLogs() {
+      const target = document.getElementById("logs");
+      try {
+        const res = await fetch("/status/logs");
+        if (!res.ok) throw new Error("Falha ao buscar logs");
+        const data = await res.json();
+        const lines = (data.logs || []).slice().reverse();
+        if (!lines.length) {
+          target.textContent = "Sem logs registrados ainda.";
+          return;
+        }
+        target.innerHTML = lines.map(log => {
+          const ts = log.ts ? new Date(log.ts).toLocaleString() : "";
+          const user = log.user ? ` [${log.user}]` : "";
+          const msg = log.message || "";
+          const lvl = log.level || "info";
+          return `<div class="log-line"><strong>${ts}</strong> · ${lvl}${user}: ${msg}</div>`;
+        }).join("");
+      } catch (err) {
+        target.textContent = "Não foi possível carregar logs.";
+      }
+    }
+    loadLogs();
+  </script>
 </body>
 </html>

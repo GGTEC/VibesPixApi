@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import { generateOrderNsu, readConfig, upsertBuyer } from "../utils/config.js";
+import { logEvent } from "../services/logger.js";
 
 export function makeCreateCheckoutHandler(rootDir) {
   return async function createCheckout(req, res) {
@@ -48,6 +49,8 @@ export function makeCreateCheckoutHandler(rootDir) {
       tts_message: body.tts_text || ""
     };
     await upsertBuyer(rootDir, user, entry);
+
+    logEvent(rootDir, { level: "info", user, message: "checkout_link_created" });
 
     const rawBody = await response.text();
     let parsed = null;

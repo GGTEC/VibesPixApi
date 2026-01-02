@@ -4,6 +4,7 @@ import { Rcon } from "rcon-client";
 import { readConfig, removeBuyer } from "../utils/config.js";
 import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
+import { logEvent } from "../services/logger.js";
 
 function sanitizeItems(payload) {
   const items = Array.isArray(payload.items) && payload.items.length
@@ -70,6 +71,8 @@ export function makeWebhookHandler(rootDir) {
     } catch (err) {
       console.warn("Webhook log write failed", err);
     }
+
+    logEvent(rootDir, { level: "info", user: user || null, message: "webhook_received" });
 
     const orderNsu = payload?.order_nsu || null;
     const configForUser = await readConfig(rootDir, user);

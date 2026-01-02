@@ -1,10 +1,11 @@
 import { getDbForUser } from "../services/mongo.js";
+import { logEvent } from "../services/logger.js";
 
 function toArrayFromMap(produtosObj = {}) {
   return Object.entries(produtosObj).map(([key, value]) => ({ key, ...value }));
 }
 
-export function makeInitDbHandler() {
+export function makeInitDbHandler(rootDir) {
   return async function initDb(req, res) {
     const user = req.params.user;
 
@@ -57,6 +58,8 @@ export function makeInitDbHandler() {
         webhookSecret: config.webhookSecret || "",
         sound: config.sound || null
       });
+
+      logEvent(rootDir, { level: "info", user, message: "init_db_completed" });
 
       return res.json({
         ok: true,
