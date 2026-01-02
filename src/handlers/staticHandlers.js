@@ -23,6 +23,7 @@ export function makeOverlayFallback(rootDir) {
       pathLower.startsWith("/api/") ||
       pathLower.startsWith("/events") ||
       pathLower.startsWith("/painel") ||
+      pathLower.startsWith("/productpanel") ||
       pathLower.startsWith("/loja")
     ) {
       return next();
