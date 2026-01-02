@@ -9,7 +9,7 @@ import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
 import { makeUploadImageHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
-import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMiddleware, makeRootOverlayHandler } from "./handlers/pageHandlers.js";
+import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMiddleware, makeRootOverlayHandler, makeProductPanelHandler, makeProductPanelStatic } from "./handlers/pageHandlers.js";
 import { makeOverlayFallback, makeOverlayStatic, makePainelStatic, makeUserAssetsStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
@@ -52,13 +52,7 @@ export function createApp(rootDir) {
 
   // Página pública raiz (fallback explícito)
   app.get("/", (req, res) => {
-    const indexPath = path.join(publicDir, "index.html");
-    if (!fs.existsSync(indexPath)) {
-      console.error("index.html não encontrado em", indexPath);
-      return res.status(500).send("index público ausente");
-    }
-    logEvent(rootDir, { level: "info", message: "status_page_view" });
-    return res.sendFile(indexPath);
+    return res.sendFile(path.join(publicDir, "index.html"));
   });
 
   // Logs públicos (sanitizados e limitados)
@@ -86,6 +80,7 @@ export function createApp(rootDir) {
   userRouter.use("/sounds", makeUserAssetsStatic(rootDir, "sounds"));
   userRouter.use("/images", makeUserAssetsStatic(rootDir, "images"));
   userRouter.use("/painel", makePainelStatic(rootDir));
+  userRouter.use("/productpanel", makeProductPanelStatic(rootDir));
 
   // Streams e eventos
   userRouter.get("/events", makeSseHandler());
@@ -107,6 +102,7 @@ export function createApp(rootDir) {
 
   // Páginas
   userRouter.get("/painel", makePainelHandler(rootDir));
+  userRouter.get("/productpanel", makeProductPanelHandler(rootDir));
   userRouter.use("/loja", makeLojaMiddleware(rootDir));
   userRouter.use("/thanks", makeThanksMiddleware(rootDir));
   userRouter.get("/overlay", makeOverlayHandler(rootDir));

@@ -173,7 +173,7 @@
       <div class="title">
         <span>Status do banco de dados</span>
       </div>
-      <div class="db-status" id="dbStatus"><span class="db-dot"></span> Testando MongoDB...</div>
+      <div class="db-status" id="dbStatus"><span class="db-dot"></span> Testando...</div>
     </header>
 
     <div class="grid">
@@ -195,12 +195,12 @@
         if (!res.ok) throw new Error("Falha no ping");
         const data = await res.json();
         if (data.ok) {
-          el.innerHTML = '<span class="db-dot"></span> MongoDB online';
+          el.innerHTML = '<span class="db-dot"></span>Online';
         } else {
-          el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span> MongoDB offline';
+          el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span>Offline';
         }
       } catch (err) {
-        el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span> MongoDB offline';
+        el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span>Offline';
       }
     }
 

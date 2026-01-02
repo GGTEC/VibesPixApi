@@ -14,6 +14,28 @@ export function makePainelHandler(rootDir) {
   };
 }
 
+export function makeProductPanelHandler(rootDir) {
+  return function productPanel(req, res) {
+    const productPanelPath = path.join(rootDir, "users", req.params.user, "productpanel", "index.html");
+
+    if (!fs.existsSync(productPanelPath)) {
+      return res.status(404).send("Painel de produtos não encontrado");
+    }
+
+    return res.sendFile(productPanelPath);
+  };
+}
+
+export function makeProductPanelStatic(rootDir) {
+  return function productPanelStatic(req, res, next) {
+    const dir = path.join(rootDir, "users", req.params.user, "productpanel");
+    if (fs.existsSync(dir)) {
+      return express.static(dir)(req, res, next);
+    }
+    return next();
+  };
+}
+
 function pickExistingDir(paths) {
   return paths.find(candidate => fs.existsSync(candidate)) || null;
 }
