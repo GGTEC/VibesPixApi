@@ -134,6 +134,26 @@
       border-bottom: 1px solid rgba(255,255,255,0.04);
     }
     .log-line strong { color: var(--text); }
+    .db-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(59,163,255,0.14);
+      border: 1px solid rgba(59,163,255,0.35);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .db-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 12px rgba(59,163,255,0.8);
+    }
     footer {
       margin-top: 18px;
       color: var(--muted);
@@ -152,6 +172,9 @@
 
     <div class="grid">
       <section class="panel">
+        <h3>Status do banco</h3>
+        <div class="db-status" id="dbStatus"><span class="db-dot"></span> Testando MongoDB...</div>
+        <h3 style="margin-top:10px;">Logs de eventos</h3>
         <p class="logs" id="logs">Carregando logs...</p>
       </section>
     </div>
@@ -161,6 +184,23 @@
     </footer>
   </main>
   <script>
+    async function checkDb() {
+      const el = document.getElementById("dbStatus");
+      const dot = el.querySelector(".db-dot");
+      try {
+        const res = await fetch("/status/db");
+        if (!res.ok) throw new Error("Falha no ping");
+        const data = await res.json();
+        if (data.ok) {
+          el.innerHTML = '<span class="db-dot"></span> MongoDB online';
+        } else {
+          el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span> MongoDB offline';
+        }
+      } catch (err) {
+        el.innerHTML = '<span class="db-dot" style="background:#ff6b6b;box-shadow:0 0 12px rgba(255,107,107,0.8);"></span> MongoDB offline';
+      }
+    }
+
     async function loadLogs() {
       const target = document.getElementById("logs");
       try {
@@ -183,6 +223,7 @@
         target.textContent = "Não foi possível carregar logs.";
       }
     }
+    checkDb();
     loadLogs();
   </script>
 </body>

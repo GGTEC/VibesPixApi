@@ -21,3 +21,9 @@ export async function getDbForUser(user) {
   const dbName = sanitizeDbName(user);
   return client.db(dbName);
 }
+
+export async function pingMongo() {
+  const client = await getClient();
+  await client.db("admin").command({ ping: 1 });
+  return true;
+}

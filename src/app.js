@@ -13,6 +13,7 @@ import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMi
 import { makeOverlayFallback, makeOverlayStatic, makePainelStatic, makeUserAssetsStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
+import { pingMongo } from "./services/mongo.js";
 
 function createUserStorage(rootDir) {
   return multer.diskStorage({
@@ -64,6 +65,16 @@ export function createApp(rootDir) {
   app.get("/status/logs", (req, res) => {
     const logs = readRecentLogs(rootDir, 120);
     return res.json({ logs });
+  });
+
+  // Saúde do banco (ping simples)
+  app.get("/status/db", async (req, res) => {
+    try {
+      await pingMongo();
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err?.message || "mongo ping failed" });
+    }
   });
 
   const userRouter = express.Router({ mergeParams: true });
