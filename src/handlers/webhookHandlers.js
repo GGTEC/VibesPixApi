@@ -47,13 +47,14 @@ async function dispatchCommands(rconClient, config, items, player) {
 
     for (let i = 0; i < qtd; i++) {
       for (const cmd of comandos) {
-        await rconClient.send(
-          cmd
-            .replace("{player}", player)
-            .replace("%player%", player)
-            .replace("{username}", player)
-            .replace("%username%", player)
-        );
+        const finalCmd = cmd
+          .replace("{player}", player)
+          .replace("%player%", player)
+          .replace("{username}", player)
+          .replace("%username%", player);
+
+        await rconClient.send(finalCmd);
+        console.info(`RCON sent: produto=${produto} qty=${qtd} cmd=${finalCmd}`);
       }
     }
   }
@@ -93,6 +94,7 @@ export function makeWebhookHandler(rootDir) {
     const config = configForUser;
 
     const items = sanitizeItems(payload);
+    console.info("Webhook items", items);
     if (!items.length) {
       return res.status(400).json({ error: "Nenhum item/descrição válido no payload" });
     }
