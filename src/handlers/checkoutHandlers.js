@@ -18,6 +18,18 @@ export function makeCreateCheckoutHandler(rootDir) {
     }
 
     const incomingItems = Array.isArray(body.items) ? body.items : [];
+    const normalizedItems = incomingItems
+      .map((item, idx) => {
+        const quantity = Number(item?.quantity ?? 1) || 1;
+        const amount = Number(item?.amount ?? 0);
+        const description = item?.description;
+        return { description, quantity, amount };
+      })
+      .filter(entry => entry.amount > 0 && entry.quantity > 0);
+
+    if (!normalizedItems.length) {
+      return res.status(400).json({ error: "Itens inválidos para checkout" });
+    }
     const orderNsu = generateOrderNsu();
 
     const payload = {
@@ -25,7 +37,7 @@ export function makeCreateCheckoutHandler(rootDir) {
       redirect_url: selfThanks,
       webhook_url: selfWebhook,
       order_nsu: orderNsu,
-      items: incomingItems
+      items: normalizedItems
     };
 
     if (!payload.handle) {
