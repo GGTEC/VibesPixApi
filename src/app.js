@@ -37,19 +37,26 @@ export function createApp(rootDir) {
   app.use(express.json({ limit: "2mb" }));
   app.use(bodyParser.json());
 
+   // Caminho absoluto da pasta pública
+  const publicDir = path.resolve(rootDir, "public");
+
   const upload = multer({
     storage: createUserStorage(rootDir),
     limits: { fileSize: 5 * 1024 * 1024 }
   });
 
-  // Página pública raiz
-  app.get("/", (req, res) => {
-    console.log("Acessada página raiz pública", rootDir);
-    return res.sendFile(path.join(rootDir, "public", "index.html"));
-  });
-
   // Assets públicos compartilhados
-  app.use(express.static(path.join(rootDir, "public")));
+  app.use(express.static(publicDir));
+
+  // Página pública raiz (fallback explícito)
+  app.get("/", (req, res) => {
+    const indexPath = path.join(publicDir, "index.html");
+    if (!fs.existsSync(indexPath)) {
+      console.error("index.html não encontrado em", indexPath);
+      return res.status(500).send("index público ausente");
+    }
+    return res.sendFile(indexPath);
+  });
 
   const userRouter = express.Router({ mergeParams: true });
 
