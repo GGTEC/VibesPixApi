@@ -19,7 +19,11 @@ function createUserStorage(rootDir) {
   return multer.diskStorage({
     destination: (req, file, cb) => {
       const dir = path.join(rootDir, "users", req.params.user, "images");
-      fs.mkdirSync(dir, { recursive: true });
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch (err) {
+        return cb(new Error(`Erro ao criar diretório de imagens: ${err.message}`));
+      }
       cb(null, dir);
     },
     filename: (req, file, cb) => {
@@ -92,7 +96,14 @@ export function createApp(rootDir) {
   userRouter.post("/api/init-db", makeInitDbHandler(rootDir));
   userRouter.post(
     "/api/upload-image",
-    upload.single("file"),
+    (req, res, next) => {
+      upload.single("file")(req, res, (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message || "Erro no upload" });
+        }
+        return next();
+      });
+    },
     makeUploadImageHandler(rootDir)
   );
   userRouter.post(
