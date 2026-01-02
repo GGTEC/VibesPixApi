@@ -50,6 +50,7 @@ export async function writeConfig(rootDir, user, updater) {
           apiKey: next.apiKey || "",
           infinitypayHandle: next.infinitypayHandle || "",
           webhookSecret: next.webhookSecret || "",
+          overlayMessage: next.overlayMessage || "",
           sound: next.sound || null
         }
       },

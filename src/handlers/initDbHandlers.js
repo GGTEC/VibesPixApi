@@ -16,6 +16,7 @@ export function makeInitDbHandler(rootDir) {
       apiKey: `${user}_SUPER_SECRET`,
       infinitypayHandle: user,
       webhookSecret: "secret",
+      overlayMessage : "Nova compra",
       sound: "default.mp3"
     };
 
@@ -56,6 +57,7 @@ export function makeInitDbHandler(rootDir) {
         apiKey: config.apiKey || "",
         infinitypayHandle: config.infinitypayHandle || "",
         webhookSecret: config.webhookSecret || "",
+        overlayMessage: config.overlayMessage || "Nova compra",
         sound: config.sound || null
       });
 

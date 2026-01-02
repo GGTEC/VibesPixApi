@@ -37,15 +37,45 @@ export function makeUpdateConfigHandler(rootDir) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 
-    if (!newConfig?.rcon || !newConfig?.produtos) {
+    const hasRcon = Boolean(newConfig?.rcon);
+    const hasProdutos = newConfig?.produtos !== undefined;
+    const hasSound = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "sound");
+    const hasInfinity = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "infinitypayHandle");
+    const hasOverlay = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayMessage");
+
+    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
-    await writeConfig(rootDir, user, () => ({
-      ...current,
-      rcon: newConfig.rcon,
-      produtos: newConfig.produtos
-    }));
+    await writeConfig(rootDir, user, () => {
+      const next = { ...current };
+
+      if (hasRcon) {
+        next.rcon = {
+          host: newConfig.rcon?.host || "",
+          port: newConfig.rcon?.port || "",
+          password: newConfig.rcon?.password || ""
+        };
+      }
+
+      if (hasProdutos) {
+        next.produtos = newConfig.produtos || {};
+      }
+
+      if (hasSound) {
+        next.sound = newConfig.sound || null;
+      }
+
+      if (hasInfinity) {
+        next.infinitypayHandle = newConfig.infinitypayHandle || "";
+      }
+
+      if (hasOverlay) {
+        next.overlayMessage = (newConfig.overlayMessage || "").toString();
+      }
+
+      return next;
+    });
 
     return res.json({ success: true });
   };

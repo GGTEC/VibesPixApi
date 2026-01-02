@@ -117,11 +117,18 @@ export function makeWebhookHandler(rootDir) {
       const soundFile = config.sound || null;
       const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
 
+      const overlayMessage = config?.overlayMessage || "Nova compra";
+
+      const buyerMessage = mensagemTTS || "";
+
       broadcastEvent(user, "purchase", {
         player,
         audioUrl,
         soundUrl,
-        items: items.map(it => ({ description: it.description, quantity: it.quantity }))
+        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+        overlayMessage,
+        buyerMessage,
+        ttsMessage: buyerMessage
       });
 
       res.json({ status: "OK", audioUrl, soundUrl });
