@@ -5,10 +5,12 @@ import { logEvent } from "../services/logger.js";
 
 function authorizeAndValidate(req, res, config) {
   const apiKey = req.headers["x-api-key"];
+  const user = req.params.user;
+  const isSession = req.authUser === user;
   if (!config) {
     return res.status(404).json({ error: "Config não encontrada" });
   }
-  if (apiKey !== config.apiKey) {
+  if (!isSession && apiKey !== config.apiKey) {
     return res.status(401).json({ error: "Não autorizado" });
   }
   if (!req.file) {
@@ -49,8 +51,9 @@ export function makeListImagesHandler(rootDir) {
     const user = req.params.user;
     const config = await readConfig(rootDir, user);
     const apiKey = req.headers["x-api-key"];
+    const isSession = req.authUser === user;
     if (!config) return res.status(404).json({ error: "Config não encontrada" });
-    if (apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
+    if (!isSession && apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
 
     const dir = path.join(rootDir, "users", user, "images");
     try {
@@ -73,8 +76,9 @@ export function makeListSoundsHandler(rootDir) {
     const user = req.params.user;
     const config = await readConfig(rootDir, user);
     const apiKey = req.headers["x-api-key"];
+    const isSession = req.authUser === user;
     if (!config) return res.status(404).json({ error: "Config não encontrada" });
-    if (apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
+    if (!isSession && apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
 
     const dir = path.join(rootDir, "users", user, "sounds");
     try {

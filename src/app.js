@@ -14,6 +14,7 @@ import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic } from "./han
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
+import { sessionMiddleware, makeLoginHandler, makeLogoutHandler } from "./services/auth.js";
 
 function createUserStorage(rootDir, folder = "images") {
   return multer.diskStorage({
@@ -84,6 +85,9 @@ export function createApp(rootDir) {
 
   const userRouter = express.Router({ mergeParams: true });
 
+  // Injeta sessão do cookie quando existir e estiver válida
+  userRouter.use(sessionMiddleware);
+
   // Assets e estáticos do usuário
   userRouter.use("/overlay", makeOverlayStatic(rootDir));
   userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));
@@ -96,6 +100,8 @@ export function createApp(rootDir) {
   userRouter.get("/events", makeSseHandler());
 
   // APIs
+  userRouter.post("/api/login", makeLoginHandler());
+  userRouter.post("/api/logout", makeLogoutHandler());
   userRouter.post("/api/webhook", makeWebhookHandler(rootDir));
   userRouter.get("/api/config", makeGetConfigHandler(rootDir));
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
@@ -153,3 +159,4 @@ export function createApp(rootDir) {
 
   return app;
 }
+

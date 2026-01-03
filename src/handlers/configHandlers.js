@@ -4,14 +4,15 @@ export function makeGetConfigHandler(rootDir) {
   return async function getConfig(req, res) {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
+    const isSession = req.authUser === user;
 
     const config = await readConfig(rootDir, user);
     if (!config) {
       return res.status(404).json({ error: "Config não encontrada" });
     }
 
-    if (apiKey) {
-      if (apiKey !== config.apiKey) {
+    if (apiKey || isSession) {
+      if (!isSession && apiKey !== config.apiKey) {
         return res.status(401).json({ error: "Não autorizado" });
       }
       return res.json(config);
@@ -26,6 +27,7 @@ export function makeUpdateConfigHandler(rootDir) {
   return async function updateConfig(req, res) {
     const user = req.params.user;
     const apiKey = req.headers["x-api-key"];
+    const isSession = req.authUser === user;
     const newConfig = req.body;
 
     const current = await readConfig(rootDir, user);
@@ -33,7 +35,7 @@ export function makeUpdateConfigHandler(rootDir) {
       return res.status(404).json({ error: "Config não encontrada" });
     }
 
-    if (apiKey !== current.apiKey) {
+    if (!isSession && apiKey !== current.apiKey) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 

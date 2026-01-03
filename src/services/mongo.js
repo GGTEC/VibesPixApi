@@ -22,6 +22,12 @@ export async function getDbForUser(user) {
   return client.db(dbName);
 }
 
+export async function getNamedDb(dbName) {
+  if (!dbName) throw new Error("Database não informada");
+  const client = await getClient();
+  return client.db(dbName);
+}
+
 export async function pingMongo() {
   const client = await getClient();
   await client.db("admin").command({ ping: 1 });

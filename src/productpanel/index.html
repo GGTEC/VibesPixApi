@@ -178,18 +178,24 @@
   <div id="login" class="login-layer">
     <div class="glass-card login-box">
       <h2 class="title">Painel do Usuário</h2>
-      <p class="subtitle">Entre com sua API Key para liberar as configurações.</p>
-      <input id="apiKey" type="password" class="input" placeholder="Digite sua API Key" />
+      <p class="subtitle">Faça login com nome de usuário ou e-mail e senha.</p>
+      <input id="loginIdentifier" class="input" placeholder="nome_usuario ou email" />
+      <input id="loginPassword" type="password" class="input" placeholder="Senha" />
       <button class="btn" id="btnLogin">Entrar</button>
-      <div id="loginError" class="toast error hidden">API Key inválida</div>
+      <div id="loginError" class="toast error hidden">Credenciais inválidas</div>
     </div>
   </div>
   <div class="toast-container" id="toasts"></div>
   <div class="card-wrapper">
 
     <div class="card hidden" id="panel">
-      <h1>Gerenciar Produtos</h1>
-      <p class="lead">Crie, edite ou remova produtos deste usuário.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h1>Gerenciar Produtos</h1>
+          <p class="lead">Crie, edite ou remova produtos deste usuário.</p>
+        </div>
+        <button class="btn secondary" id="btnLogout" style="width:auto;padding:12px 14px;">Sair</button>
+      </div>
       <div class="section">
         <div class="row">
           <div>
@@ -263,7 +269,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const user = location.pathname.split("/").filter(Boolean)[0] || "ggtec";
-    let apiKey = "";
+    let loggedIn = false;
     let config = null;
     let produtos = {};
     let imagens = [];
@@ -304,7 +310,7 @@
     }
 
     async function fetchConfig() {
-      const res = await fetch(`/${user}/api/config`, { headers: { "x-api-key": apiKey } });
+      const res = await fetch(`/${user}/api/config`, { credentials: "include" });
       if (!res.ok) throw new Error("Não autorizado ou config ausente");
       return res.json();
     }
@@ -317,9 +323,9 @@
       const res = await fetch(`/${user}/api/config`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey
+          "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify(body)
       });
       if (!res.ok) {
@@ -331,7 +337,7 @@
 
     async function fetchImages() {
       const res = await fetch(`/${user}/api/list-images`, {
-        headers: { "x-api-key": apiKey }
+        credentials: "include"
       });
       if (!res.ok) {
         const t = await res.text();
@@ -436,7 +442,7 @@
       form.append("file", file);
       const res = await fetch(`/${user}/api/upload-image`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        credentials: "include",
         body: form
       });
       if (!res.ok) {
@@ -462,9 +468,17 @@
     }
 
     $("btnLogin").onclick = async () => {
-      apiKey = $("apiKey").value.trim();
-      if (!apiKey) return toast("Informe a API Key", true);
+      const identifier = $("loginIdentifier").value.trim();
+      const password = $("loginPassword").value;
       try {
+        const res = await fetch(`/${user}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ identifier, password })
+        });
+        if (!res.ok) throw new Error("Credenciais inválidas");
+        loggedIn = true;
         config = await fetchConfig();
         produtos = config.produtos || {};
         const imagesRes = await fetchImages();
@@ -476,9 +490,20 @@
         $("panel").classList.remove("hidden");
         toast("Autenticado");
       } catch (err) {
+        $("loginError").textContent = err.message || "Credenciais inválidas";
         $("loginError").classList.remove("hidden");
         setTimeout(() => $("loginError").classList.add("hidden"), 2200);
       }
+    };
+
+    $("btnLogout").onclick = async () => {
+      try {
+        await fetch(`/${user}/api/logout`, { method: "POST", credentials: "include" });
+      } catch {}
+      loggedIn = false;
+      clearForm();
+      $("panel").classList.add("hidden");
+      $("login").classList.remove("hidden");
     };
 
     $("productSelect").onchange = (e) => {

@@ -350,15 +350,20 @@
   <div id="login-container" class="login-layer">
     <div class="glass-card login-box">
       <h2 class="title">Config do Usuário</h2>
-      <p class="subtitle">Entre com sua API Key para liberar as configurações.</p>
-      <input id="api-key-input" type="password" placeholder="Digite sua API Key" class="input">
+      <p class="subtitle">Faça login com nome de usuário ou e-mail e senha.</p>
+      <input id="login-identifier" type="text" placeholder="nome_usuario ou email" class="input" autocomplete="username">
+      <input id="login-password" type="password" placeholder="Senha" class="input" autocomplete="current-password">
       <button id="login-btn" class="btn-primary">Entrar</button>
-      <div id="login-erro" class="error hidden">API Key inválida</div>
+      <div id="login-erro" class="error hidden">Credenciais inválidas</div>
     </div>
   </div>
 
   <div class="app-wrapper">
     <div id="config-panel" class="glass-card hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+        <h3 style="margin:0;">Configurações</h3>
+        <button id="logout-btn" class="btn-primary" style="width:auto;padding:10px 14px;">Sair</button>
+      </div>
       <div class="section">
         <h3>Configuração RCON <span class="pill">Minecraft</span></h3>
         <div class="form-grid">
@@ -409,7 +414,7 @@
 // Aplica fonte Kanit globalmente
 document.documentElement.style.setProperty('--font-main', 'Kanit, sans-serif');
 
-let apiKey = '';
+let loggedIn = false;
 // Derive API base from first path segment (/:user/config => /:user/api).
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
@@ -457,7 +462,7 @@ async function loadSoundList() {
   defaultSounds.forEach((s) => addSoundOption(s));
 
   try {
-    const res = await fetch(`${baseApi}/list-sounds`, { headers: { 'x-api-key': apiKey } });
+    const res = await fetch(`${baseApi}/list-sounds`, { credentials: 'include' });
     const raw = await res.text();
     let data = null;
     try { data = JSON.parse(raw); } catch {}
@@ -478,7 +483,7 @@ async function uploadSound(file) {
     fd.append('file', file);
     const res = await fetch(`${baseApi}/upload-sound`, {
       method: 'POST',
-      headers: { 'x-api-key': apiKey },
+      credentials: 'include',
       body: fd
     });
     const raw = await res.text();
@@ -503,10 +508,10 @@ async function uploadSound(file) {
 async function carregar() {
   await loadSoundList();
   const res = await fetch(`${baseApi}/config`, {
-    headers: { "x-api-key": apiKey }
+    credentials: 'include'
   });
   if (!res.ok) {
-    throw new Error('API Key inválida');
+    throw new Error('Credenciais inválidas');
   }
   const data = await res.json();
   document.getElementById("host").value = data.rcon.host;
@@ -523,9 +528,9 @@ async function salvar() {
     await fetch(`${baseApi}/config`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey
+        "Content-Type": "application/json"
       },
+      credentials: 'include',
       body: JSON.stringify({
         rcon: {
           host: host.value,
@@ -544,21 +549,40 @@ async function salvar() {
 }
 
 document.getElementById('login-btn').onclick = async function() {
-  apiKey = document.getElementById('api-key-input').value.trim();
+  const identifier = document.getElementById('login-identifier').value.trim();
+  const password = document.getElementById('login-password').value;
   document.getElementById('login-erro').classList.add('hidden');
   try {
+    const res = await fetch(`${baseApi}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ identifier, password })
+    });
+    if (!res.ok) throw new Error('Credenciais inválidas');
+    loggedIn = true;
     await carregar();
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('config-panel').classList.remove('hidden');
-  } catch {
+  } catch (err) {
+    document.getElementById('login-erro').textContent = err.message || 'Credenciais inválidas';
     document.getElementById('login-erro').classList.remove('hidden');
   }
+};
+
+document.getElementById('logout-btn').onclick = async function() {
+  try {
+    await fetch(`${baseApi}/logout`, { method: 'POST', credentials: 'include' });
+  } catch {}
+  loggedIn = false;
+  document.getElementById('config-panel').classList.add('hidden');
+  document.getElementById('login-container').classList.remove('hidden');
 };
 
 document.getElementById('sound-upload').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-  if (!apiKey) {
+  if (!loggedIn) {
     showToast('Faça login para enviar áudio', true);
     e.target.value = '';
     return;
