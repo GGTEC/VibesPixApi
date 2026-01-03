@@ -194,13 +194,16 @@
             <label class="label">Produto existente</label>
             <select id="productSelect" class="input"></select>
           </div>
-          <div>
-            <label class="label">Novo ID do produto</label>
-            <input id="newProductId" class="input" placeholder="ex: vip_gold" />
-          </div>
         </div>
 
-        <div class="section" style="margin-top:12px;background:rgba(255,255,255,0.04);">
+        <div id="productFormSection" class="section hidden" style="margin-top:12px;background:rgba(255,255,255,0.04);">
+          <div class="row">
+            <div>
+              <label class="label">Novo ID do produto</label>
+              <input id="newProductId" class="input" placeholder="ex: vip_gold" />
+            </div>
+          </div>
+
           <div class="row">
             <div>
               <label class="label">Título</label>
@@ -224,7 +227,8 @@
           <div style="margin-top:12px;" class="row">
             <div>
               <label class="label">Imagem (URL)</label>
-              <input id="productImg" class="input" placeholder="/user/images/arquivo.png" readonly style="cursor:pointer;" />
+              <input id="productImg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
+              <input id="productImgUrl" type="hidden" />
               <small style="color: var(--muted);">Clique para escolher ou enviar uma imagem</small>
             </div>
           </div>
@@ -269,6 +273,32 @@
     let produtos = {};
     let imagens = [];
     let modalOpen = false;
+
+    function showForm(show) {
+      const form = $("productFormSection");
+      if (!form) return;
+      form.classList.toggle("hidden", !show);
+    }
+
+    function getFileNameFromUrl(url) {
+      if (!url) return "";
+      try {
+        const parts = url.split("?")[0].split("#")[0].split("/");
+        return parts[parts.length - 1] || url;
+      } catch (e) {
+        return url;
+      }
+    }
+
+    function setImageValue(url) {
+      const name = getFileNameFromUrl(url);
+      $("productImgUrl").value = url || "";
+      $("productImg").value = name || "";
+    }
+
+    function getImageValue() {
+      return $("productImgUrl").value.trim();
+    }
 
     function toast(msg, isError = false) {
       const box = document.createElement("div");
@@ -327,7 +357,7 @@
         container.appendChild(empty);
         return;
       }
-      const current = $("productImg").value.trim();
+      const current = getImageValue();
       imagens.forEach(({ name, url }) => {
         const card = document.createElement("div");
         card.className = "image-card" + (url === current ? " selected" : "");
@@ -338,7 +368,7 @@
         title.className = "image-name";
         title.textContent = name;
         card.onclick = () => {
-          $("productImg").value = url;
+          setImageValue(url);
           renderImageGallery();
           if (modalOpen) closeImageModal();
         };
@@ -348,18 +378,28 @@
       });
     }
 
-    function fillSelect() {
+    function fillSelect(selectedId = "") {
       const sel = $("productSelect");
       sel.innerHTML = "";
-      const opt = document.createElement("option");
-      opt.value = ""; opt.textContent = "Selecione um produto"; opt.disabled = true; opt.selected = true;
-      sel.appendChild(opt);
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Selecione um produto";
+      placeholder.disabled = true;
+      placeholder.selected = !selectedId;
+      sel.appendChild(placeholder);
+      const optNew = document.createElement("option");
+      optNew.value = "__new";
+      optNew.textContent = "Novo produto";
+      optNew.selected = selectedId === "__new";
+      sel.appendChild(optNew);
       Object.keys(produtos).forEach(key => {
         const o = document.createElement("option");
         o.value = key;
         o.textContent = key;
+        o.selected = selectedId === key;
         sel.appendChild(o);
       });
+      if (selectedId) sel.value = selectedId;
     }
 
     function loadProduct(key) {
@@ -379,18 +419,19 @@
               ? [p.comandos]
               : [];
       $("productCmds").value = cmds.join("\n");
-      $("productImg").value = p.imagem || "";
+      setImageValue(p.imagem || "");
       renderImageGallery();
+      showForm(true);
     }
 
-    function clearForm() {
-      $("productSelect").value = "";
+    function clearForm(keepSelection = false) {
+      if (!keepSelection) $("productSelect").value = "";
       $("newProductId").value = "";
       $("productTitle").value = "";
       $("productPrice").value = "";
       $("productQty").value = "";
       $("productCmds").value = "";
-      $("productImg").value = "";
+      setImageValue("");
       $("modalFileName").textContent = "Nenhum arquivo";
       renderImageGallery();
     }
@@ -435,6 +476,7 @@
         imagens = imagesRes.files || [];
         renderImageGallery();
         fillSelect();
+        showForm(false);
         $("login").classList.add("hidden");
         $("panel").classList.remove("hidden");
         toast("Autenticado");
@@ -446,10 +488,19 @@
 
     $("productSelect").onchange = (e) => {
       const key = e.target.value;
-      if (key) loadProduct(key);
+      if (key === "__new") {
+        clearForm(true);
+        showForm(true);
+        return;
+      }
+      if (key) {
+        loadProduct(key);
+      } else {
+        showForm(false);
+      }
     };
 
-    $("btnClear").onclick = () => clearForm();
+    $("btnClear").onclick = () => clearForm(true);
 
     $("btnSave").onclick = async () => {
       const id = ($("newProductId").value || "").trim();
@@ -458,7 +509,7 @@
       const valor = Number($("productPrice").value) || 0;
       const quantity = Number($("productQty").value) || 1;
       const cmds = $("productCmds").value.split(/\n+/).map(c => c.trim()).filter(Boolean);
-      const imagem = $("productImg").value.trim();
+      const imagem = getImageValue();
       produtos[id] = {
         title,
         valor,
@@ -468,7 +519,9 @@
       };
       try {
         await saveConfig(produtos);
-        fillSelect();
+        fillSelect(id);
+        $("productSelect").value = id;
+        showForm(true);
         toast("Produto salvo");
       } catch (err) {
         toast("Erro ao salvar: " + err.message, true);
@@ -483,6 +536,7 @@
         await saveConfig(produtos);
         fillSelect();
         clearForm();
+        showForm(false);
         toast("Produto removido");
       } catch (err) {
         toast("Erro ao remover: " + err.message, true);
@@ -496,7 +550,7 @@
       try {
         const res = await uploadImage(file);
         if (res?.url) {
-          $("productImg").value = res.url;
+          setImageValue(res.url);
           imagens = [...imagens.filter((i) => i.url !== res.url), { name: file.name, url: res.url }];
           renderImageGallery();
           toast("Imagem enviada");
