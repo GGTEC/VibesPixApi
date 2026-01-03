@@ -537,9 +537,9 @@ async function salvar() {
         overlayMessage: document.getElementById('overlay-message').value.trim() || undefined
       })
     });
-    alert("Salvo com sucesso!");
+    showToast("Salvo com sucesso!");
   } catch {
-    alert("Erro ao salvar!");
+    showToast("Erro ao salvar!", true);
   }
 }
 
