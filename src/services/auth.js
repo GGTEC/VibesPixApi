@@ -66,18 +66,21 @@ export function makeLoginHandler() {
       return res.status(400).json({ error: "Informe usuário/email e senha" });
     }
     try {
+      const idLower = identifier.toLowerCase();
       const db = await getNamedDb("VibesBotSales");
       const col = db.collection("VibesBotSales");
       const userDoc = await col.findOne({
         $or: [
           { nome_usuario: identifier },
-          { email: identifier }
+          { email: identifier },
+          { email: idLower }
         ]
       });
       if (!userDoc) return res.status(401).json({ error: "Credenciais inválidas" });
 
+      const storedHash = userDoc.pass || userDoc.pwd_hash || userDoc.password;
       const hash = crypto.createHash("sha3-256").update(password, "utf8").digest("hex");
-      if (hash !== userDoc.pass) return res.status(401).json({ error: "Credenciais inválidas" });
+      if (!storedHash || hash !== storedHash) return res.status(401).json({ error: "Credenciais inválidas" });
 
       const userName = userDoc.nome_usuario || req.params?.user;
       if (req.params?.user && userName && req.params.user !== userName) {
