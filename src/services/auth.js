@@ -47,7 +47,7 @@ function setSessionCookie(res, token) {
     `sid=${token}`,
     `Max-Age=${SESSION_TTL_MS / 1000}`,
     "HttpOnly",
-    "SameSite=None",
+    "SameSite=Lax",
     "Path=/",
     "Secure",
     "Domain=.vibesbot.com.br"
@@ -58,16 +58,18 @@ function setSessionCookie(res, token) {
 function clearSessionCookie(res) {
   res.setHeader(
     "Set-Cookie",
-    "sid=; Max-Age=0; HttpOnly; SameSite=None; Path=/; Secure; Domain=.vibesbot.com.br"
+    "sid=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/; Secure; Domain=.vibesbot.com.br"
   );
 }
 
 export function sessionMiddleware(req, _res, next) {
   const session = getSessionFromRequest(req);
   const urlUser = req.params?.user;
-  if (session && urlUser && session.user?.toLowerCase() === urlUser.toLowerCase()) {
-    req.authUser = session.user;
-    req.sessionToken = session.token;
+  if (session) {
+    if (!urlUser || session.user?.toLowerCase() === urlUser.toLowerCase()) {
+      req.authUser = session.user;
+      req.sessionToken = session.token;
+    }
   }
   next();
 }
