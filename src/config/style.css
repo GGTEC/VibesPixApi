@@ -179,3 +179,353 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+/* Config page styles */
+body.config-page {
+  --bg: #0d0b16;
+  --card: rgba(255, 255, 255, 0.06);
+  --card-strong: rgba(255, 255, 255, 0.12);
+  --accent: #7c4dff;
+  --accent-2: #00e0ff;
+  --text: #f6f6f6;
+  --muted: #9ba0b5;
+  --radius: 18px;
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, rgba(124, 77, 255, 0.25), transparent 35%),
+              radial-gradient(circle at 80% 10%, rgba(0, 224, 255, 0.18), transparent 32%),
+              radial-gradient(circle at 60% 70%, rgba(124, 77, 255, 0.2), transparent 35%),
+              var(--bg);
+  color: var(--text);
+  font-family: "Kanit", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-y: auto;
+  padding: 12px 8px 28px;
+}
+
+.config-page .app-wrapper {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 20px 12px 40px;
+}
+
+.config-page .glass-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  align-self: center;
+  width: min(560px, 100%);
+}
+
+.config-page .login-layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%, rgba(124, 77, 255, 0.28), rgba(13, 11, 22, 0.95));
+  z-index: 10;
+  padding: 12px;
+}
+
+.config-page .login-box {
+  width: min(540px, 100%);
+  text-align: center;
+  gap: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.config-page .title {
+  margin: 0 0 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-size: 24px;
+}
+
+.config-page .subtitle {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.config-page .input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: border 0.2s ease, transform 0.1s ease;
+}
+
+.config-page .input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.config-page .btn-primary {
+  background: linear-gradient(135deg, var(--accent), #9c6dff);
+  color: white;
+  border: none;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  width: 100%;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  font-size: 16px;
+}
+
+.config-page .btn-primary:hover { box-shadow: 0 10px 30px rgba(124, 77, 255, 0.35); }
+.config-page .btn-primary:active { transform: translateY(1px); }
+
+.config-page .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.config-page .section {
+  background: var(--card-strong);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-left-radius: 0%;
+  border-top-right-radius: 0%;
+}
+
+.config-page .tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.config-page .tab-btn {
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 12px 12px 0 0;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.config-page .tab-btn:hover {
+  color: #9c6dff;
+}
+
+.config-page .tab-btn.active {
+  border-color: rgba(255, 255, 255, 0.16);
+  border-bottom-color: transparent;
+  background: var(--card-strong);
+  color: #c7d2ff;
+}
+
+.config-page .tab-content.hidden { display: none; }
+
+@media (max-width: 640px) {
+  .config-page .glass-card { padding: 20px; width: 100%; }
+  .config-page .form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .config-page .section { padding: 14px; }
+  .config-page .input, .config-page .btn-primary { font-size: 16px; }
+  .config-page .title { font-size: 22px; }
+  .config-page .subtitle { font-size: 14px; }
+}
+
+.config-page .section h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.2px;
+}
+
+.config-page .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(0, 224, 255, 0.12);
+  color: var(--text);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.config-page .help-text {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
+.config-page select.input {
+  appearance: none;
+  background: linear-gradient(135deg, rgba(21, 39, 84, 0.9), rgba(15, 28, 64, 0.92));
+  border: 1px solid rgba(0, 224, 255, 0.28);
+  padding-right: 42px;
+  position: relative;
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 36px rgba(0,0,0,0.25);
+}
+
+.config-page select.input:focus {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px rgba(0, 224, 255, 0.25), 0 12px 36px rgba(0,0,0,0.25);
+}
+
+.config-page select.input option {
+  background: #0f1c40;
+  color: #f5f7fb;
+}
+
+.config-page select.input::-ms-expand { display: none; }
+
+.config-page .select-wrapper {
+  position: relative;
+}
+
+.config-page .select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.config-page textarea.input {
+  min-height: 220px;
+  resize: vertical;
+  font-family: "Fira Code", "SFMono-Regular", Menlo, monospace;
+  line-height: 1.4;
+}
+
+.config-page .hidden { display: none; }
+
+.config-page .error {
+  color: #ffb3c0;
+  background: rgba(255, 76, 106, 0.08);
+  border: 1px solid rgba(255, 76, 106, 0.3);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: left;
+  margin-top: 6px;
+}
+
+.config-page .toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.config-page .toast {
+  min-width: 240px;
+  max-width: 320px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0, 224, 255, 0.14), rgba(124, 77, 255, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(-16px);
+  animation: toast-slide 0.5s forwards;
+  font-size: 14px;
+}
+
+.config-page .toast.error {
+  background: linear-gradient(135deg, rgba(255, 76, 106, 0.18), rgba(255, 139, 167, 0.16));
+  border-color: rgba(255, 76, 106, 0.4);
+}
+
+@keyframes toast-slide {
+  0% { opacity: 0; transform: translateY(-16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.config-page .image-upload-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.config-page .file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(21, 39, 84, 0.9), rgba(15, 28, 64, 0.92));
+  border: 1px solid rgba(0, 224, 255, 0.22);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.config-page .file-input input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.config-page .file-input .file-label {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.config-page .file-input .file-name {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.config-page .image-preview {
+  margin-top: 10px;
+  max-width: 180px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  display: none;
+  background: rgba(255,255,255,0.04);
+  padding: 6px;
+}
+
+@media (max-width: 900px) {
+  body.config-page { padding: 12px 8px 28px; }
+  .config-page .app-wrapper { padding: 14px 8px 28px; align-items: flex-start; }
+  .config-page .glass-card { padding: 20px; width: 100%; }
+  .config-page .form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .config-page .section { padding: 14px; }
+  .config-page .title { font-size: 22px; }
+  .config-page .subtitle { font-size: 14px; }
+  .config-page .input, .config-page .btn-primary { font-size: 16px; }
+  .config-page .login-layer { padding: 10px; }
+}
