@@ -66,7 +66,9 @@ async function dispatchCommands(rconClient, config, items, player) {
 }
 
 export function makeWebhookHandler(rootDir) {
+  
   return async function webhook(req, res) {
+
     const user = req.params.user;
     const payload = req.body;
 
@@ -96,53 +98,47 @@ export function makeWebhookHandler(rootDir) {
     if (!configForUser) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
+
     const config = configForUser;
 
     const items = sanitizeItems(payload);
     console.info("Webhook items", items);
+
     if (!items.length) {
       return res.status(400).json({ error: "Nenhum item/descrição válido no payload" });
     }
 
-    try {
-      const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
+    const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
 
-      await dispatchCommands(rcon, config, items, player);
+    await dispatchCommands(rcon, config, items, player);
 
-      rcon.end();
+    rcon.end();
 
-      const mensagemTTS = ttsTexto;
-      const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
+    const mensagemTTS = ttsTexto;
+    const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
 
-      const soundFile = config.sound || null;
-      const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
+    const soundFile = config.sound || null;
+    const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
 
-      const overlayMessage = config?.overlayMessage || "Nova compra";
+    const overlayMessage = config?.overlayMessage || "Nova compra";
 
-      const buyerMessage = mensagemTTS || "";
+    const buyerMessage = mensagemTTS || "";
 
-      broadcastEvent(user, "purchase", {
-        player,
-        audioUrl,
-        soundUrl,
-        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
-        overlayMessage,
-        buyerMessage,
-        ttsMessage: buyerMessage
-      });
+    broadcastEvent(user, "purchase", {
+      player,
+      audioUrl,
+      soundUrl,
+      items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+      overlayMessage,
+      buyerMessage,
+      ttsMessage: buyerMessage
+    });
 
-      res.json({ status: "OK", audioUrl, soundUrl });
+    res.json({ status: "OK", audioUrl, soundUrl });
 
-      if (orderNsu) {
-        await removeBuyer(rootDir, user, orderNsu);
-      }
-    } catch (err) {
-      console.error("RCON ERROR:", err);
-      res.status(500).json({
-        error: "Erro ao executar RCON",
-        detail: err?.message || String(err),
-        code: err?.code
-      });
+    if (orderNsu) {
+      await removeBuyer(rootDir, user, orderNsu);
     }
-  };
+
+  }
 }

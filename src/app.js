@@ -9,8 +9,8 @@ import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
 import { makeUploadImageHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
-import { makeOverlayHandler, makePainelHandler, makeThanksMiddleware, makeLojaMiddleware, makeRootOverlayHandler, makeProductPanelHandler, makeProductPanelStatic } from "./handlers/pageHandlers.js";
-import { makeOverlayFallback, makeOverlayStatic, makePainelStatic, makeUserAssetsStatic } from "./handlers/staticHandlers.js";
+import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
+import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
@@ -79,11 +79,10 @@ export function createApp(rootDir) {
 
   // Assets e estáticos do usuário
   userRouter.use(makeOverlayStatic(rootDir));
-  userRouter.use(makeOverlayFallback(rootDir));
   userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));
   userRouter.use("/sounds", makeUserAssetsStatic(rootDir, "sounds"));
   userRouter.use("/images", makeUserAssetsStatic(rootDir, "images"));
-  userRouter.use("/painel", makePainelStatic(rootDir));
+  userRouter.use("/config", makeConfigStatic(rootDir));
   userRouter.use("/productpanel", makeProductPanelStatic(rootDir));
 
   // Streams e eventos
@@ -112,14 +111,18 @@ export function createApp(rootDir) {
   );
 
   // Páginas
-  userRouter.get("/painel", makePainelHandler(rootDir));
+  userRouter.get("/config", makeConfigHandler(rootDir));
   userRouter.get("/productpanel", makeProductPanelHandler(rootDir));
   userRouter.use("/loja", makeLojaMiddleware(rootDir));
   userRouter.use("/thanks", makeThanksMiddleware(rootDir));
   userRouter.get("/overlay", makeOverlayHandler(rootDir));
-  userRouter.get("/", makeRootOverlayHandler(rootDir));
+  userRouter.get("/", makeHomeHandler(rootDir));
+  userRouter.use(makeNotFoundHandler(rootDir));
 
   app.use("/:user", userRouter);
+
+  // Fallback global
+  app.use(makeNotFoundHandler(rootDir));
 
   return app;
 }

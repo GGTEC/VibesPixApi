@@ -1,10 +1,9 @@
 import path from "path";
-import fs from "fs";
 import express from "express";
 
-export function makePainelHandler(rootDir) {
-  return function painel(req, res) {
-    return res.sendFile(path.join(rootDir, "src", "painel", "index.html"));
+export function makeConfigHandler(rootDir) {
+  return function config(req, res) {
+    return res.sendFile(path.join(rootDir, "src", "config", "index.html"));
   };
 }
 
@@ -41,5 +40,17 @@ export function makeOverlayHandler(rootDir) {
 export function makeRootOverlayHandler(rootDir) {
   return function rootOverlay(req, res) {
     return res.sendFile(path.join(rootDir, "src", "overlay", "index.html"));
+  };
+}
+
+export function makeHomeHandler(rootDir) {
+  return function home(req, res) {
+    return res.sendFile(path.join(rootDir, "src", "home", "index.html"));
+  };
+}
+
+export function makeNotFoundHandler(rootDir) {
+  return function notFound(req, res) {
+    return res.status(404).sendFile(path.join(rootDir, "src", "notfound", "index.html"));
   };
 }
