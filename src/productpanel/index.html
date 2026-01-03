@@ -137,6 +137,12 @@
     .file-input { position: relative; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
     .file-input input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .file-name { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+    .image-card { cursor: pointer; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px; background: rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 6px; transition: border 0.15s ease, box-shadow 0.2s ease; }
+    .image-card:hover { border-color: rgba(124,77,255,0.6); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    .image-card.selected { border-color: rgba(0,224,255,0.8); box-shadow: 0 10px 30px rgba(0,224,255,0.22); }
+    .image-card img { width: 100%; height: 96px; object-fit: cover; border-radius: 10px; background: rgba(0,0,0,0.12); }
+    .image-name { font-size: 13px; color: var(--text); word-break: break-all; }
     .hidden { display: none; }
     .card-wrapper {
       display: flex;
@@ -223,7 +229,7 @@
             </div>
             <div>
               <label class="label">Imagens já enviadas</label>
-              <select id="imageSelect" class="input"></select>
+              <div id="imageGallery" class="image-gallery"></div>
             </div>
           </div>
 
@@ -292,30 +298,36 @@
       return res.json();
     }
 
-    function fillImageSelect() {
-      const sel = $("imageSelect");
-      if (!sel) return;
-      sel.innerHTML = "";
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "Selecione uma imagem";
-      placeholder.disabled = true;
-      placeholder.selected = true;
-      sel.appendChild(placeholder);
-      imagens.forEach(({ name, url }) => {
-        const opt = document.createElement("option");
-        opt.value = url;
-        opt.textContent = name;
-        sel.appendChild(opt);
-      });
-    }
-
-    function syncImageSelectWithInput() {
+    function renderImageGallery() {
+      const container = $("imageGallery");
+      if (!container) return;
+      container.innerHTML = "";
+      if (!imagens.length) {
+        const empty = document.createElement("p");
+        empty.className = "label";
+        empty.style.margin = "0";
+        empty.textContent = "Nenhuma imagem enviada.";
+        container.appendChild(empty);
+        return;
+      }
       const current = $("productImg").value.trim();
-      const sel = $("imageSelect");
-      if (!sel) return;
-      const match = imagens.find((img) => img.url === current);
-      sel.value = match ? match.url : "";
+      imagens.forEach(({ name, url }) => {
+        const card = document.createElement("div");
+        card.className = "image-card" + (url === current ? " selected" : "");
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = name;
+        const title = document.createElement("div");
+        title.className = "image-name";
+        title.textContent = name;
+        card.onclick = () => {
+          $("productImg").value = url;
+          renderImageGallery();
+        };
+        card.appendChild(img);
+        card.appendChild(title);
+        container.appendChild(card);
+      });
     }
 
     function fillSelect() {
@@ -350,7 +362,7 @@
               : [];
       $("productCmds").value = cmds.join("\n");
       $("productImg").value = p.imagem || "";
-      syncImageSelectWithInput();
+      renderImageGallery();
     }
 
     function clearForm() {
@@ -362,7 +374,7 @@
       $("productCmds").value = "";
       $("productImg").value = "";
       $("fileName").textContent = "Nenhum arquivo";
-      syncImageSelectWithInput();
+      renderImageGallery();
     }
 
     async function uploadImage(file) {
@@ -388,7 +400,7 @@
         produtos = config.produtos || {};
         const imagesRes = await fetchImages();
         imagens = imagesRes.files || [];
-        fillImageSelect();
+        renderImageGallery();
         fillSelect();
         $("login").classList.add("hidden");
         $("panel").classList.remove("hidden");
@@ -453,19 +465,11 @@
         if (res?.url) {
           $("productImg").value = res.url;
           imagens = [...imagens.filter((i) => i.url !== res.url), { name: file.name, url: res.url }];
-          fillImageSelect();
-          syncImageSelectWithInput();
+          renderImageGallery();
           toast("Imagem enviada");
         }
       } catch (err) {
         toast("Upload falhou: " + err.message, true);
-      }
-    };
-
-    $("imageSelect").onchange = (e) => {
-      const url = e.target.value;
-      if (url) {
-        $("productImg").value = url;
       }
     };
   </script>
