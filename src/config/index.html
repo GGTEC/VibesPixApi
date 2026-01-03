@@ -466,7 +466,6 @@ let loggedIn = false;
 // Derive API base from first path segment (/:user/config => /:user/api).
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
-const defaultSounds = ["default.mp3", "alert1.mp3", "alert2.mp3"];
 const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
 const tabContents = Array.from(document.querySelectorAll('.tab-content'));
 
