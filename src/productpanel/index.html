@@ -113,6 +113,8 @@
     textarea.input { min-height: 160px; resize: vertical; font-family: "Fira Code", ui-monospace, monospace; }
     .label { color: var(--muted); font-size: 13px; margin-bottom: 6px; display: block; }
     .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .full-span { grid-column: 1 / -1; }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; flex-direction: column; }
     .btn {
       border: none;
@@ -162,6 +164,7 @@
       body { padding: 14px 8px 28px; }
       .card { padding: 16px; max-width: 100%; }
       .row { grid-template-columns: 1fr; gap: 12px; }
+      .form-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; gap: 12px; }
       .glass-card { padding: 20px; width: 100%; }
       .login-layer { padding: 10px; }
@@ -196,14 +199,11 @@
         </div>
 
         <div id="productFormSection" class="section hidden" style="margin-top:12px;background: transparent;padding: 0px;border: 0px;">
-          <div class="row">
+          <div class="form-grid">
             <div>
               <label class="label">ID do produto (Será utilizado para pagamento e uso do comando)</label>
               <input id="newProductId" class="input" placeholder="ex: vip_gold" />
             </div>
-          </div>
-
-          <div class="row">
             <div>
               <label class="label">Título</label>
               <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
@@ -216,15 +216,11 @@
               <label class="label">Quantidade</label>
               <input id="productQty" type="number" class="input" placeholder="ex: 1" />
             </div>
-          </div>
-
-          <div style="margin-top:12px;">
-            <label class="label">Comandos (um por linha; use {player} / {username})</label>
-            <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
-          </div>
-
-          <div style="margin-top:12px;" class="row">
-            <div>
+            <div class="full-span">
+              <label class="label">Comandos (um por linha; use {player} / {username})</label>
+              <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
+            </div>
+            <div class="full-span">
               <label class="label">Imagem (URL)</label>
               <input id="productImg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="productImgUrl" type="hidden" />
