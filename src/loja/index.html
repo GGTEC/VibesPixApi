@@ -68,6 +68,7 @@
       border: 1px solid rgba(255,255,255,0.1);
       background: rgba(255,255,255,0.05);
     }
+    .product .info { display: flex; flex-direction: column; gap: 4px; }
     .product h3 { margin: 0; font-size: 18px; }
     .product p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
     .price { font-weight: 700; color: var(--accent-2); display: flex;
@@ -198,18 +199,31 @@
       color: var(--text);
     }
     .btn-ghost:hover { box-shadow: none; background: rgba(255,255,255,0.08); }
-    @media (max-width: 720px) {
+    @media (max-width: 900px) {
       body { padding: 18px 12px 120px; }
       .container { gap: 12px; }
+      .card { padding: 16px; }
       .product {
-        min-height: 0;
+        grid-template-columns: 92px 1fr;
+        grid-template-areas:
+          "img title"
+          "img meta"
+          "controls controls";
+        align-items: start;
         max-height: none;
       }
-      .product img { width: 72px; height: 72px; }
-      .product h3 { font-size: 16px; }
-      .qty { width: 100%; justify-content: space-between; }
-      .btn { width: 100%; }
+      .product img { width: 92px; height: 92px; grid-area: img; }
+      .product .info { grid-area: title; }
+      .product h3 { font-size: 16px; margin-bottom: 2px; }
+      .product p { font-size: 13px; grid-area: meta; }
+      .price { font-size: 16px; }
+      .check-col { grid-area: controls; justify-content: flex-start; }
+      .qty { grid-area: controls; width: 100%; justify-content: space-between; margin-top: 8px; }
+      .qty button { width: 32px; height: 32px; }
+      .btn { width: 100%; font-size: 16px; }
       .footer-actions { padding: 12px; }
+      .footer-inner { justify-content: center; }
+      .field .input { font-size: 16px; }
     }
 
   </style>
@@ -304,6 +318,7 @@
         img.alt = id;
 
         const info = document.createElement('div');
+        info.className = 'info';
         const title = document.createElement('h3');
         const qtd = p.quantidade || p.qty || 1;
         title.innerHTML = `${p.title}  • Qtd: ${qtd}`;
