@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { makeGetConfigHandler, makeUpdateConfigHandler } from "./handlers/configHandlers.js";
 import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
-import { makeUploadImageHandler } from "./handlers/uploadHandlers.js";
+import { makeUploadImageHandler, makeUploadSoundHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
@@ -15,14 +15,14 @@ import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
 
-function createUserStorage(rootDir) {
+function createUserStorage(rootDir, folder = "images") {
   return multer.diskStorage({
     destination: (req, file, cb) => {
-      const dir = path.join(rootDir, "users", req.params.user, "images");
+      const dir = path.join(rootDir, "users", req.params.user, folder);
       try {
         fs.mkdirSync(dir, { recursive: true });
       } catch (err) {
-        return cb(new Error(`Erro ao criar diretório de imagens: ${err.message}`));
+        return cb(new Error(`Erro ao criar diretório de upload: ${err.message}`));
       }
       cb(null, dir);
     },
@@ -46,9 +46,20 @@ export function createApp(rootDir) {
    // Caminho absoluto da pasta pública
   const publicDir = path.resolve(rootDir, "public");
 
-  const upload = multer({
-    storage: createUserStorage(rootDir),
+  const uploadImage = multer({
+    storage: createUserStorage(rootDir, "images"),
     limits: { fileSize: 5 * 1024 * 1024 }
+  });
+
+  const uploadSound = multer({
+    storage: createUserStorage(rootDir, "sounds"),
+    limits: { fileSize: 8 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype?.startsWith("audio/")) {
+        return cb(new Error("Apenas arquivos de áudio"));
+      }
+      cb(null, true);
+    }
   });
 
   // Assets públicos compartilhados
@@ -96,7 +107,7 @@ export function createApp(rootDir) {
   userRouter.post(
     "/api/upload-image",
     (req, res, next) => {
-      upload.single("file")(req, res, (err) => {
+      uploadImage.single("file")(req, res, (err) => {
         if (err) {
           return res.status(500).json({ error: err.message || "Erro no upload" });
         }
@@ -104,6 +115,18 @@ export function createApp(rootDir) {
       });
     },
     makeUploadImageHandler(rootDir)
+  );
+  userRouter.post(
+    "/api/upload-sound",
+    (req, res, next) => {
+      uploadSound.single("file")(req, res, (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message || "Erro no upload" });
+        }
+        return next();
+      });
+    },
+    makeUploadSoundHandler(rootDir)
   );
   userRouter.post(
     "/api/create_checkout_infinitepay",

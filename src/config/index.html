@@ -385,7 +385,14 @@
             <option value="alert2.mp3">alert2.mp3</option>
           </select>
         </div>
-        <p class="help-text">Arquivos devem estar em /:user/sounds/. Você pode adicionar mais opções no código.</p>
+        <div class="image-upload-row" style="margin-top:12px;">
+          <div class="file-input" id="sound-upload-box">
+            <span class="file-label">Enviar MP3</span>
+            <span class="file-name" id="sound-file-name">Selecione um arquivo</span>
+            <input id="sound-upload" type="file" accept="audio/*">
+          </div>
+        </div>
+        <p class="help-text">Envie um áudio (até 8MB). Ele fica disponível em /:user/sounds/ e aparece na lista acima.</p>
       </div>
 
       <div class="section">
@@ -409,6 +416,51 @@ let apiKey = '';
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
 
+function addSoundOption(name, selectIt = false) {
+  if (!name) return;
+  const select = document.getElementById("sound");
+  const exists = Array.from(select.options).some((o) => o.value === name);
+  if (!exists) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  }
+  if (selectIt) {
+    select.value = name;
+  }
+}
+
+async function uploadSound(file) {
+  const statusEl = document.getElementById('sound-file-name');
+  try {
+    statusEl.textContent = 'Enviando...';
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`${baseApi}/upload-sound`, {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey },
+      body: fd
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch {}
+    if (!res.ok) {
+      throw new Error(data?.error || raw || 'Falha no upload');
+    }
+    const filename = data?.filename || file.name;
+    addSoundOption(filename, true);
+    statusEl.textContent = filename;
+    alert('Áudio enviado!');
+  } catch (err) {
+    statusEl.textContent = 'Selecione um arquivo';
+    alert(err.message || 'Erro ao enviar áudio');
+  } finally {
+    const input = document.getElementById('sound-upload');
+    if (input) input.value = '';
+  }
+}
+
 async function carregar() {
   const res = await fetch(`${baseApi}/config`, {
     headers: { "x-api-key": apiKey }
@@ -420,6 +472,7 @@ async function carregar() {
   document.getElementById("host").value = data.rcon.host;
   document.getElementById("port").value = data.rcon.port;
   document.getElementById("password").value = data.rcon.password;
+  addSoundOption(data.sound);
   document.getElementById("sound").value = data.sound || '';
   document.getElementById("infinitypay-handle").value = data.infinitypayHandle || '';
   document.getElementById("overlay-message").value = data.overlayMessage || '';
@@ -461,5 +514,16 @@ document.getElementById('login-btn').onclick = async function() {
     document.getElementById('login-erro').classList.remove('hidden');
   }
 };
+
+document.getElementById('sound-upload').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!apiKey) {
+    alert('Faça login para enviar áudio');
+    e.target.value = '';
+    return;
+  }
+  await uploadSound(file);
+});
 </script>
 </html>
