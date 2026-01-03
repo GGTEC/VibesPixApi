@@ -506,6 +506,25 @@
       $("login").classList.remove("hidden");
     };
 
+    async function trySessionLogin() {
+      try {
+        config = await fetchConfig();
+        produtos = config.produtos || {};
+        const imagesRes = await fetchImages();
+        imagens = imagesRes.files || [];
+        renderImageGallery();
+        fillSelect();
+        showForm(false);
+        $("login").classList.add("hidden");
+        $("panel").classList.remove("hidden");
+        loggedIn = true;
+      } catch (_) {
+        // sessão inválida ou ausente: mantém tela de login
+      }
+    }
+
+    window.addEventListener("load", trySessionLogin);
+
     $("productSelect").onchange = (e) => {
       const key = e.target.value;
       if (key === "__new") {
