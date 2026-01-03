@@ -381,9 +381,6 @@
         <div class="select-wrapper" >
           <select id="sound" class="input" style="background: rgba(255,255,255,0.08);">
             <option value="" disabled>Selecione um áudio</option>
-            <option value="default.mp3">default.mp3</option>
-            <option value="alert1.mp3">alert1.mp3</option>
-            <option value="alert2.mp3">alert2.mp3</option>
           </select>
         </div>
         <div class="image-upload-row" style="margin-top:12px;">
@@ -416,6 +413,7 @@ let apiKey = '';
 // Derive API base from first path segment (/:user/config => /:user/api).
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
+const defaultSounds = ["default.mp3", "alert1.mp3", "alert2.mp3"];
 
 function showToast(message, isError = false) {
   const container = document.getElementById('toast-container');
@@ -443,6 +441,32 @@ function addSoundOption(name, selectIt = false) {
   }
   if (selectIt) {
     select.value = name;
+  }
+}
+
+async function loadSoundList() {
+  const select = document.getElementById("sound");
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Selecione um áudio';
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  select.appendChild(placeholder);
+
+  defaultSounds.forEach((s) => addSoundOption(s));
+
+  try {
+    const res = await fetch(`${baseApi}/list-sounds`, { headers: { 'x-api-key': apiKey } });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch {}
+    if (!res.ok) {
+      throw new Error(data?.error || raw || 'Erro ao listar áudios');
+    }
+    (data?.files || []).forEach((f) => addSoundOption(f.name));
+  } catch (err) {
+    showToast(err.message || 'Falha ao carregar áudios', true);
   }
 }
 
@@ -477,6 +501,7 @@ async function uploadSound(file) {
 }
 
 async function carregar() {
+  await loadSoundList();
   const res = await fetch(`${baseApi}/config`, {
     headers: { "x-api-key": apiKey }
   });

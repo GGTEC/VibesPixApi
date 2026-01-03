@@ -1,7 +1,7 @@
+import fs from "fs/promises";
+import path from "path";
 import { readConfig } from "../utils/config.js";
 import { logEvent } from "../services/logger.js";
-import fs from "fs";
-import path from "path";
 
 function authorizeAndValidate(req, res, config) {
   const apiKey = req.headers["x-api-key"];
@@ -47,22 +47,47 @@ export function makeUploadSoundHandler(rootDir) {
 export function makeListImagesHandler(rootDir) {
   return async function listImages(req, res) {
     const user = req.params.user;
-    const apiKey = req.headers["x-api-key"];
     const config = await readConfig(rootDir, user);
-    if (!config) {
-      return res.status(404).json({ error: "Config não encontrada" });
-    }
-    if (apiKey !== config.apiKey) {
-      return res.status(401).json({ error: "Não autorizado" });
-    }
+    const apiKey = req.headers["x-api-key"];
+    if (!config) return res.status(404).json({ error: "Config não encontrada" });
+    if (apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
 
     const dir = path.join(rootDir, "users", user, "images");
     try {
-      const files = fs.readdirSync(dir).filter((f) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(f));
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      const files = entries
+        .filter((e) => e.isFile())
+        .map((e) => ({ name: e.name, url: `/${user}/images/${e.name}` }));
       return res.json({ files });
     } catch (err) {
-      if (err.code === "ENOENT") return res.json({ files: [] });
-      return res.status(500).json({ error: "Erro ao listar imagens" });
+      if (err.code === "ENOENT") {
+        return res.json({ files: [] });
+      }
+      return res.status(500).json({ error: err.message || "Erro ao listar imagens" });
+    }
+  };
+}
+
+export function makeListSoundsHandler(rootDir) {
+  return async function listSounds(req, res) {
+    const user = req.params.user;
+    const config = await readConfig(rootDir, user);
+    const apiKey = req.headers["x-api-key"];
+    if (!config) return res.status(404).json({ error: "Config não encontrada" });
+    if (apiKey !== config.apiKey) return res.status(401).json({ error: "Não autorizado" });
+
+    const dir = path.join(rootDir, "users", user, "sounds");
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      const files = entries
+        .filter((e) => e.isFile())
+        .map((e) => ({ name: e.name, url: `/${user}/sounds/${e.name}` }));
+      return res.json({ files });
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        return res.json({ files: [] });
+      }
+      return res.status(500).json({ error: err.message || "Erro ao listar áudios" });
     }
   };
 }

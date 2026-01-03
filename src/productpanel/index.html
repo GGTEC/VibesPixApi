@@ -221,6 +221,10 @@
                 <input type="file" id="fileInput" accept="image/*" />
               </div>
             </div>
+            <div>
+              <label class="label">Imagens já enviadas</label>
+              <select id="imageSelect" class="input"></select>
+            </div>
           </div>
 
           <div class="actions">
@@ -241,6 +245,7 @@
     let apiKey = "";
     let config = null;
     let produtos = {};
+    let imagens = [];
 
     function toast(msg, isError = false) {
       const box = document.createElement("div");
@@ -276,6 +281,43 @@
       return res.json();
     }
 
+    async function fetchImages() {
+      const res = await fetch(`/${user}/api/list-images`, {
+        headers: { "x-api-key": apiKey }
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Erro ao listar imagens");
+      }
+      return res.json();
+    }
+
+    function fillImageSelect() {
+      const sel = $("imageSelect");
+      if (!sel) return;
+      sel.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Selecione uma imagem";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      sel.appendChild(placeholder);
+      imagens.forEach(({ name, url }) => {
+        const opt = document.createElement("option");
+        opt.value = url;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+    }
+
+    function syncImageSelectWithInput() {
+      const current = $("productImg").value.trim();
+      const sel = $("imageSelect");
+      if (!sel) return;
+      const match = imagens.find((img) => img.url === current);
+      sel.value = match ? match.url : "";
+    }
+
     function fillSelect() {
       const sel = $("productSelect");
       sel.innerHTML = "";
@@ -308,6 +350,7 @@
               : [];
       $("productCmds").value = cmds.join("\n");
       $("productImg").value = p.imagem || "";
+      syncImageSelectWithInput();
     }
 
     function clearForm() {
@@ -319,6 +362,7 @@
       $("productCmds").value = "";
       $("productImg").value = "";
       $("fileName").textContent = "Nenhum arquivo";
+      syncImageSelectWithInput();
     }
 
     async function uploadImage(file) {
@@ -342,6 +386,9 @@
       try {
         config = await fetchConfig();
         produtos = config.produtos || {};
+        const imagesRes = await fetchImages();
+        imagens = imagesRes.files || [];
+        fillImageSelect();
         fillSelect();
         $("login").classList.add("hidden");
         $("panel").classList.remove("hidden");
@@ -405,10 +452,20 @@
         const res = await uploadImage(file);
         if (res?.url) {
           $("productImg").value = res.url;
+          imagens = [...imagens.filter((i) => i.url !== res.url), { name: file.name, url: res.url }];
+          fillImageSelect();
+          syncImageSelectWithInput();
           toast("Imagem enviada");
         }
       } catch (err) {
         toast("Upload falhou: " + err.message, true);
+      }
+    };
+
+    $("imageSelect").onchange = (e) => {
+      const url = e.target.value;
+      if (url) {
+        $("productImg").value = url;
       }
     };
   </script>

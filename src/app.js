@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { makeGetConfigHandler, makeUpdateConfigHandler } from "./handlers/configHandlers.js";
 import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
-import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler } from "./handlers/uploadHandlers.js";
+import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler, makeListSoundsHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
@@ -127,6 +127,10 @@ export function createApp(rootDir) {
   userRouter.get(
     "/api/list-images",
     makeListImagesHandler(rootDir)
+  );
+  userRouter.get(
+    "/api/list-sounds",
+    makeListSoundsHandler(rootDir)
   );
   userRouter.post(
     "/api/create_checkout_infinitepay",
