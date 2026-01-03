@@ -143,6 +143,12 @@
     .image-card.selected { border-color: rgba(0,224,255,0.8); box-shadow: 0 10px 30px rgba(0,224,255,0.22); }
     .image-card img { width: 100%; height: 96px; object-fit: cover; border-radius: 10px; background: rgba(0,0,0,0.12); }
     .image-name { font-size: 13px; color: var(--text); word-break: break-all; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 12px; }
+    .modal { background: var(--card); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; width: min(720px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,0.45); padding: 18px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .modal-title { margin: 0; font-size: 18px; }
+    .modal-close { background: transparent; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 6px; line-height: 1; }
+    .modal-upload { margin-bottom: 12px; }
     .hidden { display: none; }
     .card-wrapper {
       display: flex;
@@ -218,18 +224,8 @@
           <div style="margin-top:12px;" class="row">
             <div>
               <label class="label">Imagem (URL)</label>
-              <input id="productImg" class="input" placeholder="/user/images/arquivo.png" />
-            </div>
-            <div>
-              <label class="label">Upload de imagem</label>
-              <div class="file-input">
-                <span class="file-name" id="fileName">Nenhum arquivo</span>
-                <input type="file" id="fileInput" accept="image/*" />
-              </div>
-            </div>
-            <div>
-              <label class="label">Imagens já enviadas</label>
-              <div id="imageGallery" class="image-gallery"></div>
+              <input id="productImg" class="input" placeholder="/user/images/arquivo.png" readonly style="cursor:pointer;" />
+              <small style="color: var(--muted);">Clique para escolher ou enviar uma imagem</small>
             </div>
           </div>
 
@@ -245,6 +241,26 @@
 
   </div>
 
+  <div id="imageModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Imagens do usuário</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-upload">
+        <label class="label">Enviar nova imagem</label>
+        <div class="file-input">
+          <span class="file-name" id="modalFileName">Nenhum arquivo</span>
+          <input type="file" id="modalFileInput" accept="image/*" />
+        </div>
+      </div>
+      <div>
+        <label class="label">Galeria</label>
+        <div id="imageGallery" class="image-gallery"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const $ = (id) => document.getElementById(id);
     const user = location.pathname.split("/").filter(Boolean)[0] || "ggtec";
@@ -252,6 +268,7 @@
     let config = null;
     let produtos = {};
     let imagens = [];
+    let modalOpen = false;
 
     function toast(msg, isError = false) {
       const box = document.createElement("div");
@@ -323,6 +340,7 @@
         card.onclick = () => {
           $("productImg").value = url;
           renderImageGallery();
+          if (modalOpen) closeImageModal();
         };
         card.appendChild(img);
         card.appendChild(title);
@@ -373,7 +391,7 @@
       $("productQty").value = "";
       $("productCmds").value = "";
       $("productImg").value = "";
-      $("fileName").textContent = "Nenhum arquivo";
+      $("modalFileName").textContent = "Nenhum arquivo";
       renderImageGallery();
     }
 
@@ -390,6 +408,21 @@
         throw new Error(t || "Falha no upload");
       }
       return res.json();
+    }
+
+    function openImageModal() {
+      const modal = $("imageModal");
+      if (!modal) return;
+      modal.style.display = "flex";
+      modalOpen = true;
+      renderImageGallery();
+    }
+
+    function closeImageModal() {
+      const modal = $("imageModal");
+      if (!modal) return;
+      modal.style.display = "none";
+      modalOpen = false;
     }
 
     $("btnLogin").onclick = async () => {
@@ -456,10 +489,10 @@
       }
     };
 
-    $("fileInput").onchange = async (e) => {
+    $("modalFileInput").onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      $("fileName").textContent = file.name;
+      $("modalFileName").textContent = file.name;
       try {
         const res = await uploadImage(file);
         if (res?.url) {
@@ -472,6 +505,12 @@
         toast("Upload falhou: " + err.message, true);
       }
     };
+
+    $("productImg").onclick = () => openImageModal();
+    $("modalClose").onclick = () => closeImageModal();
+    $("imageModal").addEventListener("click", (e) => {
+      if (e.target === $("imageModal")) closeImageModal();
+    });
   </script>
 </body>
 </html>
