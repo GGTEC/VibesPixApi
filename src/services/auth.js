@@ -66,14 +66,12 @@ export function makeLoginHandler() {
       return res.status(400).json({ error: "Informe usuário/email e senha" });
     }
     try {
-      const idLower = identifier.toLowerCase();
       const db = await getNamedDb("VibesBotSales");
       const col = db.collection("VibesBotSales");
       const userDoc = await col.findOne({
         $or: [
           { nome_usuario: identifier },
           { email: identifier },
-          { email: idLower }
         ]
       });
       if (!userDoc) return res.status(401).json({ error: "Credenciais inválidas" });
@@ -82,14 +80,12 @@ export function makeLoginHandler() {
       const hash = crypto.createHash("sha3-256").update(password, "utf8").digest("hex");
       if (!storedHash || hash !== storedHash) return res.status(401).json({ error: "Credenciais inválidas" });
 
-      const userName = userDoc.nome_usuario || req.params?.user;
-      if (req.params?.user && userName && req.params.user !== userName) {
-        return res.status(403).json({ error: "Usuário não corresponde ao painel" });
-      }
+      const userName = userDoc.nome_usuario || identifier;
+      const panelUser = req.params?.user || userName;
 
-      const token = createSession(userName || req.params?.user);
+      const token = createSession(panelUser);
       setSessionCookie(res, token);
-      return res.json({ success: true, user: userName || req.params?.user, expiresAt: Date.now() + SESSION_TTL_MS });
+      return res.json({ success: true, user: userName, panel: panelUser, expiresAt: Date.now() + SESSION_TTL_MS });
     } catch (err) {
       return res.status(500).json({ error: err?.message || "Erro ao autenticar" });
     }
