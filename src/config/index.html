@@ -137,27 +137,34 @@
 
     .tabs {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       flex-wrap: wrap;
       margin: 0 0 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 4px;
     }
 
     .tab-btn {
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: transparent;
       color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 10px 16px;
+      border-radius: 12px 12px 0 0;
       cursor: pointer;
       font-weight: 600;
-      transition: border 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+      transition: color 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #9c6dff;
     }
 
     .tab-btn.active {
-      border-color: rgba(0, 224, 255, 0.5);
-      box-shadow: 0 10px 30px rgba(0, 224, 255, 0.18);
-      background: linear-gradient(135deg, rgba(0, 224, 255, 0.16), rgba(124, 77, 255, 0.18));
-      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.16);
+      border-bottom-color: transparent;
+      background: var(--card-strong);
+      color: #c7d2ff;
     }
 
     .tab-content.hidden { display: none; }
