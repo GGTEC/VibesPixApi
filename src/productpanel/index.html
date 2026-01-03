@@ -215,8 +215,8 @@
               <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
             </div>
             <div>
-              <label class="label">Valor (exibição)</label>
-              <input id="productPrice" type="number" class="input" placeholder="ex: 500" />
+              <label class="label">Valor em R$ (exibição)</label>
+              <input id="productPrice" type="number" step="0.01" class="input" placeholder="ex: 5.50" />
             </div>
             <div>
               <label class="label">Quantidade</label>
@@ -408,7 +408,8 @@
       if (!p) return;
       $("newProductId").value = key;
       $("productTitle").value = p.title || "";
-      $("productPrice").value = p.valor ?? "";
+      const priceCents = Number(p.valor) || 0;
+      $("productPrice").value = (priceCents / 100).toFixed(2);
       $("productQty").value = p.quantity ?? "";
       const cmds = Array.isArray(p.comandos)
         ? p.comandos
@@ -545,7 +546,9 @@
       const id = ($("newProductId").value || "").trim();
       if (!id) return toast("Informe o ID do produto", true);
       const title = $("productTitle").value.trim();
-      const valor = Number($("productPrice").value) || 0;
+      const rawPrice = ($("productPrice").value || "").replace(",", ".");
+      const valorReais = Number(rawPrice) || 0;
+      const valor = Math.round(valorReais * 100);
       const quantity = Number($("productQty").value) || 1;
       const cmds = $("productCmds").value.split(/\n+/).map(c => c.trim()).filter(Boolean);
       const imagem = getImageValue();

@@ -20,17 +20,10 @@ async function dispatchCommands(rconClient, config, items, player) {
   for (const item of items) {
 
     const rawDescription = item.description;
-    if (!rawDescription) continue;
-
-    const produto = rawDescription
-      .split("|")
-      .map(p => p.trim())
-      .filter(Boolean)[0];
-
-    const produtoConfig = config.produtos?.[produto];
+    const produtoConfig = config.produtos?.[rawDescription];
 
     if (!produtoConfig) {
-      console.warn(`Produto inválido: ${produto}`);
+      console.warn(`Produto inválido: ${rawDescription}`);
       continue;
     }
 
