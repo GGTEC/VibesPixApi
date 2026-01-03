@@ -78,7 +78,7 @@ export function createApp(rootDir) {
   const userRouter = express.Router({ mergeParams: true });
 
   // Assets e estáticos do usuário
-  userRouter.use(makeOverlayStatic(rootDir));
+  userRouter.use("/overlay", makeOverlayStatic(rootDir));
   userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));
   userRouter.use("/sounds", makeUserAssetsStatic(rootDir, "sounds"));
   userRouter.use("/images", makeUserAssetsStatic(rootDir, "images"));
