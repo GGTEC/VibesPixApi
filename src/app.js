@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { makeGetConfigHandler, makeUpdateConfigHandler } from "./handlers/configHandlers.js";
 import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
-import { makeUploadImageHandler, makeUploadSoundHandler } from "./handlers/uploadHandlers.js";
+import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
@@ -27,12 +27,8 @@ function createUserStorage(rootDir, folder = "images") {
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname) || ".bin";
-      const base = path
-        .basename(file.originalname, ext)
-        .replace(/[^a-zA-Z0-9-_]/g, "_")
-        .slice(0, 40) || "image";
-      cb(null, `${base}-${Date.now()}${ext}`);
+      const safeName = path.basename(file.originalname) || `upload${Date.now()}`;
+      cb(null, safeName);
     }
   });
 }
@@ -127,6 +123,10 @@ export function createApp(rootDir) {
       });
     },
     makeUploadSoundHandler(rootDir)
+  );
+  userRouter.get(
+    "/api/list-images",
+    makeListImagesHandler(rootDir)
   );
   userRouter.post(
     "/api/create_checkout_infinitepay",
