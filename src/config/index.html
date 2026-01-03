@@ -338,7 +338,7 @@
       .login-layer { padding: 10px; }
     }
   </style>
-  <title>Painel</title>
+  <title>Config</title>
         
 </head>
 
@@ -348,7 +348,7 @@
 <body>
   <div id="login-container" class="login-layer">
     <div class="glass-card login-box">
-      <h2 class="title">Painel do Usuário</h2>
+      <h2 class="title">Config do Usuário</h2>
       <p class="subtitle">Entre com sua API Key para liberar as configurações.</p>
       <input id="api-key-input" type="password" placeholder="Digite sua API Key" class="input">
       <button id="login-btn" class="btn-primary">Entrar</button>
@@ -357,7 +357,7 @@
   </div>
 
   <div class="app-wrapper">
-    <div id="painel" class="glass-card hidden">
+    <div id="config-panel" class="glass-card hidden">
       <div class="section">
         <h3>Configuração RCON <span class="pill">Minecraft</span></h3>
         <div class="form-grid">
@@ -405,7 +405,8 @@
 document.documentElement.style.setProperty('--font-main', 'Kanit, sans-serif');
 
 let apiKey = '';
-const baseApi = window.location.pathname.replace(/\/painel.*$/, '') + '/api';
+// Derive API base from current user path (supports /:user/config).
+const baseApi = window.location.pathname.replace(/\/config.*/, '') + '/api';
 
 async function carregar() {
   const res = await fetch(`${baseApi}/config`, {
@@ -454,7 +455,7 @@ document.getElementById('login-btn').onclick = async function() {
   try {
     await carregar();
     document.getElementById('login-container').classList.add('hidden');
-    document.getElementById('painel').classList.remove('hidden');
+    document.getElementById('config-panel').classList.remove('hidden');
   } catch {
     document.getElementById('login-erro').classList.remove('hidden');
   }
