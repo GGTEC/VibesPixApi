@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerenciar Produtos · VibesPix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0b16;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --accent: #7c4dff;
+      --accent-2: #00e0ff;
+      --text: #f6f6f6;
+      --muted: #9ba0b5;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 77, 255, 0.25), transparent 35%),
+                  radial-gradient(circle at 80% 10%, rgba(0, 224, 255, 0.18), transparent 32%),
+                  radial-gradient(circle at 60% 70%, rgba(124, 77, 255, 0.2), transparent 35%),
+                  var(--bg);
+      color: var(--text);
+      font-family: "Kanit", "Inter", system-ui, -apple-system, sans-serif;
+      overflow-y: auto;
+      padding: 32px 16px 48px;
+    }
+    .login-layer {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 35%, rgba(124, 77, 255, 0.28), rgba(13, 11, 22, 0.95));
+      z-index: 10;
+      padding: 16px;
+    }
+    .glass-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      padding: 28px;
+    }
+    .login-box {
+      width: min(420px, 100%);
+      text-align: center;
+      gap: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .title { margin: 0 0 12px; font-weight: 700; letter-spacing: 0.5px; }
+    .subtitle { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+    .card {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      align-self: center;
+    }
+    h1 { margin: 0 0 4px; font-size: 24px; }
+    p.lead { margin: 0 0 16px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .section {
+      background: var(--card-strong);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .section h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .input, select.input, textarea.input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s ease, transform 0.1s ease;
+    }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.22); transform: translateY(-1px); }
+    /* Melhora contraste do dropdown nativo */
+    select.input {
+      border-radius: 14px;
+      padding-right: 32px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    select.input option {
+      background: #120f25;
+      color: var(--text);
+      padding: 12px 14px;
+    }
+    select.input option:first-child { border-radius: 12px 12px 0 0; }
+    select.input option:last-child { border-radius: 0 0 12px 12px; }
+    select.input option:checked {
+      background: linear-gradient(135deg, rgba(124, 77, 255, 0.5), rgba(0, 224, 255, 0.4));
+      color: #fff;
+    }
+    textarea.input { min-height: 160px; resize: vertical; font-family: "Fira Code", ui-monospace, monospace; }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 6px; display: block; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #9c6dff);
+      box-shadow: 0 10px 30px rgba(124, 77, 255, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.2s ease;
+    }
+    .btn.secondary { background: linear-gradient(135deg, #223149, #1a2639); box-shadow: none; }
+    .btn.danger { background: linear-gradient(135deg, #ff5f6d, #ff8a7a); }
+    .btn:active { transform: translateY(1px); }
+    .toast-container { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+    .toast { min-width: 240px; max-width: 320px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(135deg, rgba(0, 224, 255, 0.14), rgba(124, 77, 255, 0.2)); border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text); box-shadow: 0 14px 42px rgba(0, 0, 0, 0.35); opacity: 0; transform: translateY(-12px); animation: toast 0.4s forwards; font-size: 14px; }
+    .toast.error { background: linear-gradient(135deg, rgba(255, 76, 106, 0.18), rgba(255, 139, 167, 0.16)); border-color: rgba(255, 76, 106, 0.4); }
+    @keyframes toast { to { opacity: 1; transform: translateY(0); } }
+    .file-input { position: relative; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .file-input input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .file-name { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .hidden { display: none; }
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="login" class="login-layer">
+    <div class="glass-card login-box">
+      <h2 class="title">Painel do Usuário</h2>
+      <p class="subtitle">Entre com sua API Key para liberar as configurações.</p>
+      <input id="apiKey" type="password" class="input" placeholder="Digite sua API Key" />
+      <button class="btn" id="btnLogin">Entrar</button>
+      <div id="loginError" class="toast error hidden">API Key inválida</div>
+    </div>
+  </div>
+  <div class="toast-container" id="toasts"></div>
+  <div class="card-wrapper">
+
+    <div class="card hidden" id="panel">
+      <h1>Gerenciar Produtos</h1>
+      <p class="lead">Crie, edite ou remova produtos deste usuário.</p>
+      <div class="section">
+        <h3>Produtos</h3>
+        <div class="row">
+          <div>
+            <label class="label">Produto existente</label>
+            <select id="productSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Novo ID do produto</label>
+            <input id="newProductId" class="input" placeholder="ex: vip_gold" />
+          </div>
+        </div>
+
+        <div class="section" style="margin-top:12px;background:rgba(255,255,255,0.04);">
+          <div class="row">
+            <div>
+              <label class="label">Título</label>
+              <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
+            </div>
+            <div>
+              <label class="label">Valor (exibição)</label>
+              <input id="productPrice" type="number" class="input" placeholder="ex: 500" />
+            </div>
+            <div>
+              <label class="label">Quantidade</label>
+              <input id="productQty" type="number" class="input" placeholder="ex: 1" />
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label class="label">Comandos (um por linha; use {player} / {username})</label>
+            <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
+          </div>
+
+          <div style="margin-top:12px;" class="row">
+            <div>
+              <label class="label">Imagem (URL)</label>
+              <input id="productImg" class="input" placeholder="/user/images/arquivo.png" />
+            </div>
+            <div>
+              <label class="label">Upload de imagem</label>
+              <div class="file-input">
+                <span class="file-name" id="fileName">Nenhum arquivo</span>
+                <input type="file" id="fileInput" accept="image/*" />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" id="btnSave">Salvar produto</button>
+            <button class="btn danger" id="btnDelete">Remover produto</button>
+            <button class="btn secondary" id="btnClear">Limpar formulário</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const user = location.pathname.split("/").filter(Boolean)[0] || "ggtec";
+    let apiKey = "";
+    let config = null;
+    let produtos = {};
+
+    function toast(msg, isError = false) {
+      const box = document.createElement("div");
+      box.className = "toast" + (isError ? " error" : "");
+      box.textContent = msg;
+      $("toasts").appendChild(box);
+      setTimeout(() => box.remove(), 3800);
+    }
+
+    async function fetchConfig() {
+      const res = await fetch(`/${user}/api/config`, { headers: { "x-api-key": apiKey } });
+      if (!res.ok) throw new Error("Não autorizado ou config ausente");
+      return res.json();
+    }
+
+    async function saveConfig(produtosAtualizados) {
+      const body = {
+        rcon: config?.rcon || { host: "", port: "", password: "" },
+        produtos: produtosAtualizados
+      };
+      const res = await fetch(`/${user}/api/config`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Erro ao salvar");
+      }
+      return res.json();
+    }
+
+    function fillSelect() {
+      const sel = $("productSelect");
+      sel.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = ""; opt.textContent = "Selecione um produto"; opt.disabled = true; opt.selected = true;
+      sel.appendChild(opt);
+      Object.keys(produtos).forEach(key => {
+        const o = document.createElement("option");
+        o.value = key;
+        o.textContent = key;
+        sel.appendChild(o);
+      });
+    }
+
+    function loadProduct(key) {
+      const p = produtos[key];
+      if (!p) return;
+      $("newProductId").value = key;
+      $("productTitle").value = p.title || "";
+      $("productPrice").value = p.valor ?? "";
+      $("productQty").value = p.quantity ?? "";
+      const cmds = Array.isArray(p.comandos)
+        ? p.comandos
+        : Array.isArray(p.comando)
+          ? p.comando
+          : p.comando
+            ? [p.comando]
+            : p.comandos
+              ? [p.comandos]
+              : [];
+      $("productCmds").value = cmds.join("\n");
+      $("productImg").value = p.imagem || "";
+    }
+
+    function clearForm() {
+      $("productSelect").value = "";
+      $("newProductId").value = "";
+      $("productTitle").value = "";
+      $("productPrice").value = "";
+      $("productQty").value = "";
+      $("productCmds").value = "";
+      $("productImg").value = "";
+      $("fileName").textContent = "Nenhum arquivo";
+    }
+
+    async function uploadImage(file) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/${user}/api/upload-image`, {
+        method: "POST",
+        headers: { "x-api-key": apiKey },
+        body: form
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Falha no upload");
+      }
+      return res.json();
+    }
+
+    $("btnLogin").onclick = async () => {
+      apiKey = $("apiKey").value.trim();
+      if (!apiKey) return toast("Informe a API Key", true);
+      try {
+        config = await fetchConfig();
+        produtos = config.produtos || {};
+        fillSelect();
+        $("login").classList.add("hidden");
+        $("panel").classList.remove("hidden");
+        toast("Autenticado");
+      } catch (err) {
+        $("loginError").classList.remove("hidden");
+        setTimeout(() => $("loginError").classList.add("hidden"), 2200);
+      }
+    };
+
+    $("productSelect").onchange = (e) => {
+      const key = e.target.value;
+      if (key) loadProduct(key);
+    };
+
+    $("btnClear").onclick = () => clearForm();
+
+    $("btnSave").onclick = async () => {
+      const id = ($("newProductId").value || "").trim();
+      if (!id) return toast("Informe o ID do produto", true);
+      const title = $("productTitle").value.trim();
+      const valor = Number($("productPrice").value) || 0;
+      const quantity = Number($("productQty").value) || 1;
+      const cmds = $("productCmds").value.split(/\n+/).map(c => c.trim()).filter(Boolean);
+      const imagem = $("productImg").value.trim();
+      produtos[id] = {
+        title,
+        valor,
+        quantity,
+        comandos: cmds,
+        imagem
+      };
+      try {
+        await saveConfig(produtos);
+        fillSelect();
+        toast("Produto salvo");
+      } catch (err) {
+        toast("Erro ao salvar: " + err.message, true);
+      }
+    };
+
+    $("btnDelete").onclick = async () => {
+      const id = ($("newProductId").value || "").trim();
+      if (!id || !produtos[id]) return toast("Selecione um produto para remover", true);
+      delete produtos[id];
+      try {
+        await saveConfig(produtos);
+        fillSelect();
+        clearForm();
+        toast("Produto removido");
+      } catch (err) {
+        toast("Erro ao remover: " + err.message, true);
+      }
+    };
+
+    $("fileInput").onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      $("fileName").textContent = file.name;
+      try {
+        const res = await uploadImage(file);
+        if (res?.url) {
+          $("productImg").value = res.url;
+          toast("Imagem enviada");
+        }
+      } catch (err) {
+        toast("Upload falhou: " + err.message, true);
+      }
+    };
+  </script>
+</body>
+</html>

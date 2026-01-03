@@ -4,90 +4,42 @@ import express from "express";
 
 export function makePainelHandler(rootDir) {
   return function painel(req, res) {
-    const painelPath = path.join(rootDir, "users", req.params.user, "painel", "index.html");
-
-    if (!fs.existsSync(painelPath)) {
-      return res.status(404).send("Painel não encontrado");
-    }
-
-    return res.sendFile(painelPath);
+    return res.sendFile(path.join(rootDir, "src", "painel", "index.html"));
   };
 }
 
 export function makeProductPanelHandler(rootDir) {
   return function productPanel(req, res) {
-    const productPanelPath = path.join(rootDir, "users", req.params.user, "productpanel", "index.html");
-
-    if (!fs.existsSync(productPanelPath)) {
-      return res.status(404).send("Painel de produtos não encontrado");
-    }
-
-    return res.sendFile(productPanelPath);
+    return res.sendFile(path.join(rootDir, "src", "productpanel", "index.html"));
   };
 }
 
 export function makeProductPanelStatic(rootDir) {
   return function productPanelStatic(req, res, next) {
-    const dir = path.join(rootDir, "users", req.params.user, "productpanel");
-    if (fs.existsSync(dir)) {
-      return express.static(dir)(req, res, next);
-    }
-    return next();
+    return express.static(path.join(rootDir, "src", "productpanel"))(req, res, next);
   };
-}
-
-function pickExistingDir(paths) {
-  return paths.find(candidate => fs.existsSync(candidate)) || null;
 }
 
 export function makeLojaMiddleware(rootDir) {
   return function loja(req, res, next) {
-    const candidateDirs = [
-      path.join(rootDir, "users", req.params.user, "loja"),
-      path.join(rootDir, "loja"),
-      path.join(rootDir, "public", "loja")
-    ];
-
-    const found = pickExistingDir(candidateDirs);
-    if (found) {
-      return express.static(found)(req, res, next);
-    }
-
-    return res.status(404).send("Loja não encontrada");
+    return express.static(path.join(rootDir, "src", "loja"))(req, res, next);
   };
 }
 
 export function makeThanksMiddleware(rootDir) {
   return function thanks(req, res, next) {
-    const candidateDirs = [
-      path.join(rootDir, "users", req.params.user, "thanks"),
-      path.join(rootDir, "thanks"),
-      path.join(rootDir, "public", "thanks")
-    ];
-
-    const found = pickExistingDir(candidateDirs);
-    if (found) {
-      return express.static(found)(req, res, next);
-    }
-
-    return res.status(404).send("Página de obrigado não encontrada");
+    return express.static(path.join(rootDir, "src", "thanks"))(req, res, next);
   };
 }
 
 export function makeOverlayHandler(rootDir) {
   return function overlay(req, res) {
-    const customOverlay = path.join(rootDir, "users", req.params.user, "overlay", "index.html");
-
-    if (fs.existsSync(customOverlay)) {
-      return res.sendFile(customOverlay);
-    }
-
-    return res.sendFile(path.join(rootDir, "public", "overlay.html"));
+    return res.sendFile(path.join(rootDir, "src", "overlay", "index.html"));
   };
 }
 
 export function makeRootOverlayHandler(rootDir) {
   return function rootOverlay(req, res) {
-    return res.sendFile(path.join(rootDir, "public", "overlay.html"));
+    return res.sendFile(path.join(rootDir, "src", "overlay", "index.html"));
   };
 }

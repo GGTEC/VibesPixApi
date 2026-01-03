@@ -2,35 +2,15 @@ import path from "path";
 import fs from "fs";
 import express from "express";
 
-function ensureStaticIfExists(dirPath, req, res, next) {
-  if (fs.existsSync(dirPath)) {
-    return express.static(dirPath)(req, res, next);
-  }
-  return next();
-}
-
 export function makeOverlayStatic(rootDir) {
   return function overlayStatic(req, res, next) {
-    const overlayDir = path.join(rootDir, "users", req.params.user, "overlay");
-    return ensureStaticIfExists(overlayDir, req, res, next);
+    return express.static(path.join(rootDir, "src", "overlay"))(req, res, next);
   };
 }
 
 export function makeOverlayFallback(rootDir) {
   return function overlayFallback(req, res, next) {
-    const pathLower = req.path.toLowerCase();
-    if (
-      pathLower.startsWith("/api/") ||
-      pathLower.startsWith("/events") ||
-      pathLower.startsWith("/painel") ||
-      pathLower.startsWith("/productpanel") ||
-      pathLower.startsWith("/loja")
-    ) {
-      return next();
-    }
-
-    const overlayDir = path.join(rootDir, "users", req.params.user, "overlay");
-    return ensureStaticIfExists(overlayDir, req, res, next);
+    return express.static(path.join(rootDir, "src", "overlay"))(req, res, next);
   };
 }
 
@@ -46,7 +26,6 @@ export function makeUserAssetsStatic(rootDir, subdir) {
 
 export function makePainelStatic(rootDir) {
   return function painelStatic(req, res, next) {
-    const painelDir = path.join(rootDir, "users", req.params.user, "painel");
-    return ensureStaticIfExists(painelDir, req, res, next);
+    return express.static(path.join(rootDir, "src", "painel"))(req, res, next);
   };
 }
