@@ -405,8 +405,9 @@
 document.documentElement.style.setProperty('--font-main', 'Kanit, sans-serif');
 
 let apiKey = '';
-// Derive API base from current user path (supports /:user/config).
-const baseApi = window.location.pathname.replace(/\/config.*/, '') + '/api';
+// Derive API base from first path segment (/:user/config => /:user/api).
+const pathParts = window.location.pathname.split('/').filter(Boolean);
+const baseApi = `/${pathParts[0] || ''}/api`;
 
 async function carregar() {
   const res = await fetch(`${baseApi}/config`, {
