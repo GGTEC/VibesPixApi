@@ -346,6 +346,7 @@
 
 
 <body>
+  <div id="toast-container" class="toast-container"></div>
   <div id="login-container" class="login-layer">
     <div class="glass-card login-box">
       <h2 class="title">Config do Usuário</h2>
@@ -416,6 +417,20 @@ let apiKey = '';
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
 
+function showToast(message, isError = false) {
+  const container = document.getElementById('toast-container');
+  if (!container) return alert(message); // fallback
+  const el = document.createElement('div');
+  el.className = `toast${isError ? ' error' : ''}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-10px)';
+    setTimeout(() => el.remove(), 400);
+  }, 3200);
+}
+
 function addSoundOption(name, selectIt = false) {
   if (!name) return;
   const select = document.getElementById("sound");
@@ -451,10 +466,10 @@ async function uploadSound(file) {
     const filename = data?.filename || file.name;
     addSoundOption(filename, true);
     statusEl.textContent = filename;
-    alert('Áudio enviado!');
+    showToast('Áudio enviado!');
   } catch (err) {
     statusEl.textContent = 'Selecione um arquivo';
-    alert(err.message || 'Erro ao enviar áudio');
+    showToast(err.message || 'Erro ao enviar áudio', true);
   } finally {
     const input = document.getElementById('sound-upload');
     if (input) input.value = '';
@@ -519,7 +534,7 @@ document.getElementById('sound-upload').addEventListener('change', async (e) => 
   const file = e.target.files?.[0];
   if (!file) return;
   if (!apiKey) {
-    alert('Faça login para enviar áudio');
+    showToast('Faça login para enviar áudio', true);
     e.target.value = '';
     return;
   }
