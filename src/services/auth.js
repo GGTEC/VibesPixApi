@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getNamedDb } from "./mongo.js";
 
 const SESSION_TTL_MS = 60 * 60 * 1000; // 1h
-const sessions = new Map(); // token -> { user, expiresAt }
+const SESSION_SECRET = process.env.SESSION_SECRET || "vibes-session-secret";
 
 function parseCookies(cookieHeader = "") {
   return cookieHeader.split(";").reduce((acc, part) => {
@@ -12,47 +12,60 @@ function parseCookies(cookieHeader = "") {
   }, {});
 }
 
+function signToken(user) {
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const payload = `${user}.${expiresAt}`;
+  const sig = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
+  return `${payload}.${sig}`;
+}
+
+function parseSignedToken(token) {
+  const parts = token?.split(".") || [];
+  if (parts.length < 3) return null;
+  const sig = parts.pop();
+  const expires = Number(parts.pop());
+  const user = parts.join(".");
+  if (!user || !expires) return null;
+  const payload = `${user}.${expires}`;
+  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
+  if (expected !== sig) return null;
+  if (expires < Date.now()) return null;
+  return { user, expiresAt: expires };
+}
+
 function getSessionFromRequest(req) {
   const cookies = parseCookies(req.headers?.cookie || "");
   const token = cookies.sid;
   if (!token) return null;
-  const session = sessions.get(token);
+  const session = parseSignedToken(token);
   if (!session) return null;
-  if (session.expiresAt < Date.now()) {
-    sessions.delete(token);
-    return null;
-  }
   return { token, ...session };
 }
 
-function createSession(user) {
-  const token = crypto.randomUUID();
-  sessions.set(token, { user, expiresAt: Date.now() + SESSION_TTL_MS });
-  return token;
-}
-
-function destroySession(token) {
-  if (!token) return;
-  sessions.delete(token);
-}
-
 function setSessionCookie(res, token) {
-  res.setHeader(
-    "Set-Cookie",
-    `sid=${token}; Max-Age=${SESSION_TTL_MS / 1000}; HttpOnly; SameSite=Lax; Path=/`
-  );
+  const attrs = [
+    `sid=${token}`,
+    `Max-Age=${SESSION_TTL_MS / 1000}`,
+    "HttpOnly",
+    "SameSite=None",
+    "Path=/",
+    "Secure",
+    "Domain=.vibesbot.com.br"
+  ];
+  res.setHeader("Set-Cookie", attrs.join("; "));
 }
 
 function clearSessionCookie(res) {
   res.setHeader(
     "Set-Cookie",
-    "sid=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/"
+    "sid=; Max-Age=0; HttpOnly; SameSite=None; Path=/; Secure; Domain=.vibesbot.com.br"
   );
 }
 
 export function sessionMiddleware(req, _res, next) {
   const session = getSessionFromRequest(req);
-  if (session && req.params?.user && session.user === req.params.user) {
+  const urlUser = req.params?.user;
+  if (session && urlUser && session.user?.toLowerCase() === urlUser.toLowerCase()) {
     req.authUser = session.user;
     req.sessionToken = session.token;
   }
@@ -83,7 +96,7 @@ export function makeLoginHandler() {
       const userName = userDoc.nome_usuario || identifier;
       const panelUser = req.params?.user || userName;
 
-      const token = createSession(panelUser);
+      const token = signToken(panelUser);
       setSessionCookie(res, token);
       return res.json({ success: true, user: userName, panel: panelUser, expiresAt: Date.now() + SESSION_TTL_MS });
     } catch (err) {
@@ -95,8 +108,6 @@ export function makeLoginHandler() {
 export function makeLogoutHandler() {
   return async function logout(req, res) {
     const cookies = parseCookies(req.headers?.cookie || "");
-    const token = cookies.sid;
-    if (token) destroySession(token);
     clearSessionCookie(res);
     return res.json({ success: true });
   };
