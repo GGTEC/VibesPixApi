@@ -135,6 +135,33 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(135deg, rgba(124, 77, 255, 0.22), rgba(0, 224, 255, 0.18));
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, border 0.15s ease;
+    }
+
+    .tab-btn.active {
+      border-color: rgba(0, 224, 255, 0.6);
+      box-shadow: 0 10px 28px rgba(0, 224, 255, 0.18);
+    }
+
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
     @media (max-width: 640px) {
       .glass-card { padding: 20px; width: 100%; }
       .form-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -364,7 +391,14 @@
         <h3 style="margin:0;">Configurações</h3>
         <button id="logout-btn" class="btn-primary" style="width:auto;padding:10px 14px;">Sair</button>
       </div>
-      <div class="section">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab-btn="rcon">RCON</button>
+        <button class="tab-btn" data-tab-btn="checkout">Checkout</button>
+        <button class="tab-btn" data-tab-btn="audio">Áudio</button>
+        <button class="tab-btn" data-tab-btn="overlay">Overlay</button>
+      </div>
+
+      <div class="section tab-section active" data-tab="rcon">
         <h3>Configuração RCON <span class="pill">Minecraft</span></h3>
         <div class="form-grid">
           <input id="host" placeholder="IP do servidor" class="input" autocomplete="off">
@@ -373,7 +407,7 @@
         </div>
       </div>
 
-      <div class="section">
+      <div class="section tab-section" data-tab="checkout">
         <h3>Checkout InfinityPay <span class="pill">handle</span></h3>
         <div class="form-grid">
           <input id="infinitypay-handle" placeholder="Nome/handle do checkout" class="input" autocomplete="off">
@@ -381,7 +415,7 @@
         <p class="help-text">Use este nome para montar o link de checkout no InfinityPay.</p>
       </div>
 
-      <div class="section">
+      <div class="section tab-section" data-tab="audio">
         <h3>Áudio de alerta <span class="pill">sound</span></h3>
         <div class="select-wrapper" >
           <select id="sound" class="input" style="background: rgba(255,255,255,0.08);">
@@ -398,7 +432,7 @@
         <p class="help-text">Envie um áudio (até 8MB). Ele fica disponível em /:user/sounds/ e aparece na lista acima.</p>
       </div>
 
-      <div class="section">
+      <div class="section tab-section" data-tab="overlay">
         <h3>Overlay <span class="pill">mensagem padrão</span></h3>
         <input id="overlay-message" placeholder="Ex: NOVA COMPRA" class="input" autocomplete="off">
         <p class="help-text">Texto exibido no topo do alerta. O texto do comprador continua aparecendo abaixo.</p>
@@ -415,6 +449,7 @@
 document.documentElement.style.setProperty('--font-main', 'Kanit, sans-serif');
 
 let loggedIn = false;
+let currentTab = 'rcon';
 // Derive API base from first path segment (/:user/config => /:user/api).
 const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
@@ -447,6 +482,14 @@ function addSoundOption(name, selectIt = false) {
   if (selectIt) {
     select.value = name;
   }
+}
+
+function showTab(tab) {
+  currentTab = tab;
+  const sections = document.querySelectorAll('.tab-section');
+  const buttons = document.querySelectorAll('[data-tab-btn]');
+  sections.forEach((sec) => sec.classList.toggle('active', sec.dataset.tab === tab));
+  buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tabBtn === tab));
 }
 
 async function loadSoundList() {
@@ -564,6 +607,7 @@ document.getElementById('login-btn').onclick = async function() {
     await carregar();
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('config-panel').classList.remove('hidden');
+    showTab(currentTab);
   } catch (err) {
     document.getElementById('login-erro').textContent = err.message || 'Credenciais inválidas';
     document.getElementById('login-erro').classList.remove('hidden');
@@ -585,12 +629,17 @@ async function trySessionLogin() {
     loggedIn = true;
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('config-panel').classList.remove('hidden');
+    showTab(currentTab);
   } catch (_) {
     // sessão inválida ou ausente: mantém tela de login
   }
 }
 
 window.addEventListener('load', trySessionLogin);
+
+document.querySelectorAll('[data-tab-btn]').forEach((btn) => {
+  btn.addEventListener('click', () => showTab(btn.dataset.tabBtn));
+});
 
 document.getElementById('sound-upload').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
