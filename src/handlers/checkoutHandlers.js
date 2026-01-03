@@ -56,8 +56,10 @@ export function makeCreateCheckoutHandler(rootDir) {
 
     const entry = {
       order_nsu: orderNsu,
+      order_id: body.order_id || null,
       username: body.customer_name || "Cliente",
-      tts_message: body.tts_text || ""
+      tts_message: body.tts_text || "",
+      items: normalizedItems
     };
     await upsertBuyer(rootDir, user, entry);
 

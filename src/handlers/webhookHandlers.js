@@ -16,7 +16,9 @@ function sanitizeItems(payload) {
 }
 
 async function dispatchCommands(rconClient, config, items, player) {
+
   for (const item of items) {
+
     const rawDescription = item.description;
     if (!rawDescription) continue;
 
@@ -25,14 +27,19 @@ async function dispatchCommands(rconClient, config, items, player) {
       .map(p => p.trim())
       .filter(Boolean)[0];
 
-    const qtd = Number(item.quantity) > 0 ? Number(item.quantity) : 1;
+    const produtoConfig = config.produtos?.[produto];
 
-    if (!config.produtos?.[produto]) {
+    if (!produtoConfig) {
       console.warn(`Produto inválido: ${produto}`);
       continue;
     }
 
-    const comandosConfig = config.produtos[produto].comandos ?? config.produtos[produto].comando;
+    const purchaseQty = Number(item.quantity) > 0 ? Number(item.quantity) : 1;
+    const commandsPerUnitRaw = produtoConfig.quantity ?? 1;
+    const commandsPerUnit = Number(commandsPerUnitRaw) > 0 ? Number(commandsPerUnitRaw) : 1;
+    const totalExecutions = purchaseQty * commandsPerUnit;
+
+    const comandosConfig = produtoConfig.comandos ?? produtoConfig.comando;
 
     const comandos = Array.isArray(comandosConfig)
       ? comandosConfig
@@ -45,17 +52,15 @@ async function dispatchCommands(rconClient, config, items, player) {
       continue;
     }
 
-    for (let i = 0; i < qtd; i++) {
+    for (let i = 0; i < totalExecutions; i++) {
+      
       for (const cmd of comandos) {
-        const finalCmd = cmd
-          .replace("{player}", player)
-          .replace("%player%", player)
-          .replace("{username}", player)
-          .replace("%username%", player);
+
+        const finalCmd = cmd.replace("{player}", player)
 
         try {
           const resp = await rconClient.send(finalCmd);
-          console.info(`RCON sent: produto=${produto} qty=${qtd} cmd=${finalCmd} resp=${resp ?? "(no resp)"}`);
+          console.info(`RCON sent: produto=${produto} qty=${totalExecutions} cmd=${finalCmd} resp=${resp ?? "(no resp)"}`);
         } catch (err) {
           console.error(`RCON send failed: produto=${produto} cmd=${finalCmd}`, err);
           throw err;
@@ -101,44 +106,54 @@ export function makeWebhookHandler(rootDir) {
 
     const config = configForUser;
 
-    const items = sanitizeItems(payload);
+    const itemsFromPayload = sanitizeItems(payload);
+    const itemsFromSaved = Array.isArray(savedBuyer?.items) ? sanitizeItems({ items: savedBuyer.items }) : [];
+    const items = itemsFromPayload.length ? itemsFromPayload : itemsFromSaved;
     console.info("Webhook items", items);
 
     if (!items.length) {
       return res.status(400).json({ error: "Nenhum item/descrição válido no payload" });
     }
 
-    const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
+    const backgroundWork = (async () => {
+      const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
 
-    await dispatchCommands(rcon, config, items, player);
+      try {
+        await dispatchCommands(rcon, config, items, player);
+      } finally {
+        rcon.end();
+      }
 
-    rcon.end();
+      const mensagemTTS = ttsTexto;
+      const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
 
-    const mensagemTTS = ttsTexto;
-    const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
+      const soundFile = config.sound || null;
+      const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
 
-    const soundFile = config.sound || null;
-    const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
+      const overlayMessage = config?.overlayMessage || "Nova compra";
 
-    const overlayMessage = config?.overlayMessage || "Nova compra";
+      const buyerMessage = mensagemTTS || "";
 
-    const buyerMessage = mensagemTTS || "";
+      broadcastEvent(user, "purchase", {
+        player,
+        audioUrl,
+        soundUrl,
+        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+        overlayMessage,
+        buyerMessage,
+        ttsMessage: buyerMessage
+      });
 
-    broadcastEvent(user, "purchase", {
-      player,
-      audioUrl,
-      soundUrl,
-      items: items.map(it => ({ description: it.description, quantity: it.quantity })),
-      overlayMessage,
-      buyerMessage,
-      ttsMessage: buyerMessage
+      if (orderNsu) {
+        await removeBuyer(rootDir, user, orderNsu);
+      }
+    })().catch(err => {
+      console.error("Webhook background processing failed", err);
+      logEvent(rootDir, { level: "error", user: user || null, message: `webhook_background_failed ${err.message}` });
     });
 
-    res.json({ status: "OK", audioUrl, soundUrl });
+    res.json({ status: "OK", dispatchedAsync: true });
 
-    if (orderNsu) {
-      await removeBuyer(rootDir, user, orderNsu);
-    }
-
+    void backgroundWork;
   }
 }
