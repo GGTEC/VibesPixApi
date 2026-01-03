@@ -114,17 +114,39 @@
       align-content: start;
       align-items: start;
     }
-    .check-col { display: flex; align-items: center; }
-    .check-col input[type="checkbox"] {
-      width: 22px;
-      height: 22px;
-      accent-color: #7c4dff;
-      cursor: pointer;
-      border-radius: 6px;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
+    .check-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .check-col input[type="checkbox"]:focus { outline: 2px solid rgba(124,77,255,0.35); }
+    .check-col input[type="checkbox"] {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+      transition: border 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .check-col input[type="checkbox"]:focus { outline: 2px solid rgba(124,77,255,0.35); outline-offset: 2px; }
+    .check-col input[type="checkbox"]:checked {
+      border-color: rgba(0,224,255,0.6);
+      background: linear-gradient(135deg, #7c4dff, #00e0ff);
+      box-shadow: 0 10px 22px rgba(124,77,255,0.35);
+    }
+    .check-col input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -54%);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+    }
     .qty {
       display: inline-flex;
       align-items: center;
@@ -208,7 +230,7 @@
         grid-template-areas:
           "img title"
           "img meta"
-          "controls controls";
+          "check qty";
         align-items: start;
         max-height: none;
       }
@@ -217,8 +239,8 @@
       .product h3 { font-size: 16px; margin-bottom: 2px; }
       .product p { font-size: 13px; grid-area: meta; }
       .price { font-size: 16px; }
-      .check-col { grid-area: controls; justify-content: flex-start; }
-      .qty { grid-area: controls; width: 100%; justify-content: space-between; margin-top: 8px; }
+      .check-col { grid-area: check; justify-content: flex-start; align-self: center; }
+      .qty { grid-area: qty; width: 100%; justify-content: space-between; margin-top: 4px; }
       .qty button { width: 32px; height: 32px; }
       .btn { width: 100%; font-size: 16px; }
       .footer-actions { padding: 12px; }
