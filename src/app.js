@@ -9,6 +9,7 @@ import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
 import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler, makeListSoundsHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
+import { makeTestTtsHandler } from "./handlers/ttsHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
 import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
@@ -105,6 +106,7 @@ export function createApp(rootDir) {
   userRouter.post("/api/webhook", makeWebhookHandler(rootDir));
   userRouter.get("/api/config", makeGetConfigHandler(rootDir));
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
+  userRouter.post("/api/tts-test", makeTestTtsHandler(rootDir));
   userRouter.post("/api/init-db", makeInitDbHandler(rootDir));
   userRouter.post(
     "/api/upload-image",

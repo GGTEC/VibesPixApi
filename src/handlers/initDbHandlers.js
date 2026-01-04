@@ -17,7 +17,8 @@ export function makeInitDbHandler(rootDir) {
       infinitypayHandle: user,
       webhookSecret: "secret",
       overlayMessage : "Nova compra",
-      sound: "default.mp3"
+      sound: "default.mp3",
+      ttsVoice: "pt-BR-AntonioNeural"
     };
 
     try {
@@ -58,7 +59,8 @@ export function makeInitDbHandler(rootDir) {
         infinitypayHandle: config.infinitypayHandle || "",
         webhookSecret: config.webhookSecret || "",
         overlayMessage: config.overlayMessage || "Nova compra",
-        sound: config.sound || null
+        sound: config.sound || null,
+        ttsVoice: config.ttsVoice || ""
       });
 
       logEvent(rootDir, { level: "info", user, message: "init_db_completed" });

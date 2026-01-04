@@ -85,6 +85,16 @@
           <h3>Overlay <span class="pill">mensagem padrão</span></h3>
           <input id="overlay-message" placeholder="Ex: NOVA COMPRA" class="input" autocomplete="off">
           <p class="help-text">Texto exibido no topo do alerta. O texto do comprador continua aparecendo abaixo.</p>
+          <div class="section" style="margin-top:14px;">
+            <h3>Voz do TTS <span class="pill">edge-tts</span></h3>
+            <div class="select-wrapper">
+              <select id="tts-voice" class="input" style="background: rgba(255,255,255,0.08);">
+                <option value="" disabled>Selecione a voz</option>
+              </select>
+            </div>
+            <p class="help-text">Voz usada na síntese do TTS do alerta.</p>
+            <button id="tts-test" class="btn-secondary" style="margin-top:10px;">Testar voz</button>
+          </div>
         </div>
       </div>
 

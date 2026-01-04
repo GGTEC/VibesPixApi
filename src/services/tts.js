@@ -6,10 +6,12 @@ import { synthesize, synthesizeStream } from "@echristian/edge-tts";
 export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioNeural") {
   if (!text) return null;
 
+  const finalVoice = voice || "pt-BR-AntonioNeural";
+
   const safeText = text.slice(0, 240);
   const hash = crypto
     .createHash("sha1")
-    .update(`${voice}:${safeText}`)
+    .update(`${finalVoice}:${safeText}`)
     .digest("hex")
     .slice(0, 16);
 
@@ -31,8 +33,8 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
       const chunks = [];
       for await (const chunk of synthesizeStream({
         text: safeText,
-        voice,
-        language: voice.split("-").slice(0, 2).join("-") || "pt-BR",
+        voice: finalVoice,
+        language: finalVoice.split("-").slice(0, 2).join("-") || "pt-BR",
         outputFormat: "audio-24khz-48kbitrate-mono-mp3"
       })) {
         if (chunk?.length) chunks.push(Buffer.from(chunk));
@@ -47,8 +49,8 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
     if (!audioBuffer) {
       const res = await synthesize({
         text: safeText,
-        voice,
-        language: voice.split("-").slice(0, 2).join("-") || "pt-BR",
+        voice: finalVoice,
+        language: finalVoice.split("-").slice(0, 2).join("-") || "pt-BR",
         outputFormat: "audio-24khz-48kbitrate-mono-mp3"
       });
       const audio = res?.audio;

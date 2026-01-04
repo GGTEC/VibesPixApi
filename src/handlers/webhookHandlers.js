@@ -86,6 +86,15 @@ export function makeWebhookHandler(rootDir) {
     const username = savedBuyer?.username;
     const ttsTexto = savedBuyer?.tts_message;
 
+    const rawItems = Array.isArray(savedBuyer?.items) ? savedBuyer.items : payload?.items;
+    const totalValue = Array.isArray(rawItems)
+      ? rawItems.reduce((acc, it) => {
+          const qty = Number(it?.quantity ?? 1) || 1;
+          const price = Number(it?.price ?? it?.amount ?? 0) || 0;
+          return acc + qty * price;
+        }, 0)
+      : 0;
+
     if (!payload || !username) {
       const reasons = [];
       if (!payload) reasons.push("payload ausente ou inválido");
@@ -117,10 +126,21 @@ export function makeWebhookHandler(rootDir) {
         rcon.end();
       }
 
-      const audioUrl = await synthesizeTTS(rootDir, user, ttsTexto);
+      const overlayTemplate = config?.overlayMessage || "Nova compra";
+      const valorText = Number.isFinite(totalValue) ? totalValue.toFixed(2) : "0";
+
+      const overlayFilled = overlayTemplate
+        .replace(/\{username\}/gi, username || "")
+        .replace(/\{valor\}/gi, valorText);
+
+      const ttsCombined = [overlayFilled, ttsTexto].filter(Boolean).join(", ");
+
+      const voice = config?.ttsVoice || undefined;
+
+      const audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
       const soundFile = config.sound || null;
       const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
-      const overlayMessage = config?.overlayMessage || "Nova compra";
+      const overlayMessage = overlayFilled || "Nova compra";
       const buyerMessage = ttsTexto || "";
 
       broadcastEvent(user, "purchase", {

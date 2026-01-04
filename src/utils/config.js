@@ -1,6 +1,46 @@
 import crypto from "crypto";
 import { getDbForUser } from "../services/mongo.js";
 
+export const CHECKOUT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+function safeDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function pruneExpiredCheckouts(db, buyers, now = new Date()) {
+  const source = Array.isArray(buyers)
+    ? buyers
+    : await db.collection("current_buyers").find().toArray();
+
+  const cutoff = new Date(now.getTime() - CHECKOUT_TTL_MS);
+  const expiredOrderNsus = [];
+  const freshBuyers = [];
+
+  for (const buyer of source) {
+
+    const createdAt = safeDate(buyer?.created_at);
+    const expiresAt = safeDate(buyer?.expires_at);
+    const isExpired = (expiresAt && expiresAt <= now) || (createdAt && createdAt <= cutoff);
+
+    if (isExpired) {
+      if (buyer?.order_nsu) expiredOrderNsus.push(buyer.order_nsu);
+      continue;
+    }
+
+    freshBuyers.push(buyer);
+    
+  }
+
+  if (expiredOrderNsus.length) {
+    await db.collection("current_buyers").deleteMany({ order_nsu: { $in: expiredOrderNsus } });
+  }
+
+  return freshBuyers;
+}
+
 function produtosArrayToObject(produtosDocs) {
   const out = {};
   for (const doc of produtosDocs) {
@@ -21,6 +61,8 @@ export async function readConfig(rootDir, user) {
 
   if (!configDoc) return null;
 
+  const buyersPruned = await pruneExpiredCheckouts(db, buyers);
+
   const { _id: _ignore, ...configClean } = configDoc;
 
   return {
@@ -31,7 +73,7 @@ export async function readConfig(rootDir, user) {
       password: rconDoc?.password || ""
     },
     produtos: produtosArrayToObject(produtosDocs),
-    current_buyers: buyers
+    current_buyers: buyersPruned
   };
 }
 
@@ -51,7 +93,8 @@ export async function writeConfig(rootDir, user, updater) {
           infinitypayHandle: next.infinitypayHandle || "",
           webhookSecret: next.webhookSecret || "",
           overlayMessage: next.overlayMessage || "",
-          sound: next.sound || null
+          sound: next.sound || null,
+          ttsVoice: next.ttsVoice || ""
         }
       },
       { upsert: true }
@@ -93,9 +136,21 @@ export function generateOrderNsu(len = 8) {
 
 export async function upsertBuyer(rootDir, user, buyer) {
   const db = await getDbForUser(user);
+
+  const now = new Date();
+  const createdAt = safeDate(buyer?.created_at) || now;
+  const expiresAt = safeDate(buyer?.expires_at) || new Date(createdAt.getTime() + CHECKOUT_TTL_MS);
+  const enrichedBuyer = {
+    ...buyer,
+    created_at: createdAt,
+    expires_at: expiresAt
+  };
+
   await db
     .collection("current_buyers")
-    .updateOne({ order_nsu: buyer.order_nsu }, { $set: buyer }, { upsert: true });
+    .updateOne({ order_nsu: enrichedBuyer.order_nsu }, { $set: enrichedBuyer }, { upsert: true });
+
+  await pruneExpiredCheckouts(db);
 }
 
 export async function removeBuyer(rootDir, user, orderNsu) {

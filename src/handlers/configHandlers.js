@@ -44,8 +44,9 @@ export function makeUpdateConfigHandler(rootDir) {
     const hasSound = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "sound");
     const hasInfinity = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "infinitypayHandle");
     const hasOverlay = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayMessage");
+    const hasTtsVoice = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "ttsVoice");
 
-    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay) {
+    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
@@ -74,6 +75,10 @@ export function makeUpdateConfigHandler(rootDir) {
 
       if (hasOverlay) {
         next.overlayMessage = (newConfig.overlayMessage || "").toString();
+      }
+
+      if (hasTtsVoice) {
+        next.ttsVoice = (newConfig.ttsVoice || "").toString();
       }
 
       return next;

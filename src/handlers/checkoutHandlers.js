@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { generateOrderNsu, readConfig, upsertBuyer } from "../utils/config.js";
+import { CHECKOUT_TTL_MS, generateOrderNsu, readConfig, upsertBuyer } from "../utils/config.js";
 import { logEvent } from "../services/logger.js";
 
 export function makeCreateCheckoutHandler(rootDir) {
@@ -54,12 +54,16 @@ export function makeCreateCheckoutHandler(rootDir) {
       body: JSON.stringify(payload)
     });
 
+    const now = new Date();
+
     const entry = {
       order_nsu: orderNsu,
       order_id: body.order_id || null,
       username: body.customer_name || "Cliente",
       tts_message: body.tts_text || "",
-      items: normalizedItems
+      items: normalizedItems,
+      created_at: now,
+      expires_at: new Date(now.getTime() + CHECKOUT_TTL_MS)
     };
     await upsertBuyer(rootDir, user, entry);
 
