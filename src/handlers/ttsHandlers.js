@@ -15,6 +15,12 @@ export function makeTestTtsHandler(rootDir) {
     const rawText = (body.text || "").toString();
     const text = rawText.trim() || "Teste de voz do overlay";
     const fallbackVoice = "pt-BR-AntonioNeural";
+    const TIMEOUT_MS = 10000;
+
+    const runWithTimeout = (work, label) => Promise.race([
+      work,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timeout`)), TIMEOUT_MS))
+    ]);
 
     try {
       const config = await readConfig(rootDir, user);
@@ -24,12 +30,12 @@ export function makeTestTtsHandler(rootDir) {
 
       const voice = requestedVoice || config.ttsVoice || undefined;
 
-      let url = await synthesizeTTS(rootDir, user, text, voice);
+      let url = await runWithTimeout(synthesizeTTS(rootDir, user, text, voice), "tts");
       let usedVoice = voice || fallbackVoice;
       let fallbackUsed = false;
 
       if (!url) {
-        url = await synthesizeTTS(rootDir, user, text, fallbackVoice);
+        url = await runWithTimeout(synthesizeTTS(rootDir, user, text, fallbackVoice), "tts-fallback");
         usedVoice = fallbackVoice;
         fallbackUsed = true;
       }
@@ -40,7 +46,9 @@ export function makeTestTtsHandler(rootDir) {
 
       return res.json({ url, voice: usedVoice, fallbackUsed });
     } catch (err) {
-      return res.status(500).json({ error: err?.message || "Erro ao testar TTS" });
+      const isTimeout = /timeout/i.test(err?.message || "");
+      const status = isTimeout ? 504 : 500;
+      return res.status(status).json({ error: err?.message || "Erro ao testar TTS" });
     }
   };
 }
