@@ -351,7 +351,7 @@
         const info = document.createElement('div');
         info.className = 'info';
         const title = document.createElement('h3');
-        const qtd = p.quantidade || p.qty || 1;
+        const qtd = p.quantity;
         title.innerHTML = `${p.title}  • Qtd: ${qtd}`;
         const meta = document.createElement('p');
         meta.innerHTML = `<span class="price">${formatPrice(p.valor)}</span>`;
