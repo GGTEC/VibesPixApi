@@ -349,11 +349,13 @@
         img.alt = id;
 
         const info = document.createElement('div');
-        info.className = 'info';
         const title = document.createElement('h3');
-        const qtd = p.quantity;
-        title.innerHTML = `${p.title}  • Qtd: ${qtd}`;
+        const qtd = document.createElement('span');
         const meta = document.createElement('p');
+        
+        info.className = 'info';
+        title.innerHTML = `${p.title}`;
+        qtd.innerHTML = `• Qtd: ${p.quantity}`;
         meta.innerHTML = `<span class="price">${formatPrice(p.valor)}</span>`;
         info.appendChild(title);
         info.appendChild(meta);
