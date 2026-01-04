@@ -358,6 +358,7 @@
         qtd.innerHTML = `• Qtd: ${p.quantity}`;
         meta.innerHTML = `<span class="price">${formatPrice(p.valor)}</span>`;
         info.appendChild(title);
+        info.appendChild(qtd);
         info.appendChild(meta);
 
         const checkCol = document.createElement('div');
