@@ -41,7 +41,7 @@ async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
         : [];
 
     if (!comandos.length) {
-      console.warn(`Produto sem comandos configurados: ${produto}`);
+      console.warn(`Produto sem comandos configurados: ${rawDescription}`);
       continue;
     }
 
@@ -53,9 +53,9 @@ async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
 
         try {
           const resp = await rconClient.send(finalCmd);
-          console.info(`RCON sent: produto=${produto} qty=${totalExecutions} cmd=${finalCmd} resp=${resp ?? "(no resp)"}`);
+          console.info(`RCON sent: produto=${rawDescription} qty=${totalExecutions} cmd=${finalCmd} resp=${resp ?? "(no resp)"}`);
         } catch (err) {
-          console.error(`RCON send failed: produto=${produto} cmd=${finalCmd}`, err);
+          console.error(`RCON send failed: produto=${rawDescription} cmd=${finalCmd}`, err);
           throw err;
         }
       }
