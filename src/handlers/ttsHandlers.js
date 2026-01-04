@@ -15,7 +15,7 @@ export function makeTestTtsHandler(rootDir) {
     const rawText = (body.text || "").toString();
     const text = rawText.trim() || "Teste de voz do overlay";
     const fallbackVoice = "pt-BR-AntonioNeural";
-    const TIMEOUT_MS = 10000;
+    const TIMEOUT_MS = 5000;
 
     const runWithTimeout = (work, label) => Promise.race([
       work,
