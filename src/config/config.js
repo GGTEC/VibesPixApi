@@ -232,10 +232,11 @@ async function testarVoz() {
       throw new Error(data?.error || raw || 'Falha ao testar TTS');
     }
     const url = data?.url;
+    const fallbackUsed = Boolean(data?.fallbackUsed);
     if (url) {
       const audio = new Audio(url);
       audio.play().catch(() => {});
-      showToast('Reproduzindo voz...');
+      showToast(fallbackUsed ? 'Voz não suportada, usando padrão.' : 'Reproduzindo voz...');
     }
   } catch (err) {
     showToast(err.message || 'Erro ao testar voz', true);

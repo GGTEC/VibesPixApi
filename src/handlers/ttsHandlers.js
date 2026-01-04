@@ -14,6 +14,7 @@ export function makeTestTtsHandler(rootDir) {
     const requestedVoice = (body.voice || "").toString().trim();
     const rawText = (body.text || "").toString();
     const text = rawText.trim() || "Teste de voz do overlay";
+    const fallbackVoice = "pt-BR-AntonioNeural";
 
     try {
       const config = await readConfig(rootDir, user);
@@ -22,13 +23,22 @@ export function makeTestTtsHandler(rootDir) {
       }
 
       const voice = requestedVoice || config.ttsVoice || undefined;
-      const url = await synthesizeTTS(rootDir, user, text, voice);
+
+      let url = await synthesizeTTS(rootDir, user, text, voice);
+      let usedVoice = voice || fallbackVoice;
+      let fallbackUsed = false;
+
+      if (!url) {
+        url = await synthesizeTTS(rootDir, user, text, fallbackVoice);
+        usedVoice = fallbackVoice;
+        fallbackUsed = true;
+      }
 
       if (!url) {
         return res.status(500).json({ error: "Falha ao sintetizar TTS" });
       }
 
-      return res.json({ url, voice: voice || "pt-BR-AntonioNeural" });
+      return res.json({ url, voice: usedVoice, fallbackUsed });
     } catch (err) {
       return res.status(500).json({ error: err?.message || "Erro ao testar TTS" });
     }
