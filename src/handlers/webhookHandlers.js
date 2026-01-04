@@ -15,7 +15,7 @@ function sanitizeItems(payload) {
   return validItems.map(it => ({ description: it.description, quantity: Number(it.quantity) || 1 }));
 }
 
-async function dispatchCommands(rconClient, config, items, player) {
+async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
 
   for (const item of items) {
 
@@ -49,7 +49,7 @@ async function dispatchCommands(rconClient, config, items, player) {
       
       for (const cmd of comandos) {
 
-        const finalCmd = cmd.replace("{player}", player)
+        const finalCmd = cmd.replace("{username}", nameAboveMobHead).replace("{nickname}", nameAboveMobHead);
 
         try {
           const resp = await rconClient.send(finalCmd);
@@ -83,13 +83,13 @@ export function makeWebhookHandler(rootDir) {
     const orderNsu = payload?.order_nsu;
     const configForUser = await readConfig(rootDir, user);
     const savedBuyer = configForUser?.current_buyers?.find?.(b => b.order_nsu === orderNsu);
-    const player = savedBuyer?.username;
+    const username = savedBuyer?.username;
     const ttsTexto = savedBuyer?.tts_message;
 
-    if (!payload || !player) {
+    if (!payload || !username) {
       const reasons = [];
       if (!payload) reasons.push("payload ausente ou inválido");
-      if (!player) reasons.push("nome do comprador ausente no registro");
+      if (!username) reasons.push("nome do comprador ausente no registro");
       return res.status(400).json({ error: "Payload inválido", reasons });
     }
 
@@ -102,7 +102,7 @@ export function makeWebhookHandler(rootDir) {
     const itemsFromPayload = sanitizeItems(payload);
     const itemsFromSaved = Array.isArray(savedBuyer?.items) ? sanitizeItems({ items: savedBuyer.items }) : [];
     const items = itemsFromPayload.length ? itemsFromPayload : itemsFromSaved;
-    console.info("Webhook items", items);
+
 
     if (!items.length) {
       return res.status(400).json({ error: "Nenhum item/descrição válido no payload" });
@@ -112,23 +112,19 @@ export function makeWebhookHandler(rootDir) {
       const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
 
       try {
-        await dispatchCommands(rcon, config, items, player);
+        await dispatchCommands(rcon, config, items, username);
       } finally {
         rcon.end();
       }
 
-      const mensagemTTS = ttsTexto;
-      const audioUrl = await synthesizeTTS(rootDir, user, mensagemTTS);
-
+      const audioUrl = await synthesizeTTS(rootDir, user, ttsTexto);
       const soundFile = config.sound || null;
       const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
-
       const overlayMessage = config?.overlayMessage || "Nova compra";
-
-      const buyerMessage = mensagemTTS || "";
+      const buyerMessage = ttsTexto || "";
 
       broadcastEvent(user, "purchase", {
-        player,
+        username,
         audioUrl,
         soundUrl,
         items: items.map(it => ({ description: it.description, quantity: it.quantity })),
@@ -141,7 +137,6 @@ export function makeWebhookHandler(rootDir) {
         await removeBuyer(rootDir, user, orderNsu);
       }
     })().catch(err => {
-      console.error("Webhook background processing failed", err);
       logEvent(rootDir, { level: "error", user: user || null, message: `webhook_background_failed ${err.message}` });
     });
 
