@@ -87,13 +87,15 @@ export function makeWebhookHandler(rootDir) {
     const ttsTexto = savedBuyer?.tts_message;
 
     const rawItems = Array.isArray(savedBuyer?.items) ? savedBuyer.items : payload?.items;
-    const totalValue = Array.isArray(rawItems)
+    const totalValueCents = Array.isArray(rawItems)
       ? rawItems.reduce((acc, it) => {
           const qty = Number(it?.quantity ?? 1) || 1;
           const price = Number(it?.price ?? it?.amount ?? 0) || 0;
           return acc + qty * price;
         }, 0)
       : 0;
+
+    const totalValueReais = Number.isFinite(totalValueCents) ? totalValueCents / 100 : 0;
 
     if (!payload || !username) {
       const reasons = [];
@@ -160,7 +162,7 @@ export function makeWebhookHandler(rootDir) {
       }
 
       const overlayTemplate = config?.overlayMessage || "Nova compra";
-      const valorText = Number.isFinite(totalValue) ? totalValue.toFixed(2) : "0";
+      const valorText = Number.isFinite(totalValueReais) ? totalValueReais.toFixed(2) : "0";
 
       const overlayFilled = overlayTemplate
         .replace(/\{username\}/gi, username || "")
