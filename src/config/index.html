@@ -86,10 +86,10 @@
               flex-direction: column;
           ">
           <h3>Overlay <span class="pill">mensagem padrão</span></h3>
+          <p class="help-text">Texto exibido no topo do alerta. use {username} para o nome do comprador e {valor} para o valor da compra.</p>
           <input id="overlay-message" placeholder="Ex: NOVA COMPRA" class="input" autocomplete="off">
-          <p class="help-text">Texto exibido no topo do alerta. O texto do comprador continua aparecendo abaixo.</p>
 
-          <h3 style="margin-top: 15px;">Voz do TTS <span class="pill">edge-tts</span></h3>
+          <h3 style="margin-top: 15px;">Voz do TTS</h3>
           <div class="select-wrapper">
             <select id="tts-voice" class="input" style="background: rgba(255,255,255,0.08);">
               <option value="" disabled>Selecione a voz</option>
@@ -97,7 +97,7 @@
           </div>
 
           <p class="help-text">Voz usada na síntese do TTS do alerta.</p>
-          <button id="tts-test" class="btn-primary" style="margin-top:10px;width: 30%;padding: 7px 10px;align-self: end;">Testar voz</button>
+          <button id="tts-test" class="btn-primary" style="margin-top:10px;width: 20%;padding: 7px 10px;align-self: end;">Testar voz</button>
 
         </div>
       </div>
