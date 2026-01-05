@@ -118,7 +118,40 @@ export function makeWebhookHandler(rootDir) {
     }
 
     const backgroundWork = (async () => {
-      const rcon = await Rcon.connect({ ...config.rcon, timeout: 5000 });
+      const rconConfig = config?.rcon || {};
+
+      if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
+        logEvent(rootDir, {
+          level: "error",
+          user: user || null,
+          message: `webhook_skip_rcon missing_rcon_config host=${rconConfig.host || ""} port=${rconConfig.port || ""} hasPassword=${Boolean(rconConfig.password)}`
+        });
+        return;
+      }
+
+      logEvent(rootDir, {
+        level: "info",
+        user: user || null,
+        message: `webhook_rcon_connect host=${rconConfig.host} port=${rconConfig.port}`
+      });
+
+      const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
+
+      rcon.on("end", () => {
+        logEvent(rootDir, {
+          level: "info",
+          user: user || null,
+          message: `webhook_rcon_closed host=${rconConfig.host} port=${rconConfig.port}`
+        });
+      });
+
+      rcon.on("error", (err) => {
+        logEvent(rootDir, {
+          level: "error",
+          user: user || null,
+          message: `webhook_rcon_error host=${rconConfig.host} port=${rconConfig.port} msg=${err?.message || "unknown"}`
+        });
+      });
 
       try {
         await dispatchCommands(rcon, config, items, username);
@@ -157,7 +190,18 @@ export function makeWebhookHandler(rootDir) {
         await removeBuyer(rootDir, user, orderNsu);
       }
     })().catch(err => {
-      logEvent(rootDir, { level: "error", user: user || null, message: `webhook_background_failed ${err.message}` });
+      const context = {
+        user,
+        orderNsu,
+        host: config?.rcon?.host,
+        port: config?.rcon?.port,
+        items: items.map(it => ({ d: it.description, q: it.quantity })).slice(0, 5)
+      };
+      logEvent(rootDir, {
+        level: "error",
+        user: user || null,
+        message: `webhook_background_failed msg=${err?.message || "unknown"} ctx=${JSON.stringify(context)}`
+      });
     });
 
     res.json({ status: "OK", dispatchedAsync: true });
