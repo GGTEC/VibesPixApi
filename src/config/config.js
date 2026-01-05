@@ -8,29 +8,11 @@ const pathParts = window.location.pathname.split('/').filter(Boolean);
 const baseApi = `/${pathParts[0] || ''}/api`;
 const defaultSounds = ["default.mp3", "alert1.mp3", "alert2.mp3"];
 const ttsVoices = [
-  { value: "pt-BR-FranciscaNeural", label: "pt-BR Francisca (F)" },
-  { value: "pt-BR-AntonioNeural", label: "pt-BR Antonio (M)" },
-  { value: "pt-BR-MacerioMultilingualNeural4", label: "pt-BR Macerio Multilingual (M)" },
-  { value: "pt-BR-ThalitaMultilingualNeural4", label: "pt-BR Thalita Multilingual (F)" },
-  { value: "pt-BR-BrendaNeural", label: "pt-BR Brenda (F)" },
-  { value: "pt-BR-DonatoNeural", label: "pt-BR Donato (M)" },
-  { value: "pt-BR-ElzaNeural", label: "pt-BR Elza (F)" },
-  { value: "pt-BR-FabioNeural", label: "pt-BR Fabio (M)" },
-  { value: "pt-BR-GiovannaNeural", label: "pt-BR Giovanna (F)" },
-  { value: "pt-BR-HumbertoNeural", label: "pt-BR Humberto (M)" },
-  { value: "pt-BR-JulioNeural", label: "pt-BR Julio (M)" },
-  { value: "pt-BR-LeilaNeural", label: "pt-BR Leila (F)" },
-  { value: "pt-BR-LeticiaNeural", label: "pt-BR Leticia (F, Child)" },
-  { value: "pt-BR-ManuelaNeural", label: "pt-BR Manuela (F)" },
-  { value: "pt-BR-NicolauNeural", label: "pt-BR Nicolau (M)" },
-  { value: "pt-BR-ThalitaNeural", label: "pt-BR Thalita (F)" },
-  { value: "pt-BR-ValerioNeural", label: "pt-BR Valerio (M)" },
-  { value: "pt-BR-YaraNeural", label: "pt-BR Yara (F)" },
-  { value: "pt-BR-Macerio:DragonHDLatestNeural1", label: "pt-BR Macerio DragonHD (M)" },
-  { value: "pt-BR-Thalita:DragonHDLatestNeural1", label: "pt-BR Thalita DragonHD (F)" },
-  { value: "pt-PT-RaquelNeural", label: "pt-PT Raquel (F)" },
-  { value: "pt-PT-DuarteNeural", label: "pt-PT Duarte (M)" },
-  { value: "pt-PT-FernandaNeural", label: "pt-PT Fernanda (F)" }
+  { value: "pt-BR-ThalitaMultilingualNeural", label: "pt-BR - ThalitaMultilingualNeural (Feminino)" },
+  { value: "pt-BR-AntonioNeural", label: "pt-BR - AntonioNeural (Masculino)" },
+  { value: "pt-BR-FranciscaNeural", label: "pt-BR - FranciscaNeural (Feminino)" },
+  { value: "pt-PT-DuarteNeural", label: "pt-PT - DuarteNeural (Masculino)" },
+  { value: "pt-PT-RaquelNeural", label: "pt-PT - RaquelNeural (Feminino)" }
 ];
 const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
 const tabContents = Array.from(document.querySelectorAll('.tab-content'));

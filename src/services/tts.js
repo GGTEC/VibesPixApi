@@ -3,10 +3,18 @@ import fs from "fs";
 import crypto from "crypto";
 import { synthesize, synthesizeStream } from "@echristian/edge-tts";
 
+const ALLOWED_TTS_VOICES = new Set([
+  "pt-BR-ThalitaMultilingualNeural",
+  "pt-BR-AntonioNeural",
+  "pt-BR-FranciscaNeural",
+  "pt-PT-DuarteNeural",
+  "pt-PT-RaquelNeural"
+]);
+
 export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioNeural") {
   if (!text) return null;
 
-  const finalVoice = voice || "pt-BR-AntonioNeural";
+  const finalVoice = ALLOWED_TTS_VOICES.has(voice) ? voice : "pt-BR-AntonioNeural";
 
   const safeText = text.slice(0, 240);
   const hash = crypto
