@@ -154,10 +154,15 @@ export function createApp(rootDir) {
   userRouter.get("/", makeHomeHandler(rootDir));
   userRouter.use(makeNotFoundHandler(rootDir));
 
-  // Redireciona /:user sem barra final para preservar links relativos
-  app.get("/:user", (req, res) => {
-    const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
-    return res.redirect(302, `/${encodeURIComponent(req.params.user)}/${query}`);
+  // Redireciona apenas o slug raiz sem barra final (evita loop em /:user/)
+  app.get(/^\/([^/]+)$/i, (req, res, next) => {
+    const user = req.params[0];
+
+    // Rotas públicas já tratadas mantêm comportamento normal
+    if (["status"].includes(user)) return next();
+
+    const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+    return res.redirect(302, `/${encodeURIComponent(user)}/${query}`);
   });
 
   app.use("/:user", userRouter);
