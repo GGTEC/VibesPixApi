@@ -274,7 +274,6 @@ body.config-page {
   background: linear-gradient(135deg, var(--accent), #9c6dff);
   color: white;
   border: none;
-  padding: 14px 16px;
   border-radius: 12px;
   font-weight: 700;
   width: 100%;
