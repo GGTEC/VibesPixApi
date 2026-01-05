@@ -281,8 +281,8 @@
         <input id="final-name" class="input" placeholder="Ex: SeuNickname">
       </div>
       <div class="field">
-        <label for="final-tts">Texto que será falado</label>
-        <input id="final-tts" class="input" placeholder="Ex: Olá, seja bem-vindo!">
+        <label for="final-tts">Texto que será falado (máx. 300 caracteres)</label>
+        <input id="final-tts" class="input" placeholder="Ex: Olá, seja bem-vindo!" maxlength="300">
       </div>
       <hr class="divider">
       <h4>Revisar compra</h4>
@@ -507,7 +507,8 @@
           return;
         }
         const nome = document.getElementById('final-name').value.trim() || 'Cliente';
-        const tts = document.getElementById('final-tts').value.trim() || '';
+        const ttsRaw = document.getElementById('final-tts').value || '';
+        const tts = ttsRaw.trim().slice(0, 300);
 
         const itemList = items.map(([id, entry]) => ({
           description: id,
