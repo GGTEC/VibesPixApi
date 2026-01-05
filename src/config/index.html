@@ -81,7 +81,10 @@
       </div>
 
       <div id="tab-overlay" class="tab-content hidden">
-        <div class="section">
+        <div class="section" style="
+              display: flex;
+              flex-direction: column;
+          ">
           <h3>Overlay <span class="pill">mensagem padrão</span></h3>
           <input id="overlay-message" placeholder="Ex: NOVA COMPRA" class="input" autocomplete="off">
           <p class="help-text">Texto exibido no topo do alerta. O texto do comprador continua aparecendo abaixo.</p>
@@ -94,7 +97,7 @@
           </div>
 
           <p class="help-text">Voz usada na síntese do TTS do alerta.</p>
-          <button id="tts-test" class="btn-primary" style="margin-top:10px;width: 30%;padding: 7px 10px;">Testar voz</button>
+          <button id="tts-test" class="btn-primary" style="margin-top:10px;width: 30%;padding: 7px 10px;align-self: end;">Testar voz</button>
 
         </div>
       </div>
