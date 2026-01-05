@@ -154,6 +154,12 @@ export function createApp(rootDir) {
   userRouter.get("/", makeHomeHandler(rootDir));
   userRouter.use(makeNotFoundHandler(rootDir));
 
+  // Redireciona /:user sem barra final para preservar links relativos
+  app.get("/:user", (req, res) => {
+    const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+    return res.redirect(302, `/${encodeURIComponent(req.params.user)}/${query}`);
+  });
+
   app.use("/:user", userRouter);
 
   // Fallback global
