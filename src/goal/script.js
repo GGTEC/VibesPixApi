@@ -64,7 +64,7 @@ function renderGoal() {
 
   progressTextEl.textContent = formatted;
   textAboveEl.textContent = formatted;
-  summaryEl.textContent = `${formatBRL(goal.current)} recebidos • faltam ${formatBRL(remaining)}`;
+  summaryEl.textContent = `${formatBRL(goal.current)} / ${formatBRL(goal.target)}`;
 
   if (goal.textPosition === "above") {
     rootEl.classList.add("text-above");
