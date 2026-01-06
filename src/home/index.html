@@ -454,22 +454,6 @@
                 </div>
               </div>
 
-              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 12px;">
-                <div>
-                  <label class="label">Nome do jogador (teste)</label>
-                  <input id="productTestName" class="input" placeholder="Ex: Tester" />
-                </div>
-                <div>
-                  <label class="label">Quantidade para testar</label>
-                  <input id="productTestQty" type="number" class="input" placeholder="ex: 1" value="1" />
-                </div>
-                <div style="grid-column:1 / -1;">
-                  <label class="label">Mensagem de TTS (opcional)</label>
-                  <input id="productTestTts" class="input" placeholder="Ex: Mensagem falada no overlay" />
-                  <small style="color: var(--muted);">Será combinada com a mensagem do overlay.</small>
-                </div>
-              </div>
-
               <div class="actions" style="gap:10px;">
                 <button class="btn-secondary" id="btnTestProduct" style="width:auto;padding:12px 14px;">Testar produto (RCON + overlay)</button>
               </div>
@@ -1060,9 +1044,6 @@
       document.getElementById('productPrice').value = '';
       document.getElementById('productQty').value = '';
       document.getElementById('productCmds').value = '';
-      document.getElementById('productTestName').value = '';
-      document.getElementById('productTestQty').value = '1';
-      document.getElementById('productTestTts').value = '';
       setImageValue('');
     }
 
@@ -1160,14 +1141,17 @@
         if (!loggedIn) throw new Error('Faça login para testar');
         const id = document.getElementById('newProductId').value.trim();
         if (!id) throw new Error('Informe o ID do produto');
-        const qty = Number(document.getElementById('productTestQty').value) || 1;
-        const username = document.getElementById('productTestName').value.trim() || 'Tester';
-        const ttsText = document.getElementById('productTestTts').value.trim();
+        const produto = produtos[id];
+        const username = user || 'Tester';
+        const valorReais = produto?.valor ? produto.valor / 100 : 0;
+        const valorFmt = Number.isFinite(valorReais) ? valorReais.toFixed(2) : '0.00';
+        const itemNome = produto?.title || id;
+        const ttsText = `${username} enviou um teste de ${itemNome} que vale R$ ${valorFmt}`;
         const res = await fetch(`${baseApi}/test-product`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ productId: id, quantity: qty, username, ttsText })
+          body: JSON.stringify({ productId: id, quantity: 1, username, ttsText })
         });
         const raw = await res.text();
         let data = null;
