@@ -6,7 +6,6 @@ const rootEl = document.getElementById("goal-root");
 const progressEl = document.getElementById("goal-progress");
 const progressTextEl = document.getElementById("goal-progress-text");
 const textAboveEl = document.getElementById("goal-text-above");
-const summaryEl = document.getElementById("goal-summary");
 
 const defaults = {
   target: 100,
@@ -47,7 +46,7 @@ function formatBRL(value) {
 }
 
 function renderGoal() {
-  if (!progressEl || !progressTextEl || !summaryEl || !rootEl || !textAboveEl) return;
+  if (!progressEl || !progressTextEl || !rootEl || !textAboveEl) return;
 
   const pct = goal.target > 0 ? Math.min(100, (goal.current / goal.target) * 100) : 0;
   progressEl.style.width = `${pct}%`;
@@ -64,8 +63,6 @@ function renderGoal() {
 
   progressTextEl.textContent = formatted;
   textAboveEl.textContent = formatted;
-  summaryEl.textContent = `${formatBRL(goal.current)} / ${formatBRL(goal.target)}`;
-
   if (goal.textPosition === "above") {
     rootEl.classList.add("text-above");
     progressTextEl.style.display = "none";

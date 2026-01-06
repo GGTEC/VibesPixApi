@@ -72,12 +72,6 @@ body {
 
 .goal-text-above { opacity: 0.92; }
 
-.goal-summary {
-  text-align: center;
-  color: rgba(255,255,255,0.75);
-  font-size: 14px;
-}
-
 @media (max-width: 640px) {
   .goal-root {
     width: 96vw;

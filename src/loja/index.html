@@ -355,7 +355,8 @@
         
         info.className = 'info';
         title.innerHTML = `${p.title}`;
-        qtd.innerHTML = `• Qtd: ${p.quantity}`;
+        const qtdValue = p.quantity ?? p.qty ?? '—';
+        qtd.innerHTML = `• Qtd: ${qtdValue}`;
         meta.innerHTML = `<span class="price">${formatPrice(p.valor)}</span>`;
         info.appendChild(title);
         info.appendChild(qtd);
