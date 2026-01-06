@@ -28,6 +28,12 @@ function formatValorReais(value) {
   return rounded.toFixed(2).replace(".", ",");
 }
 
+function computeProdutoValorReais(produto, quantity = 1) {
+  const valorCents = Number(produto?.valor ?? produto?.price ?? 0) || 0;
+  const qty = Number(quantity) > 0 ? Number(quantity) : 1;
+  return (valorCents * qty) / 100;
+}
+
 async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
 
   for (const item of items) {
@@ -241,4 +247,82 @@ export function makeWebhookHandler(rootDir) {
 
     void backgroundWork;
   }
+}
+
+export function makeTestProductHandler(rootDir) {
+  return async function testProduct(req, res) {
+    const user = req.params.user;
+    const isSession = req.authUser === user;
+    if (!isSession) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+
+    const { productId, quantity = 1, username = "Tester", ttsText = "", simulateOverlay = true } = req.body || {};
+    if (!productId) {
+      return res.status(400).json({ error: "productId obrigatório" });
+    }
+
+    const config = await readConfig(rootDir, user);
+    if (!config) {
+      return res.status(404).json({ error: "Config não encontrada" });
+    }
+
+    const produto = config?.produtos?.[productId];
+    if (!produto) {
+      return res.status(404).json({ error: "Produto não encontrado" });
+    }
+
+    const rconConfig = config?.rcon || {};
+    if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
+      return res.status(400).json({ error: "Config RCON ausente para teste" });
+    }
+
+    const items = [{ description: productId, quantity: Number(quantity) > 0 ? Number(quantity) : 1 }];
+
+    // Envia comandos via RCON
+    const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
+    try {
+      await dispatchCommands(rcon, config, items, username);
+    } finally {
+      rcon.end();
+    }
+
+    const purchaseValue = computeProdutoValorReais(produto, quantity);
+    let audioUrl = null;
+    let overlayMessage = null;
+    let soundUrl = null;
+
+    if (simulateOverlay) {
+      const overlayTemplate = config?.overlayMessage || "Nova compra";
+      const valorText = formatValorReais(purchaseValue);
+      overlayMessage = overlayTemplate
+        .replace(/\{username\}/gi, username)
+        .replace(/\{valor\}/gi, valorText);
+
+      const ttsCombined = [overlayMessage, ttsText].filter(Boolean).join("; ");
+      const voice = config?.ttsVoice || undefined;
+
+      try {
+        audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+      } catch (err) {
+        console.warn("Teste: falha ao sintetizar TTS", err);
+      }
+
+      const soundFile = config?.sound || null;
+      soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
+
+      broadcastEvent(user, "purchase", {
+        username,
+        audioUrl,
+        soundUrl,
+        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+        overlayMessage,
+        buyerMessage: ttsText || "",
+        ttsMessage: ttsText || "",
+        totalValue: purchaseValue
+      });
+    }
+
+    return res.json({ ok: true, purchaseValue, overlayMessage, audioUrl, soundUrl });
+  };
 }
