@@ -255,6 +255,10 @@
           <button class="sub-btn" data-tab="tab-storeconfig">Loja</button>
         </div>
         <button class="nav-btn" data-main="store">Loja / Produtos</button>
+        <div class="subnav hidden" id="store-subnav">
+          <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
+          <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registros</button>
+        </div>
         <button id="store-link-btn" class="nav-btn" type="button">Abrir loja pública →</button>
         <button id="logout-btn" class="nav-btn" style="margin-top:6px;">Sair</button>
       </div>
@@ -415,11 +419,6 @@
               <h2 style="margin:0 0 6px;">Loja e Produtos</h2>
               <p class="subtitle" style="text-align:left;margin:0;">Gerencie produtos e mídias da sua loja.</p>
             </div>
-          </div>
-
-          <div class="subnav" id="store-subnav" style="margin-top:10px;">
-            <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
-            <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registro de compras</button>
           </div>
 
           <div id="store-tab-products" class="tab-content">
@@ -607,7 +606,8 @@
     // Navegação lateral
     const mainTabs = Array.from(document.querySelectorAll('.nav-btn[data-main]'));
     const subTabs = Array.from(document.querySelectorAll('.sub-btn[data-tab]'));
-    const subnav = document.getElementById('config-subnav');
+    const configSubnav = document.getElementById('config-subnav');
+    const storeSubnav = document.getElementById('store-subnav');
     const actionBarConfig = document.getElementById('action-bar-config');
     const actionBarStore = document.getElementById('action-bar-store');
     const mainSections = {
@@ -644,7 +644,8 @@
       Object.entries(mainSections).forEach(([key, section]) => {
         section.classList.toggle('hidden', key !== target);
       });
-      if (subnav) subnav.classList.toggle('hidden', target !== 'config');
+      if (configSubnav) configSubnav.classList.toggle('hidden', target !== 'config');
+      if (storeSubnav) storeSubnav.classList.toggle('hidden', target !== 'store');
       const sidebar = document.querySelector('.sidebar');
       if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
       updateFloatingButtons();
@@ -664,6 +665,8 @@
         const shouldShow = key === id;
         section.classList.toggle('hidden', !shouldShow);
       });
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
       updateFloatingButtons();
     }
 
