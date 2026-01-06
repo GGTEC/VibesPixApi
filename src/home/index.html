@@ -416,56 +416,66 @@
               <p class="subtitle" style="text-align:left;margin:0;">Gerencie produtos e mídias da sua loja.</p>
             </div>
           </div>
-          <div class="section">
-            <div class="row">
-              <div>
-                <label class="label">Produto existente</label>
-                <select id="productSelect" class="input"></select>
-              </div>
-            </div>
 
-            <div id="productFormSection" class="section hidden" style="margin-top:12px;background: transparent;padding: 0;border: 0;">
-              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+          <div class="subnav" id="store-subnav" style="margin-top:10px;">
+            <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
+            <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registro de compras</button>
+          </div>
+
+          <div id="store-tab-products" class="tab-content">
+            <div class="section">
+              <div class="row">
                 <div>
-                  <label class="label">ID do produto</label>
-                  <input id="newProductId" class="input" placeholder="ex: vip_gold" />
-                </div>
-                <div>
-                  <label class="label">Título</label>
-                  <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
-                </div>
-                <div>
-                  <label class="label">Valor em R$ (exibição)</label>
-                  <input id="productPrice" type="number" step="0.01" class="input" placeholder="ex: 5.50" />
-                </div>
-                <div>
-                  <label class="label">Quantidade</label>
-                  <input id="productQty" type="number" class="input" placeholder="ex: 1" />
-                </div>
-                <div style="grid-column:1 / -1;">
-                  <label class="label">Comandos (um por linha; use {player} / {username})</label>
-                  <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
-                </div>
-                <div style="grid-column:1 / -1;">
-                  <label class="label">Imagem (URL)</label>
-                  <input id="productImg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
-                  <input id="productImgUrl" type="hidden" />
-                  <small style="color: var(--muted);">Clique para escolher ou enviar uma imagem</small>
+                  <label class="label">Produto existente</label>
+                  <select id="productSelect" class="input"></select>
                 </div>
               </div>
 
-              <div class="actions" style="gap:10px;">
-                <button class="btn-secondary" id="btnTestProduct" style="width:auto;padding:12px 14px;">Testar produto (RCON + overlay)</button>
+              <div id="productFormSection" class="section hidden" style="margin-top:12px;background: transparent;padding: 0;border: 0;">
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                  <div>
+                    <label class="label">ID do produto</label>
+                    <input id="newProductId" class="input" placeholder="ex: vip_gold" />
+                  </div>
+                  <div>
+                    <label class="label">Título</label>
+                    <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
+                  </div>
+                  <div>
+                    <label class="label">Valor em R$ (exibição)</label>
+                    <input id="productPrice" type="number" step="0.01" class="input" placeholder="ex: 5.50" />
+                  </div>
+                  <div>
+                    <label class="label">Quantidade</label>
+                    <input id="productQty" type="number" class="input" placeholder="ex: 1" />
+                  </div>
+                  <div style="grid-column:1 / -1;">
+                    <label class="label">Comandos (um por linha; use {player} / {username})</label>
+                    <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
+                  </div>
+                  <div style="grid-column:1 / -1;">
+                    <label class="label">Imagem (URL)</label>
+                    <input id="productImg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
+                    <input id="productImgUrl" type="hidden" />
+                    <small style="color: var(--muted);">Clique para escolher ou enviar uma imagem</small>
+                  </div>
+                </div>
+
+                <div class="actions" style="gap:10px;">
+                  <button class="btn-secondary" id="btnTestProduct" style="width:auto;padding:12px 14px;">Testar produto (RCON + overlay)</button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="section">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-              <h3 style="margin:0;">Registro de compras</h3>
-              <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
+          <div id="store-tab-purchases" class="tab-content hidden">
+            <div class="section">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                <h3 style="margin:0;">Registro de compras</h3>
+                <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
+              </div>
+              <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
             </div>
-            <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
           </div>
         </div>
       </div>
@@ -573,6 +583,7 @@
     let imagens = [];
     let modalOpen = false;
     let currentMainTab = 'config';
+    let currentStoreTab = 'store-products';
 
     const toastContainer = document.getElementById('toast-container');
     function showToast(message, isError = false) {
@@ -595,7 +606,7 @@
 
     // Navegação lateral
     const mainTabs = Array.from(document.querySelectorAll('.nav-btn[data-main]'));
-    const subTabs = Array.from(document.querySelectorAll('.sub-btn'));
+    const subTabs = Array.from(document.querySelectorAll('.sub-btn[data-tab]'));
     const subnav = document.getElementById('config-subnav');
     const actionBarConfig = document.getElementById('action-bar-config');
     const actionBarStore = document.getElementById('action-bar-store');
@@ -615,7 +626,7 @@
         actionBarStore.classList.add('hidden');
       } else if (currentMainTab === 'store') {
         const formVisible = !document.getElementById('productFormSection').classList.contains('hidden');
-        if (formVisible) {
+        if (formVisible && currentStoreTab === 'store-products') {
           actionBarStore.classList.remove('hidden');
         } else {
           actionBarStore.classList.add('hidden');
@@ -639,9 +650,27 @@
       updateFloatingButtons();
     }
 
+    const storeTabs = Array.from(document.querySelectorAll('.store-sub-btn'));
+    const storeSections = {
+      'store-products': document.getElementById('store-tab-products'),
+      'store-purchases': document.getElementById('store-tab-purchases')
+    };
+
+    function setStoreTab(id) {
+      currentStoreTab = id;
+      storeTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.storeTab === id));
+      Object.entries(storeSections).forEach(([key, section]) => {
+        if (!section) return;
+        const shouldShow = key === id;
+        section.classList.toggle('hidden', !shouldShow);
+      });
+      updateFloatingButtons();
+    }
+
     function setSubTab(id) {
+      if (!id) return;
       subTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
-      document.querySelectorAll('.tab-content').forEach(panel => {
+      document.querySelectorAll('#config-section .tab-content').forEach(panel => {
         const shouldShow = panel.id === id;
         const isHidden = panel.classList.contains('hidden');
 
@@ -671,8 +700,11 @@
     mainTabs.forEach(btn => btn.addEventListener('click', () => setMainTab(btn.dataset.main)));
     subTabs.forEach(btn => btn.addEventListener('click', () => setSubTab(btn.dataset.tab)));
 
+    storeTabs.forEach(btn => btn.addEventListener('click', () => setStoreTab(btn.dataset.storeTab)));
+
     setMainTab('config');
     setSubTab('tab-rcon');
+    setStoreTab('store-products');
     initColorControls();
 
     // Login
