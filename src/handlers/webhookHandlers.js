@@ -423,16 +423,18 @@ export function makeReplayPurchaseHandler(rootDir) {
       return res.status(400).json({ error: "Compra sem itens válidos" });
     }
 
+    const username = purchase.username || "Cliente";
+
     const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
     try {
-      await dispatchCommands(rcon, config, items, purchase.username || "Cliente");
+      await dispatchCommands(rcon, config, items, username);
     } finally {
       rcon.end();
     }
 
     const overlayMessage = purchase.overlayMessage
       || (config.overlayMessage || "Nova compra")
-        .replace(/\{username\}/gi, purchase.username || "")
+        .replace(/\{username\}/gi, username)
         .replace(/\{valor\}/gi, formatValorReais(Number(purchase.totalValue || 0)));
 
     const ttsMessage = purchase.ttsMessage || "";
@@ -449,7 +451,7 @@ export function makeReplayPurchaseHandler(rootDir) {
     const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
 
     broadcastEvent(user, "purchase", {
-      username: purchase.username,
+      username,
       audioUrl,
       soundUrl,
       items,
