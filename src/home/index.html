@@ -398,7 +398,9 @@
           <div id="tab-storeconfig" class="tab-content hidden">
             <div class="section">
               <h3>Configuração da Loja <span class="pill">lead</span></h3>
-              <label class="label" for="store-lead">Texto de destaque da loja</label>
+              <label class="label" for="store-name">Nome da loja</label>
+              <input id="store-name" class="input" placeholder="Ex: Loja do GGTEC" />
+              <label class="label" for="store-lead" style="margin-top:10px;">Texto de destaque da loja</label>
               <input id="store-lead" class="input" placeholder="Ex: Compre interações para a live!" />
               <p class="help-text">Este texto será exibido na loja pública, acima dos produtos.</p>
             </div>
@@ -820,7 +822,8 @@
       const overlayLink = document.getElementById('overlay-link');
       overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
 
-      // Loja - lead
+      // Loja - nome e lead
+      document.getElementById('store-name').value = data.home?.name || '';
       document.getElementById('store-lead').value = data.home?.lead || '';
 
       const goal = data.overlayGoal || {};
@@ -857,6 +860,7 @@
             ttsVoice: document.getElementById('tts-voice').value || undefined,
             overlayGoal,
             home: {
+              name: document.getElementById('store-name').value.trim() || undefined,
               lead: document.getElementById('store-lead').value.trim() || undefined
             }
           })
@@ -864,6 +868,7 @@
         configCache = configCache || {};
         configCache.overlayGoal = overlayGoal;
         configCache.home = configCache.home || {};
+        configCache.home.name = document.getElementById('store-name').value.trim() || undefined;
         configCache.home.lead = document.getElementById('store-lead').value.trim() || undefined;
         showToast('Configurações salvas!');
       } catch {

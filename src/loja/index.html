@@ -262,7 +262,7 @@
 <body>
   <div class="container">
     <header class="card">
-      <h1>Loja interativa</h1>
+      <h1 id="store-title">Loja interativa</h1>
       <p class="lead">Compre aqui interações para a live do GGTEC!
           Escolha entre diversas opções de interações para tornar a live mais divertida e envolvente.</p>
     </header>
@@ -329,9 +329,11 @@
       }
       const data = await res.json();
       renderProducts(data);
-      if (data.home && data.home.lead) {
+      if (data.home) {
         const leadEl = document.querySelector('p.lead');
-        if (leadEl) leadEl.textContent = data.home.lead;
+        const titleEl = document.getElementById('store-title');
+        if (leadEl && data.home.lead) leadEl.textContent = data.home.lead;
+        if (titleEl && data.home.name) titleEl.textContent = data.home.name;
       }
     }
 
