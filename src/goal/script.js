@@ -68,8 +68,12 @@ function renderGoal() {
 
   if (goal.textPosition === "above") {
     rootEl.classList.add("text-above");
+    progressTextEl.style.display = "none";
+    textAboveEl.style.display = "block";
   } else {
     rootEl.classList.remove("text-above");
+    progressTextEl.style.display = "flex";
+    textAboveEl.style.display = "none";
   }
 }
 
