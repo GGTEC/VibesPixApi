@@ -15,6 +15,19 @@ function sanitizeItems(payload) {
   return validItems.map(it => ({ description: it.description, quantity: Number(it.quantity) || 1 }));
 }
 
+function formatValorReais(value) {
+  if (!Number.isFinite(value)) return "0";
+
+  const rounded = Math.round(value * 100) / 100;
+  const hasCents = Math.abs(rounded % 1) > 1e-9;
+
+  if (!hasCents) {
+    return String(Math.trunc(rounded));
+  }
+
+  return rounded.toFixed(2).replace(".", ",");
+}
+
 async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
 
   for (const item of items) {
@@ -162,7 +175,7 @@ export function makeWebhookHandler(rootDir) {
       }
 
       const overlayTemplate = config?.overlayMessage || "Nova compra";
-      const valorText = Number.isFinite(totalValueReais) ? totalValueReais.toFixed(2) : "0";
+      const valorText = formatValorReais(totalValueReais);
 
       const overlayFilled = overlayTemplate
         .replace(/\{username\}/gi, username || "")
