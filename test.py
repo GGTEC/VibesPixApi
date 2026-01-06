@@ -1,6 +1,6 @@
 import requests
 
-url = "https://api.vibesbot.com.br/ggtec/api/webhook"
+url = "https://api.vibesbot.com.br/oxi.maya/api/webhook"
 body = {
     "invoice_slug": "6wtHnK2KA5",
     "amount": 1300,
@@ -11,13 +11,10 @@ body = {
     "order_nsu": "QA57J3UZ",
     "receipt_url": "https://recibo.infinitepay.io/f1e80fa2-2514-4d61-a39b-6d4c9b186da2",
     "items": [
-        {"quantity": 1, "price": 100, "description": "zombie"}
+        {"quantity": 1, "price": 100, "description": "zumbi"}
     ]
 }
 
 resp = requests.post(url, json=body, timeout=15)
 print("Status:", resp.status_code)
 print("Body:", resp.text)
-
-
-
