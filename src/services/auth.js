@@ -80,6 +80,7 @@ export function makeLoginHandler() {
     if (!identifier || !password) {
       return res.status(400).json({ error: "Informe usuário/email e senha" });
     }
+    const urlUser = req.params?.user;
     try {
       const db = await getNamedDb("VibesBotSales");
       const col = db.collection("VibesBotSales");
@@ -96,7 +97,11 @@ export function makeLoginHandler() {
       if (!storedHash || hash !== storedHash) return res.status(401).json({ error: "Credenciais inválidas" });
 
       const userName = userDoc.nome_usuario || identifier;
-      const panelUser = req.params?.user || userName;
+      if (urlUser && urlUser.toLowerCase() !== userName.toLowerCase()) {
+        return res.status(401).json({ error: "Usuário não corresponde à URL" });
+      }
+
+      const panelUser = urlUser || userName;
 
       const token = signToken(panelUser);
       setSessionCookie(res, token);
