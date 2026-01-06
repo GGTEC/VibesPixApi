@@ -104,10 +104,12 @@ export async function readConfig(rootDir, user) {
 
   const { _id: _ignore, ...configClean } = configDoc;
   const overlayGoal = normalizeOverlayGoal(configClean?.overlayGoal);
+  const home = configClean?.home || {};
 
   return {
     ...configClean,
     overlayGoal,
+    home,
     rcon: {
       host: rconDoc?.host || "",
       port: rconDoc?.port || "",
@@ -136,7 +138,8 @@ export async function writeConfig(rootDir, user, updater) {
           overlayMessage: next.overlayMessage || "",
           sound: next.sound || null,
           ttsVoice: next.ttsVoice || "",
-          overlayGoal: normalizeOverlayGoal(next.overlayGoal)
+          overlayGoal: normalizeOverlayGoal(next.overlayGoal),
+          home: next.home || {}
         }
       },
       { upsert: true }
