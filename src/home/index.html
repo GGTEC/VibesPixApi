@@ -938,6 +938,30 @@
     });
 
     // Loja / produtos
+    function normalizeComandos(raw) {
+      if (Array.isArray(raw)) return raw.map((c) => c?.toString().trim()).filter(Boolean);
+      if (typeof raw === 'string') {
+        return raw
+          .split('\n')
+          .map((c) => c.trim())
+          .filter(Boolean);
+      }
+      return [];
+    }
+
+    function normalizeProduto(key, data = {}) {
+      const valorNumber = Number(data.valor);
+      const qtyNumber = Number(data.quantity);
+      return {
+        key,
+        title: data.title || '',
+        valor: Number.isFinite(valorNumber) ? valorNumber : 0,
+        quantity: Number.isFinite(qtyNumber) ? qtyNumber : 0,
+        comandos: normalizeComandos(data.comandos ?? data.comando),
+        imagem: data.imagem || ''
+      };
+    }
+
     function getFileNameFromUrl(url) {
       if (!url) return '';
       try {
@@ -1023,7 +1047,7 @@
     function fillForm(id) {
       const data = produtos[id];
       if (!data) return clearForm();
-      document.getElementById('newProductId').value = id;
+      document.getElementById('newProductId').value = data.key || id;
       document.getElementById('productTitle').value = data.title || '';
       document.getElementById('productPrice').value = data.valor ? (data.valor / 100).toFixed(2) : '';
       document.getElementById('productQty').value = data.quantity || '';
@@ -1077,7 +1101,9 @@
     async function loadProdutos() {
       const data = await fetchConfigProdutos();
       configCache = data;
-      produtos = data?.produtos || {};
+      produtos = Object.fromEntries(
+        Object.entries(data?.produtos || {}).map(([key, value]) => [key, normalizeProduto(key, value)])
+      );
       fillSelect();
     }
 
@@ -1112,13 +1138,17 @@
         const id = document.getElementById('newProductId').value.trim();
         if (!id) throw new Error('Informe o ID do produto');
         const updated = { ...produtos };
-        updated[id] = {
+        updated[id] = normalizeProduto(id, {
           title: document.getElementById('productTitle').value.trim(),
           valor: Math.round(Number(document.getElementById('productPrice').value) * 100) || 0,
           quantity: Number(document.getElementById('productQty').value) || 0,
-          comandos: document.getElementById('productCmds').value.split('\n').map(c => c.trim()).filter(Boolean),
+          comandos: document
+            .getElementById('productCmds')
+            .value.split('\n')
+            .map(c => c.trim())
+            .filter(Boolean),
           imagem: getImageValue()
-        };
+        });
         await saveProdutos(updated);
         produtos = updated;
         fillSelect(id);
