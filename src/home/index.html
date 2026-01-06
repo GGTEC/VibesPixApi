@@ -1131,10 +1131,10 @@
       showForm(true);
     });
 
-    document.getElementById('btnClear').addEventListener('click', () => {
+    const handleClearProduct = () => {
       clearForm();
       document.getElementById('productSelect').value = '__new';
-    });
+    };
 
     document.getElementById('btnTestProduct').addEventListener('click', async () => {
       try {
@@ -1164,61 +1164,58 @@
       }
     });
 
-    document.getElementById('btnSave').addEventListener('click', async () => {
+    const handleSaveProduct = async () => {
+      const id = document.getElementById('newProductId').value.trim();
+      if (!id) throw new Error('Informe o ID do produto');
+      const updated = { ...produtos };
+      updated[id] = normalizeProduto(id, {
+        title: document.getElementById('productTitle').value.trim(),
+        valor: Math.round(Number(document.getElementById('productPrice').value) * 100) || 0,
+        quantity: Number(document.getElementById('productQty').value) || 0,
+        comandos: document
+          .getElementById('productCmds')
+          .value.split('\n')
+          .map(c => c.trim())
+          .filter(Boolean),
+        imagem: getImageValue()
+      });
+      await saveProdutos(updated);
+      produtos = updated;
+      fillSelect(id);
+      showForm(true);
+      showToast('Produto salvo!');
+    };
+
+    const handleDeleteProduct = async () => {
+      const id = document.getElementById('productSelect').value;
+      if (!id || id === '__new') throw new Error('Selecione um produto para remover');
+      const updated = { ...produtos };
+      delete updated[id];
+      await saveProdutos(updated);
+      produtos = updated;
+      fillSelect();
+      showForm(false);
+      showToast('Produto removido!');
+    };
+
+    document.getElementById('action-save-product').addEventListener('click', async () => {
       try {
-        const id = document.getElementById('newProductId').value.trim();
-        if (!id) throw new Error('Informe o ID do produto');
-        const updated = { ...produtos };
-        updated[id] = normalizeProduto(id, {
-          title: document.getElementById('productTitle').value.trim(),
-          valor: Math.round(Number(document.getElementById('productPrice').value) * 100) || 0,
-          quantity: Number(document.getElementById('productQty').value) || 0,
-          comandos: document
-            .getElementById('productCmds')
-            .value.split('\n')
-            .map(c => c.trim())
-            .filter(Boolean),
-          imagem: getImageValue()
-        });
-        await saveProdutos(updated);
-        produtos = updated;
-        fillSelect(id);
-        showForm(true);
-        showToast('Produto salvo!');
+        await handleSaveProduct();
       } catch (err) {
         showToast(err.message || 'Erro ao salvar produto', true);
       }
     });
 
-    document.getElementById('action-save-product').addEventListener('click', () => {
-      const saveBtn = document.getElementById('btnSave');
-      if (saveBtn) saveBtn.click();
-    });
-
-    document.getElementById('action-delete-product').addEventListener('click', () => {
-      const delBtn = document.getElementById('btnDelete');
-      if (delBtn) delBtn.click();
-    });
-
-    document.getElementById('action-clear-product').addEventListener('click', () => {
-      const clearBtn = document.getElementById('btnClear');
-      if (clearBtn) clearBtn.click();
-    });
-
-    document.getElementById('btnDelete').addEventListener('click', async () => {
-      const id = document.getElementById('productSelect').value;
-      if (!id || id === '__new') return;
-      const updated = { ...produtos };
-      delete updated[id];
+    document.getElementById('action-delete-product').addEventListener('click', async () => {
       try {
-        await saveProdutos(updated);
-        produtos = updated;
-        fillSelect();
-        showForm(false);
-        showToast('Produto removido!');
+        await handleDeleteProduct();
       } catch (err) {
         showToast(err.message || 'Erro ao remover', true);
       }
+    });
+
+    document.getElementById('action-clear-product').addEventListener('click', () => {
+      handleClearProduct();
     });
 
     document.getElementById('productImg').addEventListener('click', () => {
