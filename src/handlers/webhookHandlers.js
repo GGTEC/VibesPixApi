@@ -113,24 +113,31 @@ export function makeWebhookHandler(rootDir) {
     const orderNsu = payload?.order_nsu;
     const configForUser = await readConfig(rootDir, user);
     const savedBuyer = configForUser?.current_buyers?.find?.(b => b.order_nsu === orderNsu);
-    const username = savedBuyer?.username;
-    const ttsTexto = savedBuyer?.tts_message;
+    const username = savedBuyer?.username
+      || payload?.customer_name
+      || payload?.username
+      || payload?.name
+      || "Cliente";
+    const ttsTexto = savedBuyer?.tts_message || payload?.tts_text || "";
 
-    const rawItems = Array.isArray(savedBuyer?.items) ? savedBuyer.items : payload?.items;
-    const totalValueCents = Array.isArray(rawItems)
-      ? rawItems.reduce((acc, it) => {
-          const qty = Number(it?.quantity ?? 1) || 1;
-          const price = Number(it?.price ?? it?.amount ?? 0) || 0;
-          return acc + qty * price;
-        }, 0)
-      : 0;
+    const rawItems = Array.isArray(savedBuyer?.items) && savedBuyer.items.length
+      ? savedBuyer.items
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
+
+    const totalValueCents = rawItems.reduce((acc, it) => {
+      const qty = Number(it?.quantity ?? 1) || 1;
+      const price = Number(it?.price ?? it?.amount ?? 0) || 0;
+      return acc + qty * price;
+    }, 0);
 
     const totalValueReais = Number.isFinite(totalValueCents) ? totalValueCents / 100 : 0;
 
-    if (!payload || !username) {
+    if (!payload || !rawItems.length) {
       const reasons = [];
       if (!payload) reasons.push("payload ausente ou inválido");
-      if (!username) reasons.push("nome do comprador ausente no registro");
+      if (!rawItems.length) reasons.push("sem itens válidos no payload");
       return res.status(400).json({ error: "Payload inválido", reasons });
     }
 
@@ -332,6 +339,19 @@ export function makeTestProductHandler(rootDir) {
         ttsMessage: ttsText || "",
         totalValue: purchaseValue
       });
+
+      try {
+        await logPurchase(rootDir, user, {
+          username,
+          overlayMessage,
+          ttsMessage: ttsText || "",
+          totalValue: purchaseValue,
+          items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+          source: "test-product"
+        });
+      } catch (err) {
+        logEvent(rootDir, { level: "error", user, message: `test_purchase_log_failed msg=${err?.message || "unknown"}` });
+      }
     }
 
     return res.json({ ok: true, purchaseValue, overlayMessage, audioUrl, soundUrl });

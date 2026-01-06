@@ -73,7 +73,6 @@ function playAudio(url) {
   if (!url) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const audio = new Audio(url);
-    audio.crossOrigin = "anonymous";
     let ended = false;
 
     const cleanup = () => {
@@ -90,15 +89,13 @@ function playAudio(url) {
     audio.onerror = err => {
       if (!ended) {
         cleanup();
-        console.warn("Audio play error", err);
-        resolve();
+        reject(err || new Error("audio error"));
       }
     };
 
     audio.play().catch(err => {
       cleanup();
-      console.warn("Audio play catch", err);
-      resolve();
+      reject(err);
     });
   });
 }
