@@ -459,6 +459,14 @@
               </div>
             </div>
           </div>
+
+          <div class="section">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <h3 style="margin:0;">Registro de compras</h3>
+              <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
+            </div>
+            <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
         </div>
       </div>
     </main>
@@ -561,6 +569,7 @@
     let loggedIn = false;
     let configCache = null;
     let produtos = {};
+    let purchases = [];
     let imagens = [];
     let modalOpen = false;
     let currentMainTab = 'config';
@@ -577,6 +586,11 @@
         el.style.transform = 'translateY(-10px)';
         setTimeout(() => el.remove(), 400);
       }, 3200);
+    }
+
+    function formatPriceCents(cents) {
+      const n = Number(cents) || 0;
+      return 'R$ ' + (n / 100).toFixed(2);
     }
 
     // Navegação lateral
@@ -1110,6 +1124,91 @@
       fillSelect();
     }
 
+    async function loadPurchases(showToastOnError = false) {
+      const listEl = document.getElementById('purchaseList');
+      if (listEl) listEl.textContent = 'Carregando...';
+      try {
+        const res = await fetch(`${baseApi}/purchases`, { credentials: 'include' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Erro ao carregar compras');
+        purchases = data?.purchases || [];
+        renderPurchases();
+      } catch (err) {
+        if (listEl) listEl.textContent = 'Falha ao carregar compras';
+        if (showToastOnError) showToast(err.message || 'Erro ao carregar compras', true);
+      }
+    }
+
+    function renderPurchases() {
+      const listEl = document.getElementById('purchaseList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      if (!purchases.length) {
+        const empty = document.createElement('p');
+        empty.className = 'help-text';
+        empty.textContent = 'Nenhuma compra registrada.';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      purchases.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.padding = '12px';
+
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.gap = '10px';
+        header.style.alignItems = 'center';
+
+        const title = document.createElement('div');
+        title.innerHTML = `<strong>${p.username || 'Cliente'}</strong> · ${formatPriceCents((p.totalValue || 0) * 100)}`;
+
+        const replayBtn = document.createElement('button');
+        replayBtn.className = 'btn-secondary';
+        replayBtn.textContent = 'Reproduzir';
+        replayBtn.style.padding = '8px 10px';
+        replayBtn.dataset.replayId = p._id;
+
+        header.appendChild(title);
+        header.appendChild(replayBtn);
+
+        const items = document.createElement('div');
+        const itemsText = Array.isArray(p.items)
+          ? p.items.map(it => `${it.quantity || 1}x ${it.description || ''}`).join(', ')
+          : '';
+        items.innerHTML = `<small style="color: var(--muted);">Itens: ${itemsText || '—'}</small>`;
+
+        const tts = document.createElement('div');
+        tts.style.marginTop = '6px';
+        tts.innerHTML = `<small style="color: var(--muted);">TTS: ${p.ttsMessage || '—'}</small>`;
+
+        card.appendChild(header);
+        card.appendChild(items);
+        card.appendChild(tts);
+        listEl.appendChild(card);
+      });
+    }
+
+    async function replayPurchase(purchaseId) {
+      try {
+        const res = await fetch(`${baseApi}/purchases/replay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ purchaseId })
+        });
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+        if (!res.ok) throw new Error(data?.error || raw || 'Erro ao reproduzir');
+        showToast('Compra reproduzida');
+      } catch (err) {
+        showToast(err.message || 'Erro ao reproduzir compra', true);
+      }
+    }
+
     async function loadImagens() {
       const data = await fetchImages();
       imagens = data?.files?.map(f => ({ name: f.name, url: f.url })) || [];
@@ -1129,6 +1228,17 @@
       }
       fillForm(id);
       showForm(true);
+    });
+
+    document.getElementById('refreshPurchases').addEventListener('click', () => {
+      loadPurchases(true);
+    });
+
+    document.getElementById('purchaseList').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-replay-id]');
+      if (!btn) return;
+      const id = btn.dataset.replayId;
+      if (id) replayPurchase(id);
     });
 
     const handleClearProduct = () => {
@@ -1264,6 +1374,7 @@
       await carregarConfig();
       await loadProdutos();
       await loadImagens();
+      await loadPurchases();
       // link para loja pública
       const storeBtn = document.getElementById('store-link-btn');
       storeBtn.dataset.url = `/${encodeURIComponent(user)}/loja`;

@@ -2,6 +2,8 @@ import path from "path";
 import fs from "fs";
 import { Rcon } from "rcon-client";
 import { normalizeOverlayGoal, readConfig, removeBuyer, writeConfig } from "../utils/config.js";
+import { getDbForUser } from "../services/mongo.js";
+import { ObjectId } from "mongodb";
 import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
 import { logEvent } from "../services/logger.js";
@@ -32,6 +34,15 @@ function computeProdutoValorReais(produto, quantity = 1) {
   const valorCents = Number(produto?.valor ?? produto?.price ?? 0) || 0;
   const qty = Number(quantity) > 0 ? Number(quantity) : 1;
   return (valorCents * qty) / 100;
+}
+
+async function logPurchase(rootDir, user, purchase) {
+  const db = await getDbForUser(user);
+  const col = db.collection("purchases");
+  await col.insertOne({
+    ...purchase,
+    createdAt: new Date()
+  });
 }
 
 async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
@@ -324,5 +335,110 @@ export function makeTestProductHandler(rootDir) {
     }
 
     return res.json({ ok: true, purchaseValue, overlayMessage, audioUrl, soundUrl });
+  };
+}
+
+export function makeListPurchasesHandler(rootDir) {
+  return async function listPurchases(req, res) {
+    const user = req.params.user;
+    const isSession = req.authUser === user;
+    if (!isSession) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+    const db = await getDbForUser(user);
+    const docs = await db
+      .collection("purchases")
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+
+    const purchases = docs.map(doc => ({
+      ...doc,
+      _id: doc._id?.toString?.() || doc._id
+    }));
+
+    return res.json({ purchases });
+  };
+}
+
+export function makeReplayPurchaseHandler(rootDir) {
+  return async function replayPurchase(req, res) {
+    const user = req.params.user;
+    const isSession = req.authUser === user;
+    if (!isSession) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+    const { purchaseId } = req.body || {};
+    if (!purchaseId) {
+      return res.status(400).json({ error: "purchaseId obrigatório" });
+    }
+
+    let purchase = null;
+    try {
+      const db = await getDbForUser(user);
+      purchase = await db.collection("purchases").findOne({ _id: new ObjectId(purchaseId) });
+    } catch (err) {
+      return res.status(400).json({ error: "purchaseId inválido" });
+    }
+
+    if (!purchase) {
+      return res.status(404).json({ error: "Compra não encontrada" });
+    }
+
+    const config = await readConfig(rootDir, user);
+    if (!config) {
+      return res.status(404).json({ error: "Config não encontrada" });
+    }
+
+    const rconConfig = config?.rcon || {};
+    if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
+      return res.status(400).json({ error: "Config RCON ausente para replay" });
+    }
+
+    const items = Array.isArray(purchase.items)
+      ? purchase.items.map(it => ({ description: it.description, quantity: it.quantity }))
+      : [];
+    if (!items.length) {
+      return res.status(400).json({ error: "Compra sem itens válidos" });
+    }
+
+    const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
+    try {
+      await dispatchCommands(rcon, config, items, purchase.username || "Cliente");
+    } finally {
+      rcon.end();
+    }
+
+    const overlayMessage = purchase.overlayMessage
+      || (config.overlayMessage || "Nova compra")
+        .replace(/\{username\}/gi, purchase.username || "")
+        .replace(/\{valor\}/gi, formatValorReais(Number(purchase.totalValue || 0)));
+
+    const ttsMessage = purchase.ttsMessage || "";
+    const voice = config?.ttsVoice || undefined;
+    let audioUrl = null;
+    try {
+      const ttsCombined = [overlayMessage, ttsMessage].filter(Boolean).join("; ");
+      audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+    } catch (err) {
+      logEvent(rootDir, { level: "error", user, message: `replay_tts_failed msg=${err?.message || "unknown"}` });
+    }
+
+    const soundFile = config?.sound || null;
+    const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
+
+    broadcastEvent(user, "purchase", {
+      username: purchase.username,
+      audioUrl,
+      soundUrl,
+      items,
+      overlayMessage,
+      buyerMessage: ttsMessage,
+      ttsMessage,
+      totalValue: Number(purchase.totalValue || 0)
+    });
+
+    return res.json({ ok: true, overlayMessage, audioUrl, soundUrl });
   };
 }
