@@ -1025,7 +1025,7 @@
       if (!data) return clearForm();
       document.getElementById('newProductId').value = id;
       document.getElementById('productTitle').value = data.title || '';
-      document.getElementById('productPrice').value = data.price || '';
+      document.getElementById('productPrice').value = data.price ? (data.price / 100).toFixed(2) : '';
       document.getElementById('productQty').value = data.qty || '';
       document.getElementById('productCmds').value = (data.commands || []).join('\n');
       setImageValue(data.img || '');
@@ -1114,7 +1114,7 @@
         const updated = { ...produtos };
         updated[id] = {
           title: document.getElementById('productTitle').value.trim(),
-          price: Number(document.getElementById('productPrice').value) || 0,
+          price: Math.round(Number(document.getElementById('productPrice').value) * 100) || 0,
           qty: Number(document.getElementById('productQty').value) || 0,
           commands: document.getElementById('productCmds').value.split('\n').map(c => c.trim()).filter(Boolean),
           img: getImageValue()
