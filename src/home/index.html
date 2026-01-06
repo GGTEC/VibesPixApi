@@ -182,6 +182,17 @@
     .bottom-bar .btn-secondary { padding: 12px 14px; }
     .bottom-bar .btn-danger { padding: 12px 14px; }
 
+    .color-control { display: flex; align-items: center; gap: 10px; }
+    .color-swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
     .mobile-toggle {
       position: fixed;
       top: 12px;
@@ -336,15 +347,27 @@
                   </div>
                   <div>
                     <label class="label">Cor do fundo da barra</label>
-                    <input id="goal-bar-bg" type="color" class="input" value="#0f172a">
+                    <div class="color-control">
+                      <div id="goal-bar-bg-swatch" class="color-swatch"></div>
+                      <input id="goal-bar-bg-text" class="input" placeholder="#0f172a" autocomplete="off">
+                      <input id="goal-bar-bg-picker" type="color" style="display:none;">
+                    </div>
                   </div>
                   <div>
                     <label class="label">Cor do progresso</label>
-                    <input id="goal-bar-fill" type="color" class="input" value="#22d3ee">
+                    <div class="color-control">
+                      <div id="goal-bar-fill-swatch" class="color-swatch"></div>
+                      <input id="goal-bar-fill-text" class="input" placeholder="#22d3ee" autocomplete="off">
+                      <input id="goal-bar-fill-picker" type="color" style="display:none;">
+                    </div>
                   </div>
                   <div>
                     <label class="label">Cor do texto</label>
-                    <input id="goal-text-color" type="color" class="input" value="#e5e7eb">
+                    <div class="color-control">
+                      <div id="goal-text-color-swatch" class="color-swatch"></div>
+                      <input id="goal-text-color-text" class="input" placeholder="#e5e7eb" autocomplete="off">
+                      <input id="goal-text-color-picker" type="color" style="display:none;">
+                    </div>
                   </div>
                 </div>
 
@@ -474,6 +497,57 @@
       { value: "pt-PT-RaquelNeural", label: "pt-PT - RaquelNeural (Feminino)" }
     ];
 
+    const colorDefaults = {
+      "bar-bg": "#0f172a",
+      "bar-fill": "#22d3ee",
+      "text-color": "#e5e7eb"
+    };
+
+    const colorSetters = {};
+
+    function normalizeHex(value, fallback) {
+      const hex = (value || "").trim();
+      const regex = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/;
+      return regex.test(hex) ? hex.toLowerCase() : fallback;
+    }
+
+    function setupColorControl(key) {
+      const picker = document.getElementById(`goal-${key}-picker`);
+      const text = document.getElementById(`goal-${key}-text`);
+      const swatch = document.getElementById(`goal-${key}-swatch`);
+      const fallback = colorDefaults[key] || "#000000";
+      if (!picker || !text || !swatch) return () => {};
+
+      const apply = (val) => {
+        const safe = normalizeHex(val, fallback);
+        picker.value = safe;
+        text.value = safe;
+        swatch.style.background = safe;
+      };
+
+      const fromPicker = () => apply(picker.value);
+      const fromText = () => apply(text.value);
+
+      picker.addEventListener('input', fromPicker);
+      text.addEventListener('input', fromText);
+      [text, swatch].forEach(el => el.addEventListener('click', () => picker.click()));
+
+      apply(fallback);
+      return apply;
+    }
+
+    function initColorControls() {
+      ["bar-bg", "bar-fill", "text-color"].forEach(key => {
+        colorSetters[key] = setupColorControl(key);
+      });
+    }
+
+    function readColorValue(key) {
+      const text = document.getElementById(`goal-${key}-text`);
+      const fallback = colorDefaults[key] || "#000000";
+      return normalizeHex(text?.value, fallback);
+    }
+
     let loggedIn = false;
     let configCache = null;
     let produtos = {};
@@ -575,6 +649,7 @@
 
     setMainTab('config');
     setSubTab('tab-rcon');
+    initColorControls();
 
     // Login
     const loginLayer = document.getElementById('login-layer');
@@ -740,9 +815,9 @@
       document.getElementById('goal-current').value = goal.current ?? '';
       document.getElementById('goal-text-template').value = goal.textTemplate || '';
       document.getElementById('goal-text-position').value = goal.textPosition === 'above' ? 'above' : 'inside';
-      if (goal.barBgColor) document.getElementById('goal-bar-bg').value = goal.barBgColor;
-      if (goal.barFillColor) document.getElementById('goal-bar-fill').value = goal.barFillColor;
-      if (goal.textColor) document.getElementById('goal-text-color').value = goal.textColor;
+      if (colorSetters['bar-bg']) colorSetters['bar-bg'](goal.barBgColor || colorDefaults['bar-bg']);
+      if (colorSetters['bar-fill']) colorSetters['bar-fill'](goal.barFillColor || colorDefaults['bar-fill']);
+      if (colorSetters['text-color']) colorSetters['text-color'](goal.textColor || colorDefaults['text-color']);
       document.getElementById('goal-overlay-link').value = `${location.origin}/${encodeURIComponent(user)}/goal`;
     }
 
@@ -753,9 +828,9 @@
           current: Number(document.getElementById('goal-current').value) || 0,
           textTemplate: document.getElementById('goal-text-template').value.trim() || undefined,
           textPosition: document.getElementById('goal-text-position').value === 'above' ? 'above' : 'inside',
-          barBgColor: document.getElementById('goal-bar-bg').value,
-          barFillColor: document.getElementById('goal-bar-fill').value,
-          textColor: document.getElementById('goal-text-color').value
+          barBgColor: readColorValue('bar-bg'),
+          barFillColor: readColorValue('bar-fill'),
+          textColor: readColorValue('text-color')
         };
         await fetch(`${baseApi}/config`, {
           method: 'POST',
