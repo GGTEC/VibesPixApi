@@ -207,6 +207,15 @@
       z-index: 25;
       display: none;
     }
+
+    .card .list {
+      height: auto;
+    }
+
+    #store-tab-purchases section {
+      height: 90vh;
+      overflow: scroll;
+    }
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { display: none; position: fixed; top: 0; left: 0; height: 100vh; width: min(320px, 92vw); z-index: 24; overflow-y: auto; }
@@ -255,10 +264,6 @@
           <button class="sub-btn" data-tab="tab-storeconfig">Loja</button>
         </div>
         <button class="nav-btn" data-main="store">Loja / Produtos</button>
-        <div class="subnav hidden" id="store-subnav">
-          <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
-          <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registros</button>
-        </div>
         <button id="store-link-btn" class="nav-btn" type="button">Abrir loja pública →</button>
         <button id="logout-btn" class="nav-btn" style="margin-top:6px;">Sair</button>
       </div>
@@ -419,6 +424,11 @@
               <h2 style="margin:0 0 6px;">Loja e Produtos</h2>
               <p class="subtitle" style="text-align:left;margin:0;">Gerencie produtos e mídias da sua loja.</p>
             </div>
+          </div>
+
+          <div class="subnav" id="store-subnav" style="margin-top:10px;">
+            <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
+            <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registro de compras</button>
           </div>
 
           <div id="store-tab-products" class="tab-content">
@@ -605,9 +615,8 @@
 
     // Navegação lateral
     const mainTabs = Array.from(document.querySelectorAll('.nav-btn[data-main]'));
-    const subTabs = Array.from(document.querySelectorAll('.sub-btn[data-tab]'));
-    const configSubnav = document.getElementById('config-subnav');
-    const storeSubnav = document.getElementById('store-subnav');
+    const subTabs = Array.from(document.querySelectorAll('.sub-btn'));
+    const subnav = document.getElementById('config-subnav');
     const actionBarConfig = document.getElementById('action-bar-config');
     const actionBarStore = document.getElementById('action-bar-store');
     const mainSections = {
@@ -626,7 +635,7 @@
         actionBarStore.classList.add('hidden');
       } else if (currentMainTab === 'store') {
         const formVisible = !document.getElementById('productFormSection').classList.contains('hidden');
-        if (formVisible && currentStoreTab === 'store-products') {
+        if (formVisible) {
           actionBarStore.classList.remove('hidden');
         } else {
           actionBarStore.classList.add('hidden');
@@ -644,8 +653,7 @@
       Object.entries(mainSections).forEach(([key, section]) => {
         section.classList.toggle('hidden', key !== target);
       });
-      if (configSubnav) configSubnav.classList.toggle('hidden', target !== 'config');
-      if (storeSubnav) storeSubnav.classList.toggle('hidden', target !== 'store');
+      if (subnav) subnav.classList.toggle('hidden', target !== 'config');
       const sidebar = document.querySelector('.sidebar');
       if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
       updateFloatingButtons();
@@ -665,15 +673,12 @@
         const shouldShow = key === id;
         section.classList.toggle('hidden', !shouldShow);
       });
-      const sidebar = document.querySelector('.sidebar');
-      if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
       updateFloatingButtons();
     }
 
     function setSubTab(id) {
-      if (!id) return;
       subTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
-      document.querySelectorAll('#config-section .tab-content').forEach(panel => {
+      document.querySelectorAll('.tab-content').forEach(panel => {
         const shouldShow = panel.id === id;
         const isHidden = panel.classList.contains('hidden');
 
@@ -703,11 +708,8 @@
     mainTabs.forEach(btn => btn.addEventListener('click', () => setMainTab(btn.dataset.main)));
     subTabs.forEach(btn => btn.addEventListener('click', () => setSubTab(btn.dataset.tab)));
 
-    storeTabs.forEach(btn => btn.addEventListener('click', () => setStoreTab(btn.dataset.storeTab)));
-
     setMainTab('config');
     setSubTab('tab-rcon');
-    setStoreTab('store-products');
     initColorControls();
 
     // Login
