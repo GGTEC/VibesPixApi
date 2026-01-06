@@ -3,115 +3,882 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal do Usuário · VibesPix</title>
+  <title>Painel do Streamer · VibesPix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0d0b16;
-      --card: rgba(255,255,255,0.07);
+      --card: rgba(255,255,255,0.06);
       --card-strong: rgba(255,255,255,0.12);
       --accent: #7c4dff;
       --accent-2: #00e0ff;
-      --text: #f6f7fb;
-      --muted: #a5aac2;
+      --text: #f6f6f6;
+      --muted: #9ba0b5;
       --radius: 18px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, rgba(124,77,255,0.25), transparent 35%),
+                  radial-gradient(circle at 80% 10%, rgba(0,224,255,0.18), transparent 32%),
+                  radial-gradient(circle at 60% 70%, rgba(124,77,255,0.2), transparent 35%),
+                  var(--bg);
+      color: var(--text);
+      font-family: "Kanit", "Inter", system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+    .login-layer {
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 18px 12px 32px;
-      color: var(--text);
-      background: radial-gradient(circle at 25% 20%, rgba(124,77,255,0.25), transparent 36%),
-                  radial-gradient(circle at 75% 25%, rgba(0,224,255,0.20), transparent 34%),
-                  radial-gradient(circle at 45% 70%, rgba(124,77,255,0.18), transparent 40%),
-                  var(--bg);
-      font-family: "Kanit", "Inter", system-ui, sans-serif;
+      background: radial-gradient(circle at 50% 35%, rgba(124, 77, 255, 0.28), rgba(13, 11, 22, 0.95));
+      z-index: 20;
+      padding: 16px;
     }
-    .shell {
-      width: min(1040px, 100%);
+    .glass-card {
       background: var(--card);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 22px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.38);
-      backdrop-filter: blur(10px);
-    }
-    h1 { margin: 0 0 6px; font-size: 26px; }
-    p.lead { margin: 0 0 16px; color: var(--muted); }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-    }
-    .tile {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      width: min(520px, 100%);
+      text-align: center;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 16px;
-      background: var(--card-strong);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--text);
-      text-decoration: none;
-      box-shadow: 0 14px 42px rgba(0,0,0,0.32);
-      transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+      gap: 12px;
     }
-    .tile:hover { transform: translateY(-2px); box-shadow: 0 18px 48px rgba(0,0,0,0.38); border-color: rgba(255,255,255,0.16); }
-    .tile:active { transform: translateY(0); }
-    .tile h3 { margin: 0; font-size: 18px; }
-    .tile p { margin: 0; color: var(--muted); font-size: 14px; }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
+    .title { margin: 0 0 8px; font-weight: 700; letter-spacing: 0.4px; font-size: 24px; }
+    .subtitle { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+    .input {
+      width: 100%;
+      padding: 14px 16px;
       border-radius: 12px;
-      background: rgba(0,224,255,0.14);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text);
-      font-size: 12px;
-      letter-spacing: 0.3px;
-      width: fit-content;
+      font-size: 16px;
+      outline: none;
+      transition: border 0.2s ease, transform 0.1s ease;
     }
-    @media (max-width: 720px) {
-      body { padding: 14px 10px 28px; }
-      .shell { padding: 18px; }
-      h1 { font-size: 23px; }
-      .grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.22); transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9c6dff);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      width: 100%;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      padding: 14px 16px;
+      transition: transform 0.12s ease, box-shadow 0.2s ease;
+      font-size: 16px;
+    }
+    .btn-primary:hover { box-shadow: 0 10px 30px rgba(124, 77, 255, 0.35); }
+    .btn-primary:active { transform: translateY(1px); }
+    .hidden { display: none !important; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+    .nav-group { display: flex; flex-direction: column; gap: 6px; }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    }
+    .nav-btn:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-1px); }
+    .nav-btn.active { background: linear-gradient(135deg, rgba(124,77,255,0.25), rgba(0,224,255,0.18)); border-color: rgba(255,255,255,0.22); }
+    .subnav { margin-left: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .sub-btn { padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; color: var(--text); text-align: left; cursor: pointer; font-weight: 500; }
+    .sub-btn:hover { border-color: rgba(255,255,255,0.14); }
+    .sub-btn.active { background: rgba(0,224,255,0.12); border-color: rgba(0,224,255,0.3); }
+    .store-link { color: var(--accent-2); font-weight: 600; text-decoration: none; margin-top: 6px; }
+    .content { overflow-y: auto; padding: 20px; }
+    .panel { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .card { background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); box-shadow: 0 18px 60px rgba(0,0,0,0.45); padding: 18px; }
+    .section { background: var(--card-strong); border-radius: var(--radius); padding: 16px; border: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
+    .section h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; background: rgba(0,224,255,0.12); color: var(--text); font-size: 12px; letter-spacing: 0.2px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+    .help-text { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+    .select-wrapper { position: relative; }
+    select.input { appearance: none; background: rgba(255,255,255,0.06); border-radius: 12px; padding-right: 36px; }
+    select.input option { background: #120f25; color: var(--text); }
+    .toast-container { position: fixed; top: 18px; right: 18px; display: flex; flex-direction: column; gap: 10px; z-index: 30; }
+    .toast { min-width: 240px; max-width: 320px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(135deg, rgba(0,224,255,0.14), rgba(124,77,255,0.2)); border: 1px solid rgba(255,255,255,0.12); color: var(--text); box-shadow: 0 14px 42px rgba(0,0,0,0.35); opacity: 0; transform: translateY(-12px); animation: toast 0.4s forwards; font-size: 14px; }
+    .toast.error { background: linear-gradient(135deg, rgba(255,76,106,0.18), rgba(255,139,167,0.16)); border-color: rgba(255,76,106,0.4); }
+    @keyframes toast { to { opacity: 1; transform: translateY(0); } }
+
+    .file-input { position: relative; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .file-input input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .file-name { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+    .image-card { cursor: pointer; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px; background: rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 6px; transition: border 0.15s ease, box-shadow 0.2s ease; }
+    .image-card:hover { border-color: rgba(124,77,255,0.6); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    .image-card.selected { border-color: rgba(0,224,255,0.8); box-shadow: 0 10px 30px rgba(0,224,255,0.22); }
+    .image-card img { width: 100%; height: 96px; object-fit: cover; border-radius: 10px; background: rgba(0,0,0,0.12); }
+    .image-name { font-size: 13px; color: var(--text); word-break: break-all; }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 6px; display: block; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    textarea.input { min-height: 140px; resize: vertical; font-family: "Fira Code", ui-monospace, monospace; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn-secondary { background: linear-gradient(135deg, #223149, #1a2639); box-shadow: none; border: none; color: white; padding: 12px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-danger { background: linear-gradient(135deg, #ff5f6d, #ff8a7a); border: none; color: white; padding: 12px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 12px; }
+    .modal { background: var(--card); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; width: min(720px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,0.45); padding: 18px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .modal-title { margin: 0; font-size: 18px; }
+    .modal-close { background: transparent; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 6px; line-height: 1; }
+    .modal-upload { margin-bottom: 12px; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { flex-direction: row; overflow-x: auto; gap: 8px; }
+      .nav-group { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+      .subnav { flex-direction: row; flex-wrap: wrap; margin-left: 0; }
+      .content { height: calc(100vh - 200px); overflow-y: auto; }
+    }
+
+    @media (max-width: 640px) {
+      body { overflow-y: auto; }
+      .layout { height: auto; }
+      .content { height: auto; padding: 14px; }
+      .card { padding: 14px; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <h1>Painel do Usuário</h1>
-    <p class="lead">Escolha uma área para gerenciar.</p>
-    <div class="grid">
-      <a class="tile" href="config">
-        <span class="pill">Configuração</span>
-        <h3>API / RCON</h3>
-        <p>Gerencie chaves, RCON e mensagens da overlay.</p>
-      </a>
-      <a class="tile" href="loja">
-        <span class="pill">Loja</span>
-        <h3>Loja interativa</h3>
-        <p>Veja produtos disponíveis para compra.</p>
-      </a>
-      <a class="tile" href="productpanel">
-        <span class="pill">Produtos</span>
-        <h3>Gerenciar produtos</h3>
-        <p>Crie, edite ou remova itens vendidos.</p>
-      </a>
-      <a class="tile" href="overlay">
-        <span class="pill">Overlay</span>
-        <h3>Visual da live</h3>
-        <p>Abra a overlay para testar eventos em tempo real.</p>
-      </a>
+  <div id="toast-container" class="toast-container"></div>
+  <div id="login-layer" class="login-layer">
+    <div class="glass-card">
+      <h2 class="title">Painel do Streamer</h2>
+      <p class="subtitle">Faça login com usuário ou e-mail para acessar todas as abas.</p>
+      <input id="login-identifier" type="text" placeholder="nome_usuario ou email" class="input" autocomplete="username">
+      <input id="login-password" type="password" placeholder="Senha" class="input" autocomplete="current-password">
+      <button id="login-btn" class="btn-primary">Entrar</button>
+      <div id="login-erro" class="toast error hidden">Credenciais inválidas</div>
     </div>
   </div>
+
+  <div class="layout hidden" id="app">
+    <aside class="sidebar">
+      <div class="brand">Painel</div>
+      <div class="nav-group">
+        <button class="nav-btn active" data-main="config">Configuração</button>
+        <div class="subnav" id="config-subnav">
+          <button class="sub-btn active" data-tab="tab-rcon">RCON</button>
+          <button class="sub-btn" data-tab="tab-checkout">Checkout</button>
+          <button class="sub-btn" data-tab="tab-sound">Áudio</button>
+          <button class="sub-btn" data-tab="tab-overlay">Overlay</button>
+        </div>
+        <button class="nav-btn" data-main="store">Loja / Produtos</button>
+        <a id="store-link" class="store-link" target="_blank">Abrir loja pública →</a>
+        <button id="logout-btn" class="nav-btn" style="margin-top:6px;">Sair</button>
+      </div>
+    </aside>
+    <main class="content">
+      <div class="panel">
+        <div id="config-section" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0 0 6px;">Configuração</h2>
+              <p class="subtitle" style="text-align:left;margin:0;">RCON, checkout, áudio e overlay agrupados nesta aba.</p>
+            </div>
+          </div>
+
+          <div id="tab-rcon" class="tab-content">
+            <div class="section">
+              <h3>Configuração RCON <span class="pill">Minecraft</span></h3>
+              <div class="form-grid">
+                <input id="host" placeholder="IP do servidor" class="input" autocomplete="off">
+                <input id="port" placeholder="Porta" class="input" autocomplete="off">
+                <input id="password" placeholder="Senha" type="password" class="input" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-checkout" class="tab-content hidden">
+            <div class="section">
+              <h3>Checkout InfinityPay <span class="pill">handle</span></h3>
+              <div class="form-grid">
+                <input id="infinitypay-handle" placeholder="Nome/handle do checkout" class="input" autocomplete="off">
+              </div>
+              <p class="help-text">Use este nome para montar o link de checkout no InfinityPay.</p>
+            </div>
+          </div>
+
+          <div id="tab-sound" class="tab-content hidden">
+            <div class="section">
+              <h3>Áudio de alerta <span class="pill">sound</span></h3>
+              <div class="select-wrapper" >
+                <select id="sound" class="input" style="background: rgba(255,255,255,0.08);">
+                  <option value="" disabled>Selecione um áudio</option>
+                </select>
+              </div>
+              <div class="file-input" id="sound-upload-box" style="margin-top:12px;">
+                <span class="file-label">Enviar MP3</span>
+                <span class="file-name" id="sound-file-name">Selecione um arquivo</span>
+                <input id="sound-upload" type="file" accept="audio/*">
+              </div>
+              <p class="help-text">Envie um áudio (até 8MB). Ele fica disponível em /:user/sounds/ e aparece na lista acima.</p>
+            </div>
+          </div>
+
+          <div id="tab-overlay" class="tab-content hidden">
+            <div class="section">
+              <h3>Overlay <span class="pill">mensagem padrão</span></h3>
+              <p class="help-text">Texto exibido no topo do alerta. use {username} para o nome do comprador e {valor} para o valor da compra.</p>
+              <input id="overlay-message" placeholder="Ex: NOVA COMPRA" class="input" autocomplete="off">
+
+              <h3 style="margin-top: 15px;">Voz do TTS</h3>
+              <div class="select-wrapper">
+                <select id="tts-voice" class="input" style="background: rgba(255,255,255,0.08);">
+                  <option value="" disabled>Selecione a voz</option>
+                </select>
+              </div>
+
+              <p class="help-text">Voz usada na síntese do TTS do alerta.</p>
+              <button id="tts-test" class="btn-primary" style="margin-top:10px;width: 180px;padding: 10px 12px;">Testar voz</button>
+            </div>
+          </div>
+
+          <button id="btn-salvar-config" class="btn-primary" style="margin-top:14px;">Salvar configurações</button>
+        </div>
+
+        <div id="store-section" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0 0 6px;">Loja e Produtos</h2>
+              <p class="subtitle" style="text-align:left;margin:0;">Gerencie produtos e mídias da sua loja.</p>
+            </div>
+          </div>
+          <div class="section">
+            <div class="row">
+              <div>
+                <label class="label">Produto existente</label>
+                <select id="productSelect" class="input"></select>
+              </div>
+            </div>
+
+            <div id="productFormSection" class="section hidden" style="margin-top:12px;background: transparent;padding: 0;border: 0;">
+              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                <div>
+                  <label class="label">ID do produto</label>
+                  <input id="newProductId" class="input" placeholder="ex: vip_gold" />
+                </div>
+                <div>
+                  <label class="label">Título</label>
+                  <input id="productTitle" class="input" placeholder="ex: VIP Gold" />
+                </div>
+                <div>
+                  <label class="label">Valor em R$ (exibição)</label>
+                  <input id="productPrice" type="number" step="0.01" class="input" placeholder="ex: 5.50" />
+                </div>
+                <div>
+                  <label class="label">Quantidade</label>
+                  <input id="productQty" type="number" class="input" placeholder="ex: 1" />
+                </div>
+                <div style="grid-column:1 / -1;">
+                  <label class="label">Comandos (um por linha; use {player} / {username})</label>
+                  <textarea id="productCmds" class="input" spellcheck="false" placeholder="give {player} diamond 1"></textarea>
+                </div>
+                <div style="grid-column:1 / -1;">
+                  <label class="label">Imagem (URL)</label>
+                  <input id="productImg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
+                  <input id="productImgUrl" type="hidden" />
+                  <small style="color: var(--muted);">Clique para escolher ou enviar uma imagem</small>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn-primary" id="btnSave" style="width:auto;padding:12px 14px;">Salvar produto</button>
+                <button class="btn-danger" id="btnDelete" style="width:auto;padding:12px 14px;">Remover produto</button>
+                <button class="btn-secondary" id="btnClear" style="width:auto;padding:12px 14px;">Limpar formulário</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="imageModal" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Imagens do usuário</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-upload">
+        <label class="label">Enviar nova imagem</label>
+        <div class="file-input">
+          <span class="file-name" id="modalFileName">Nenhum arquivo</span>
+          <input type="file" id="modalFileInput" accept="image/*" />
+        </div>
+      </div>
+      <div>
+        <label class="label">Galeria</label>
+        <div id="imageGallery" class="image-gallery"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Contexto base
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const user = pathParts[0] || '';
+    const baseApi = `/${user}/api`;
+    const defaultSounds = ["default.mp3", "alert1.mp3", "alert2.mp3"];
+    const ttsVoices = [
+      { value: "pt-BR-ThalitaMultilingualNeural", label: "pt-BR - ThalitaMultilingualNeural (Feminino)" },
+      { value: "pt-BR-AntonioNeural", label: "pt-BR - AntonioNeural (Masculino)" },
+      { value: "pt-BR-FranciscaNeural", label: "pt-BR - FranciscaNeural (Feminino)" },
+      { value: "pt-PT-DuarteNeural", label: "pt-PT - DuarteNeural (Masculino)" },
+      { value: "pt-PT-RaquelNeural", label: "pt-PT - RaquelNeural (Feminino)" }
+    ];
+
+    let loggedIn = false;
+    let configCache = null;
+    let produtos = {};
+    let imagens = [];
+    let modalOpen = false;
+
+    const toastContainer = document.getElementById('toast-container');
+    function showToast(message, isError = false) {
+      if (!toastContainer) return alert(message);
+      const el = document.createElement('div');
+      el.className = `toast${isError ? ' error' : ''}`;
+      el.textContent = message;
+      toastContainer.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-10px)';
+        setTimeout(() => el.remove(), 400);
+      }, 3200);
+    }
+
+    // Navegação lateral
+    const mainTabs = Array.from(document.querySelectorAll('.nav-btn[data-main]'));
+    const subTabs = Array.from(document.querySelectorAll('.sub-btn'));
+    const mainSections = {
+      config: document.getElementById('config-section'),
+      store: document.getElementById('store-section')
+    };
+
+    function setMainTab(target) {
+      mainTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.main === target));
+      Object.entries(mainSections).forEach(([key, section]) => {
+        section.classList.toggle('hidden', key !== target);
+      });
+    }
+
+    function setSubTab(id) {
+      subTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
+      document.querySelectorAll('.tab-content').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== id);
+      });
+    }
+
+    mainTabs.forEach(btn => btn.addEventListener('click', () => setMainTab(btn.dataset.main)));
+    subTabs.forEach(btn => btn.addEventListener('click', () => setSubTab(btn.dataset.tab)));
+
+    setMainTab('config');
+    setSubTab('tab-rcon');
+
+    // Login
+    const loginLayer = document.getElementById('login-layer');
+    document.getElementById('login-btn').onclick = async function() {
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value;
+      document.getElementById('login-erro').classList.add('hidden');
+      try {
+        const res = await fetch(`${baseApi}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ identifier, password })
+        });
+        if (!res.ok) throw new Error('Credenciais inválidas');
+        loggedIn = true;
+        await boot();
+        loginLayer.classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+      } catch (err) {
+        document.getElementById('login-erro').textContent = err.message || 'Credenciais inválidas';
+        document.getElementById('login-erro').classList.remove('hidden');
+      }
+    };
+
+    document.getElementById('logout-btn').onclick = async function() {
+      try { await fetch(`${baseApi}/logout`, { method: 'POST', credentials: 'include' }); } catch {}
+      loggedIn = false;
+      document.getElementById('app').classList.add('hidden');
+      loginLayer.classList.remove('hidden');
+    };
+
+    async function trySessionLogin() {
+      try {
+        await boot();
+        loggedIn = true;
+        loginLayer.classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+      } catch (_) {
+        // sessão inválida: manter tela de login
+      }
+    }
+
+    // Config (RCON/overlay/etc)
+    const tabButtons = subTabs;
+    const tabContents = Array.from(document.querySelectorAll('.tab-content'));
+
+    function addSoundOption(name, selectIt = false) {
+      if (!name) return;
+      const select = document.getElementById('sound');
+      const exists = Array.from(select.options).some((o) => o.value === name);
+      if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+      if (selectIt) select.value = name;
+    }
+
+    async function loadSoundList() {
+      const select = document.getElementById('sound');
+      select.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Selecione um áudio';
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      select.appendChild(placeholder);
+      defaultSounds.forEach((s) => addSoundOption(s));
+      try {
+        const res = await fetch(`${baseApi}/list-sounds`, { credentials: 'include' });
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+        if (!res.ok) throw new Error(data?.error || raw || 'Erro ao listar áudios');
+        (data?.files || []).forEach((f) => addSoundOption(f.name));
+      } catch (err) {
+        showToast(err.message || 'Falha ao carregar áudios', true);
+      }
+    }
+
+    function populateTtsVoiceList() {
+      const select = document.getElementById('tts-voice');
+      select.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Selecione a voz';
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      select.appendChild(placeholder);
+      ttsVoices.forEach((voice) => {
+        const opt = document.createElement('option');
+        opt.value = voice.value;
+        opt.textContent = voice.label;
+        select.appendChild(opt);
+      });
+    }
+
+    async function uploadSound(file) {
+      const statusEl = document.getElementById('sound-file-name');
+      try {
+        statusEl.textContent = 'Enviando...';
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch(`${baseApi}/upload-sound`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+        if (!res.ok) throw new Error(data?.error || raw || 'Falha no upload');
+        const filename = data?.filename || file.name;
+        addSoundOption(filename, true);
+        statusEl.textContent = filename;
+        showToast('Áudio enviado!');
+      } catch (err) {
+        statusEl.textContent = 'Selecione um arquivo';
+        showToast(err.message || 'Erro ao enviar áudio', true);
+      } finally {
+        const input = document.getElementById('sound-upload');
+        if (input) input.value = '';
+      }
+    }
+
+    async function carregarConfig() {
+      await loadSoundList();
+      populateTtsVoiceList();
+      const res = await fetch(`${baseApi}/config`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Credenciais inválidas');
+      const data = await res.json();
+      configCache = data;
+      document.getElementById('host').value = data.rcon?.host || '';
+      document.getElementById('port').value = data.rcon?.port || '';
+      document.getElementById('password').value = data.rcon?.password || '';
+      addSoundOption(data.sound);
+      document.getElementById('sound').value = data.sound || '';
+      document.getElementById('infinitypay-handle').value = data.infinitypayHandle || '';
+      document.getElementById('overlay-message').value = data.overlayMessage || '';
+      if (data.ttsVoice) document.getElementById('tts-voice').value = data.ttsVoice;
+    }
+
+    async function salvarConfig() {
+      try {
+        await fetch(`${baseApi}/config`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            rcon: { host: host.value, port: port.value, password: password.value },
+            sound: sound.value?.trim() || undefined,
+            infinitypayHandle: document.getElementById('infinitypay-handle').value.trim() || undefined,
+            overlayMessage: document.getElementById('overlay-message').value.trim() || undefined,
+            ttsVoice: document.getElementById('tts-voice').value || undefined
+          })
+        });
+        showToast('Configurações salvas!');
+      } catch {
+        showToast('Erro ao salvar!', true);
+      }
+    }
+
+    async function testarVoz() {
+      const btn = document.getElementById('tts-test');
+      const voice = document.getElementById('tts-voice')?.value || '';
+      const overlayText = document.getElementById('overlay-message')?.value?.trim() || 'Teste de voz do overlay';
+      if (!loggedIn) return showToast('Faça login para testar voz', true);
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Testando...';
+        const res = await fetch(`${baseApi}/tts-test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ voice, text: overlayText })
+        });
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+        if (!res.ok) throw new Error(data?.error || raw || 'Falha ao testar TTS');
+        const url = data?.url;
+        const fallbackUsed = Boolean(data?.fallbackUsed);
+        if (url) {
+          const audio = new Audio(url);
+          audio.play().catch(() => {});
+          showToast(fallbackUsed ? 'Voz não suportada, usando padrão.' : 'Reproduzindo voz...');
+        }
+      } catch (err) {
+        showToast(err.message || 'Erro ao testar voz', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Testar voz';
+      }
+    }
+
+    document.getElementById('sound-upload').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!loggedIn) {
+        showToast('Faça login para enviar áudio', true);
+        e.target.value = '';
+        return;
+      }
+      await uploadSound(file);
+    });
+    document.getElementById('tts-test').addEventListener('click', testarVoz);
+    document.getElementById('btn-salvar-config').addEventListener('click', salvarConfig);
+
+    // Loja / produtos
+    function getFileNameFromUrl(url) {
+      if (!url) return '';
+      try {
+        const parts = url.split('?')[0].split('#')[0].split('/');
+        return parts[parts.length - 1] || url;
+      } catch (e) {
+        return url;
+      }
+    }
+
+    function setImageValue(url) {
+      const name = getFileNameFromUrl(url);
+      document.getElementById('productImgUrl').value = url || '';
+      document.getElementById('productImg').value = name || '';
+    }
+
+    function getImageValue() { return document.getElementById('productImgUrl').value.trim(); }
+
+    function renderImageGallery() {
+      const container = document.getElementById('imageGallery');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!imagens.length) {
+        const empty = document.createElement('p');
+        empty.className = 'label';
+        empty.style.margin = '0';
+        empty.textContent = 'Nenhuma imagem enviada.';
+        container.appendChild(empty);
+        return;
+      }
+      const current = getImageValue();
+      imagens.forEach(({ name, url }) => {
+        const card = document.createElement('div');
+        card.className = 'image-card' + (url === current ? ' selected' : '');
+        const img = document.createElement('img');
+        img.src = url; img.alt = name;
+        const title = document.createElement('div');
+        title.className = 'image-name';
+        title.textContent = name;
+        card.onclick = () => {
+          setImageValue(url);
+          renderImageGallery();
+          if (modalOpen) closeImageModal();
+        };
+        card.appendChild(img);
+        card.appendChild(title);
+        container.appendChild(card);
+      });
+    }
+
+    function fillSelect(selectedId = '') {
+      const sel = document.getElementById('productSelect');
+      sel.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Selecione um produto';
+      placeholder.disabled = true;
+      placeholder.selected = !selectedId;
+      sel.appendChild(placeholder);
+      const optNew = document.createElement('option');
+      optNew.value = '__new';
+      optNew.textContent = 'Novo produto';
+      optNew.selected = selectedId === '__new';
+      sel.appendChild(optNew);
+      Object.keys(produtos).forEach(key => {
+        const o = document.createElement('option');
+        o.value = key;
+        o.textContent = key;
+        o.selected = selectedId === key;
+        sel.appendChild(o);
+      });
+    }
+
+    function clearForm() {
+      document.getElementById('newProductId').value = '';
+      document.getElementById('productTitle').value = '';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productQty').value = '';
+      document.getElementById('productCmds').value = '';
+      setImageValue('');
+    }
+
+    function fillForm(id) {
+      const data = produtos[id];
+      if (!data) return clearForm();
+      document.getElementById('newProductId').value = id;
+      document.getElementById('productTitle').value = data.title || '';
+      document.getElementById('productPrice').value = data.price || '';
+      document.getElementById('productQty').value = data.qty || '';
+      document.getElementById('productCmds').value = (data.commands || []).join('\n');
+      setImageValue(data.img || '');
+    }
+
+    function showForm(show) {
+      document.getElementById('productFormSection').classList.toggle('hidden', !show);
+    }
+
+    async function fetchConfigProdutos() {
+      const res = await fetch(`${baseApi}/config`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Não autorizado ou config ausente');
+      return res.json();
+    }
+
+    async function saveProdutos(produtosAtualizados) {
+      const body = {
+        rcon: configCache?.rcon || { host: '', port: '', password: '' },
+        produtos: produtosAtualizados,
+        sound: configCache?.sound,
+        infinitypayHandle: configCache?.infinitypayHandle,
+        overlayMessage: configCache?.overlayMessage,
+        ttsVoice: configCache?.ttsVoice
+      };
+      const res = await fetch(`${baseApi}/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'Erro ao salvar');
+      }
+      return res.json();
+    }
+
+    async function fetchImages() {
+      const res = await fetch(`${baseApi}/list-images`, { credentials: 'include' });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'Erro ao listar imagens');
+      }
+      return res.json();
+    }
+
+    async function loadProdutos() {
+      const data = await fetchConfigProdutos();
+      configCache = data;
+      produtos = data?.produtos || {};
+      fillSelect();
+    }
+
+    async function loadImagens() {
+      const data = await fetchImages();
+      imagens = data?.files?.map(f => ({ name: f.name, url: f.url })) || [];
+      renderImageGallery();
+    }
+
+    document.getElementById('productSelect').addEventListener('change', (e) => {
+      const id = e.target.value;
+      if (id === '__new') {
+        clearForm();
+        showForm(true);
+        return;
+      }
+      if (!id) {
+        showForm(false);
+        return;
+      }
+      fillForm(id);
+      showForm(true);
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      clearForm();
+      document.getElementById('productSelect').value = '__new';
+    });
+
+    document.getElementById('btnSave').addEventListener('click', async () => {
+      try {
+        const id = document.getElementById('newProductId').value.trim();
+        if (!id) throw new Error('Informe o ID do produto');
+        const updated = { ...produtos };
+        updated[id] = {
+          title: document.getElementById('productTitle').value.trim(),
+          price: Number(document.getElementById('productPrice').value) || 0,
+          qty: Number(document.getElementById('productQty').value) || 0,
+          commands: document.getElementById('productCmds').value.split('\n').map(c => c.trim()).filter(Boolean),
+          img: getImageValue()
+        };
+        await saveProdutos(updated);
+        produtos = updated;
+        fillSelect(id);
+        showForm(true);
+        showToast('Produto salvo!');
+      } catch (err) {
+        showToast(err.message || 'Erro ao salvar produto', true);
+      }
+    });
+
+    document.getElementById('btnDelete').addEventListener('click', async () => {
+      const id = document.getElementById('productSelect').value;
+      if (!id || id === '__new') return;
+      const updated = { ...produtos };
+      delete updated[id];
+      try {
+        await saveProdutos(updated);
+        produtos = updated;
+        fillSelect();
+        showForm(false);
+        showToast('Produto removido!');
+      } catch (err) {
+        showToast(err.message || 'Erro ao remover', true);
+      }
+    });
+
+    document.getElementById('productImg').addEventListener('click', () => {
+      openImageModal();
+    });
+
+    // Modal de imagens
+    function openImageModal() {
+      modalOpen = true;
+      document.getElementById('imageModal').style.display = 'flex';
+      renderImageGallery();
+    }
+    function closeImageModal() {
+      modalOpen = false;
+      document.getElementById('imageModal').style.display = 'none';
+    }
+    document.getElementById('modalClose').addEventListener('click', closeImageModal);
+
+    document.getElementById('modalFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      document.getElementById('modalFileName').textContent = file.name;
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const res = await fetch(`${baseApi}/upload-image`, { method: 'POST', credentials: 'include', body: fd });
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+        if (!res.ok) throw new Error(data?.error || raw || 'Erro ao enviar');
+        await loadImagens();
+        showToast('Imagem enviada!');
+      } catch (err) {
+        showToast(err.message || 'Erro ao enviar imagem', true);
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    // Boot geral
+    async function boot() {
+      await carregarConfig();
+      await loadProdutos();
+      await loadImagens();
+      // link para loja pública
+      const storeLink = document.getElementById('store-link');
+      storeLink.href = `/${encodeURIComponent(user)}/loja`;
+    }
+
+    window.addEventListener('load', trySessionLogin);
+  </script>
 </body>
 </html>
