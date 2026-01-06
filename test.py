@@ -8,7 +8,7 @@ body = {
     "installments": 1,
     "capture_method": "pix",
     "transaction_nsu": "f1e80fa2-2514-4d61-a39b-6d4c9b186da2",
-    "order_nsu": "PZDAY2QP",
+    "order_nsu": "QA57J3UZ",
     "receipt_url": "https://recibo.infinitepay.io/f1e80fa2-2514-4d61-a39b-6d4c9b186da2",
     "items": [
         {"quantity": 1, "price": 100, "description": "zombie"}

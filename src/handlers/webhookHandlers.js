@@ -181,7 +181,7 @@ export function makeWebhookHandler(rootDir) {
         .replace(/\{username\}/gi, username || "")
         .replace(/\{valor\}/gi, valorText);
 
-      const ttsCombined = [overlayFilled, ttsTexto].filter(Boolean).join(", ");
+      const ttsCombined = [overlayFilled, ttsTexto].filter(Boolean).join("; ");
 
       const voice = config?.ttsVoice || undefined;
 
