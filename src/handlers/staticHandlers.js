@@ -7,6 +7,12 @@ export function makeOverlayStatic(rootDir) {
   };
 }
 
+export function makeGoalStatic(rootDir) {
+  return function goalStatic(req, res, next) {
+    return express.static(path.join(rootDir, "src", "goal"))(req, res, next);
+  };
+}
+
 export function makeConfigStatic(rootDir) {
   return function configStatic(req, res, next) {
     return express.static(path.join(rootDir, "src", "config"))(req, res, next);

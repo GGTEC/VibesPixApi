@@ -311,6 +311,54 @@
                 </div>
               </div>
 
+              <div class="section" style="margin-top:14px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);">
+                <h3>Meta de arrecadação <span class="pill">goal overlay</span></h3>
+                <p class="help-text">Configure a barra de meta exibida em /:user/goal. Use {current}, {target} ou {remaining} para personalizar o texto.</p>
+                <div class="form-grid">
+                  <div>
+                    <label class="label">Valor da meta (R$)</label>
+                    <input id="goal-target" type="number" step="0.01" min="0" class="input" placeholder="100.00">
+                  </div>
+                  <div>
+                    <label class="label">Valor recebido</label>
+                    <input id="goal-current" type="number" step="0.01" min="0" class="input" placeholder="0.00">
+                  </div>
+                  <div>
+                    <label class="label">Texto da meta</label>
+                    <input id="goal-text-template" class="input" placeholder="Meta: {current} / {target}">
+                  </div>
+                  <div>
+                    <label class="label">Posição do texto</label>
+                    <select id="goal-text-position" class="input">
+                      <option value="inside">Dentro da barra</option>
+                      <option value="above">Acima da barra</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="label">Cor do fundo da barra</label>
+                    <input id="goal-bar-bg" type="color" class="input" value="#0f172a">
+                  </div>
+                  <div>
+                    <label class="label">Cor do progresso</label>
+                    <input id="goal-bar-fill" type="color" class="input" value="#22d3ee">
+                  </div>
+                  <div>
+                    <label class="label">Cor do texto</label>
+                    <input id="goal-text-color" type="color" class="input" value="#e5e7eb">
+                  </div>
+                </div>
+
+                <div class="form-grid" style="margin-top:12px;">
+                  <div style="grid-column:1 / -1;">
+                    <label class="label">Link do overlay de meta</label>
+                    <div class="row" style="grid-template-columns: 1fr auto; align-items: center; gap: 10px;">
+                      <input id="goal-overlay-link" class="input" readonly>
+                      <button id="copy-goal-overlay-link" class="btn-secondary" type="button">Copiar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <h3 style="margin-top: 15px;">Voz do TTS</h3>
               <div class="select-wrapper">
                 <select id="tts-voice" class="input" style="background: rgba(255,255,255,0.08);">
@@ -686,10 +734,29 @@
       if (data.ttsVoice) document.getElementById('tts-voice').value = data.ttsVoice;
       const overlayLink = document.getElementById('overlay-link');
       overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
+
+      const goal = data.overlayGoal || {};
+      document.getElementById('goal-target').value = goal.target ?? '';
+      document.getElementById('goal-current').value = goal.current ?? '';
+      document.getElementById('goal-text-template').value = goal.textTemplate || '';
+      document.getElementById('goal-text-position').value = goal.textPosition === 'above' ? 'above' : 'inside';
+      if (goal.barBgColor) document.getElementById('goal-bar-bg').value = goal.barBgColor;
+      if (goal.barFillColor) document.getElementById('goal-bar-fill').value = goal.barFillColor;
+      if (goal.textColor) document.getElementById('goal-text-color').value = goal.textColor;
+      document.getElementById('goal-overlay-link').value = `${location.origin}/${encodeURIComponent(user)}/goal`;
     }
 
     async function salvarConfig() {
       try {
+        const overlayGoal = {
+          target: Number(document.getElementById('goal-target').value) || 0,
+          current: Number(document.getElementById('goal-current').value) || 0,
+          textTemplate: document.getElementById('goal-text-template').value.trim() || undefined,
+          textPosition: document.getElementById('goal-text-position').value === 'above' ? 'above' : 'inside',
+          barBgColor: document.getElementById('goal-bar-bg').value,
+          barFillColor: document.getElementById('goal-bar-fill').value,
+          textColor: document.getElementById('goal-text-color').value
+        };
         await fetch(`${baseApi}/config`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -699,9 +766,12 @@
             sound: sound.value?.trim() || undefined,
             infinitypayHandle: document.getElementById('infinitypay-handle').value.trim() || undefined,
             overlayMessage: document.getElementById('overlay-message').value.trim() || undefined,
-            ttsVoice: document.getElementById('tts-voice').value || undefined
+            ttsVoice: document.getElementById('tts-voice').value || undefined,
+            overlayGoal
           })
         });
+        configCache = configCache || {};
+        configCache.overlayGoal = overlayGoal;
         showToast('Configurações salvas!');
       } catch {
         showToast('Erro ao salvar!', true);
@@ -756,6 +826,16 @@
     document.getElementById('action-save-config').addEventListener('click', salvarConfig);
     document.getElementById('copy-overlay-link').addEventListener('click', async () => {
       const link = document.getElementById('overlay-link').value;
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast('Link copiado!');
+      } catch {
+        showToast('Não foi possível copiar', true);
+      }
+    });
+
+    document.getElementById('copy-goal-overlay-link').addEventListener('click', async () => {
+      const link = document.getElementById('goal-overlay-link').value;
       try {
         await navigator.clipboard.writeText(link);
         showToast('Link copiado!');
@@ -876,7 +956,8 @@
         sound: configCache?.sound,
         infinitypayHandle: configCache?.infinitypayHandle,
         overlayMessage: configCache?.overlayMessage,
-        ttsVoice: configCache?.ttsVoice
+        ttsVoice: configCache?.ttsVoice,
+        overlayGoal: configCache?.overlayGoal
       };
       const res = await fetch(`${baseApi}/config`, {
         method: 'POST',

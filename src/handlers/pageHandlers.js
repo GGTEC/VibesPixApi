@@ -43,6 +43,12 @@ export function makeRootOverlayHandler(rootDir) {
   };
 }
 
+export function makeGoalHandler(rootDir) {
+  return function goal(req, res) {
+    return res.sendFile(path.join(rootDir, "src", "goal", "index.html"));
+  };
+}
+
 export function makeHomeHandler(rootDir) {
   return function home(req, res) {
     return res.sendFile(path.join(rootDir, "src", "home", "index.html"));

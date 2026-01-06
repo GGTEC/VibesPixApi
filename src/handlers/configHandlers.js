@@ -1,4 +1,4 @@
-import { readConfig, writeConfig } from "../utils/config.js";
+import { normalizeOverlayGoal, readConfig, writeConfig } from "../utils/config.js";
 
 export function makeGetConfigHandler(rootDir) {
   return async function getConfig(req, res) {
@@ -44,9 +44,10 @@ export function makeUpdateConfigHandler(rootDir) {
     const hasSound = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "sound");
     const hasInfinity = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "infinitypayHandle");
     const hasOverlay = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayMessage");
+    const hasOverlayGoal = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayGoal");
     const hasTtsVoice = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "ttsVoice");
 
-    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice) {
+    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice && !hasOverlayGoal) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
@@ -75,6 +76,10 @@ export function makeUpdateConfigHandler(rootDir) {
 
       if (hasOverlay) {
         next.overlayMessage = (newConfig.overlayMessage || "").toString();
+      }
+
+      if (hasOverlayGoal) {
+        next.overlayGoal = normalizeOverlayGoal(newConfig.overlayGoal);
       }
 
       if (hasTtsVoice) {

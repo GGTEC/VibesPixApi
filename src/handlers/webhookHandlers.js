@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Rcon } from "rcon-client";
-import { readConfig, removeBuyer } from "../utils/config.js";
+import { normalizeOverlayGoal, readConfig, removeBuyer, writeConfig } from "../utils/config.js";
 import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
 import { logEvent } from "../services/logger.js";
@@ -191,6 +191,23 @@ export function makeWebhookHandler(rootDir) {
       const overlayMessage = overlayFilled || "Nova compra";
       const buyerMessage = ttsTexto || "";
 
+      const purchaseValue = Number.isFinite(totalValueReais) ? totalValueReais : 0;
+      if (purchaseValue > 0) {
+        try {
+          await writeConfig(rootDir, user, (current) => {
+            const goal = normalizeOverlayGoal(current?.overlayGoal);
+            goal.current = Math.max(0, (goal.current || 0) + purchaseValue);
+            return { ...current, overlayGoal: goal };
+          });
+        } catch (err) {
+          logEvent(rootDir, {
+            level: "error",
+            user: user || null,
+            message: `webhook_overlay_goal_update_failed msg=${err?.message || "unknown"}`
+          });
+        }
+      }
+
       broadcastEvent(user, "purchase", {
         username,
         audioUrl,
@@ -198,7 +215,8 @@ export function makeWebhookHandler(rootDir) {
         items: items.map(it => ({ description: it.description, quantity: it.quantity })),
         overlayMessage,
         buyerMessage,
-        ttsMessage: buyerMessage
+        ttsMessage: buyerMessage,
+        totalValue: purchaseValue
       });
 
       if (orderNsu) {

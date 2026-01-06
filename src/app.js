@@ -10,8 +10,8 @@ import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler, 
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler } from "./handlers/webhookHandlers.js";
 import { makeTestTtsHandler } from "./handlers/ttsHandlers.js";
-import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler } from "./handlers/pageHandlers.js";
-import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic } from "./handlers/staticHandlers.js";
+import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler, makeGoalHandler } from "./handlers/pageHandlers.js";
+import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic, makeGoalStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
@@ -91,6 +91,7 @@ export function createApp(rootDir) {
 
   // Assets e estáticos do usuário
   userRouter.use("/overlay", makeOverlayStatic(rootDir));
+  userRouter.use("/goal", makeGoalStatic(rootDir));
   userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));
   userRouter.use("/sounds", makeUserAssetsStatic(rootDir, "sounds"));
   userRouter.use("/images", makeUserAssetsStatic(rootDir, "images"));
@@ -151,6 +152,7 @@ export function createApp(rootDir) {
   userRouter.use("/loja", makeLojaMiddleware(rootDir));
   userRouter.use("/thanks", makeThanksMiddleware(rootDir));
   userRouter.get("/overlay", makeOverlayHandler(rootDir));
+  userRouter.get("/goal", makeGoalHandler(rootDir));
   userRouter.get("/", makeHomeHandler(rootDir));
   userRouter.use(makeNotFoundHandler(rootDir));
 

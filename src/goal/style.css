@@ -1,0 +1,87 @@
+:root {
+  --bar-bg: #0f172a;
+  --bar-fill: #22d3ee;
+  --text: #e5e7eb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  font-family: "Inter", "Kanit", system-ui, sans-serif;
+  color: var(--text);
+}
+
+.goal-root {
+  width: min(92vw, 860px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.goal-text {
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 22px);
+  text-align: center;
+  color: var(--text);
+}
+
+.goal-bar {
+  position: relative;
+  width: 100%;
+  height: 42px;
+  background: var(--bar-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 14px 38px rgba(0, 0, 0, 0.35);
+}
+
+.goal-progress {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 35%), var(--bar-fill);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: width 0.5s ease, background 0.2s ease;
+}
+
+.goal-progress-text {
+  position: relative;
+  z-index: 2;
+  padding: 0 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.goal-root.text-above .goal-progress-text { display: none; }
+.goal-root:not(.text-above) .goal-text-above { display: none; }
+
+.goal-text-above { opacity: 0.92; }
+
+.goal-summary {
+  text-align: center;
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .goal-root {
+    width: 96vw;
+    padding: 12px;
+  }
+  .goal-bar { height: 38px; }
+}

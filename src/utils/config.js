@@ -3,6 +3,45 @@ import { getDbForUser } from "../services/mongo.js";
 
 export const CHECKOUT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
+const DEFAULT_GOAL = {
+  target: 100,
+  current: 0,
+  textTemplate: "Meta: {current} / {target}",
+  textPosition: "inside",
+  barBgColor: "#0f172a",
+  barFillColor: "#22d3ee",
+  textColor: "#e5e7eb"
+};
+
+function safeNumber(value, fallback = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return n;
+}
+
+function safeColor(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  return trimmed;
+}
+
+export function normalizeOverlayGoal(goal) {
+  const textPos = goal?.textPosition === "above" ? "above" : "inside";
+
+  return {
+    target: safeNumber(goal?.target, DEFAULT_GOAL.target),
+    current: safeNumber(goal?.current, DEFAULT_GOAL.current),
+    textTemplate: typeof goal?.textTemplate === "string" && goal.textTemplate.trim()
+      ? goal.textTemplate.trim()
+      : DEFAULT_GOAL.textTemplate,
+    textPosition: textPos,
+    barBgColor: safeColor(goal?.barBgColor, DEFAULT_GOAL.barBgColor),
+    barFillColor: safeColor(goal?.barFillColor, DEFAULT_GOAL.barFillColor),
+    textColor: safeColor(goal?.textColor, DEFAULT_GOAL.textColor)
+  };
+}
+
 function safeDate(value) {
   if (!value) return null;
   if (value instanceof Date) return value;
@@ -64,9 +103,11 @@ export async function readConfig(rootDir, user) {
   const buyersPruned = await pruneExpiredCheckouts(db, buyers);
 
   const { _id: _ignore, ...configClean } = configDoc;
+  const overlayGoal = normalizeOverlayGoal(configClean?.overlayGoal);
 
   return {
     ...configClean,
+    overlayGoal,
     rcon: {
       host: rconDoc?.host || "",
       port: rconDoc?.port || "",
@@ -94,7 +135,8 @@ export async function writeConfig(rootDir, user, updater) {
           webhookSecret: next.webhookSecret || "",
           overlayMessage: next.overlayMessage || "",
           sound: next.sound || null,
-          ttsVoice: next.ttsVoice || ""
+          ttsVoice: next.ttsVoice || "",
+          overlayGoal: normalizeOverlayGoal(next.overlayGoal)
         }
       },
       { upsert: true }
