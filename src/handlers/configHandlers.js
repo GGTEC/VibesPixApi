@@ -46,8 +46,9 @@ export function makeUpdateConfigHandler(rootDir) {
     const hasOverlay = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayMessage");
     const hasOverlayGoal = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayGoal");
     const hasTtsVoice = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "ttsVoice");
+    const hasHome = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "home");
 
-    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice && !hasOverlayGoal) {
+    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice && !hasOverlayGoal && !hasHome) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
@@ -84,6 +85,10 @@ export function makeUpdateConfigHandler(rootDir) {
 
       if (hasTtsVoice) {
         next.ttsVoice = (newConfig.ttsVoice || "").toString();
+      }
+
+      if (hasHome) {
+        next.home = newConfig.home || {};
       }
 
       return next;
