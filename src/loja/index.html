@@ -463,6 +463,12 @@
       qtySpan.textContent = String(current.qty);
     }
 
+    function getValor(produto) {
+      const raw = produto?.valor ?? produto?.price;
+      const num = Number(raw);
+      return Number.isFinite(num) && num > 0 ? num : 0;
+    }
+
     function showProductsView() {
       summaryEl.style.display = 'none';
       productsEl.classList.remove('hidden');
@@ -485,11 +491,11 @@
 
         const title = document.createElement('p');
         title.className = 'title';
-        title.textContent = `${entry.qty}x ${entry.produto.nome || id}`;
+        title.textContent = `${entry.qty}x ${entry.produto.title || entry.produto.nome || id}`;
 
         const meta = document.createElement('p');
         meta.className = 'meta';
-        const valor = entry.produto.price || 0;
+        const valor = getValor(entry.produto);
         const subtotal = valor * (entry.qty || 1);
         total += subtotal;
         meta.textContent = `${formatPrice(valor)} cada • ${formatPrice(subtotal)} total`;
@@ -521,7 +527,7 @@
 
         const itemList = items.map(([id, entry]) => ({
           description: id,
-          amount: entry.produto.price || 0,
+          amount: getValor(entry.produto),
           quantity: entry.qty || 1
         }));
 
