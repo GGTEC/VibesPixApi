@@ -125,7 +125,7 @@
     .sub-btn:hover { border-color: rgba(255,255,255,0.14); }
     .sub-btn.active { background: rgba(0,224,255,0.12); border-color: rgba(0,224,255,0.3); }
     .store-link { color: var(--accent-2); font-weight: 600; text-decoration: none; margin-top: 6px; }
-    .content { overflow-y: auto; padding: 20px; }
+    .content { overflow-y: auto}
     .panel { width: 100%; display: flex; flex-direction: column; gap: 14px; }
     .card { background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); box-shadow: 0 18px 60px rgba(0,0,0,0.45); padding: 18px; width: 100%; }
     .section { background: var(--card-strong); border-radius: var(--radius); padding: 16px; border: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
@@ -163,22 +163,23 @@
     .modal-close { background: transparent; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 6px; line-height: 1; }
     .modal-upload { margin-bottom: 12px; }
 
-    .floating-save {
+    .bottom-bar {
       position: fixed;
-      bottom: 16px;
-      right: 16px;
-      z-index: 26;
+      bottom: 0;
+      right: 0;
       padding: 12px 14px;
-      border-radius: 12px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--accent), #9c6dff);
-      color: white;
-      box-shadow: 0 14px 42px rgba(0,0,0,0.35);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-top-left-radius: 14px;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+      z-index: 26;
     }
-    .floating-save.secondary { background: linear-gradient(135deg, #223149, #1a2639); }
-    .floating-save.hidden { display: none !important; }
+    .bottom-bar.hidden { display: none !important; }
+    .bottom-bar .btn-primary { width: auto; padding: 12px 14px; }
+    .bottom-bar .btn-secondary { padding: 12px 14px; }
+    .bottom-bar .btn-danger { padding: 12px 14px; }
 
     .mobile-toggle {
       position: fixed;
@@ -202,13 +203,14 @@
       .subnav { flex-direction: column; margin-left: 0; }
       .content { height: auto; overflow-y: auto; padding-top: 64px; }
       .mobile-toggle { display: block; }
-      .floating-save { bottom: 14px; right: 14px; }
+      .bottom-bar { left: 0; right: 0; justify-content: center; border-radius: 0; padding: 12px; }
+      .bottom-bar .btn-primary, .bottom-bar .btn-secondary, .bottom-bar .btn-danger { flex: 1; width: 100%; }
     }
 
     @media (max-width: 640px) {
       body { overflow-y: auto; }
       .layout { height: auto; }
-      .content { height: auto; padding: 14px; }
+      .content { height: auto;}
       .card { padding: 14px; }
     }
   </style>
@@ -319,7 +321,7 @@
             </div>
           </div>
 
-          <button id="btn-salvar-config" class="btn-primary" style="margin-top:14px;">Salvar configurações</button>
+          <button id="btn-salvar-config" class="btn-primary hidden" style="margin-top:14px;">Salvar configurações</button>
         </div>
 
         <div id="store-section" class="card hidden">
@@ -379,8 +381,14 @@
     </main>
   </div>
 
-  <button id="floating-save-config" class="floating-save hidden" type="button">Salvar config</button>
-  <button id="floating-save-product" class="floating-save secondary hidden" type="button">Salvar produto</button>
+  <div id="action-bar-config" class="bottom-bar hidden">
+    <button id="action-save-config" class="btn-primary" type="button">Salvar configurações</button>
+  </div>
+  <div id="action-bar-store" class="bottom-bar hidden">
+    <button id="action-save-product" class="btn-primary" type="button">Salvar</button>
+    <button id="action-delete-product" class="btn-danger" type="button">Remover</button>
+    <button id="action-clear-product" class="btn-secondary" type="button">Limpar</button>
+  </div>
 
   <div id="imageModal" class="modal-backdrop" style="display:none;">
     <div class="modal">
@@ -441,8 +449,8 @@
     const mainTabs = Array.from(document.querySelectorAll('.nav-btn[data-main]'));
     const subTabs = Array.from(document.querySelectorAll('.sub-btn'));
     const subnav = document.getElementById('config-subnav');
-    const floatingSaveConfig = document.getElementById('floating-save-config');
-    const floatingSaveProduct = document.getElementById('floating-save-product');
+    const actionBarConfig = document.getElementById('action-bar-config');
+    const actionBarStore = document.getElementById('action-bar-store');
     const mainSections = {
       config: document.getElementById('config-section'),
       store: document.getElementById('store-section')
@@ -450,24 +458,24 @@
 
     function updateFloatingButtons() {
       if (!loggedIn) {
-        floatingSaveConfig.classList.add('hidden');
-        floatingSaveProduct.classList.add('hidden');
+        actionBarConfig.classList.add('hidden');
+        actionBarStore.classList.add('hidden');
         return;
       }
       if (currentMainTab === 'config') {
-        floatingSaveConfig.classList.remove('hidden');
-        floatingSaveProduct.classList.add('hidden');
+        actionBarConfig.classList.remove('hidden');
+        actionBarStore.classList.add('hidden');
       } else if (currentMainTab === 'store') {
         const formVisible = !document.getElementById('productFormSection').classList.contains('hidden');
         if (formVisible) {
-          floatingSaveProduct.classList.remove('hidden');
+          actionBarStore.classList.remove('hidden');
         } else {
-          floatingSaveProduct.classList.add('hidden');
+          actionBarStore.classList.add('hidden');
         }
-        floatingSaveConfig.classList.add('hidden');
+        actionBarConfig.classList.add('hidden');
       } else {
-        floatingSaveConfig.classList.add('hidden');
-        floatingSaveProduct.classList.add('hidden');
+        actionBarConfig.classList.add('hidden');
+        actionBarStore.classList.add('hidden');
       }
     }
 
@@ -723,7 +731,7 @@
     });
     document.getElementById('tts-test').addEventListener('click', testarVoz);
     document.getElementById('btn-salvar-config').addEventListener('click', salvarConfig);
-    floatingSaveConfig.addEventListener('click', salvarConfig);
+    document.getElementById('action-save-config').addEventListener('click', salvarConfig);
     document.getElementById('copy-overlay-link').addEventListener('click', async () => {
       const link = document.getElementById('overlay-link').value;
       try {
@@ -925,9 +933,19 @@
       }
     });
 
-    floatingSaveProduct.addEventListener('click', () => {
+    document.getElementById('action-save-product').addEventListener('click', () => {
       const saveBtn = document.getElementById('btnSave');
       if (saveBtn) saveBtn.click();
+    });
+
+    document.getElementById('action-delete-product').addEventListener('click', () => {
+      const delBtn = document.getElementById('btnDelete');
+      if (delBtn) delBtn.click();
+    });
+
+    document.getElementById('action-clear-product').addEventListener('click', () => {
+      const clearBtn = document.getElementById('btnClear');
+      if (clearBtn) clearBtn.click();
     });
 
     document.getElementById('btnDelete').addEventListener('click', async () => {
