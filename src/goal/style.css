@@ -24,7 +24,6 @@ body {
   flex-direction: column;
   gap: 10px;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.08);
   border-radius: 14px;
   backdrop-filter: blur(6px);
 }
