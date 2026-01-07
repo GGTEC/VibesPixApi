@@ -211,7 +211,17 @@ export function makeWebhookHandler(rootDir) {
       const voice = ttsVoice || config?.ttsVoice || undefined;
 
       logStep(rootDir, user, "tts_start", { voice });
-      const audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+      let audioUrl = null;
+      try {
+        audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+      } catch (err) {
+        logEvent(rootDir, {
+          level: "error",
+          user: user || null,
+          message: `webhook_tts_error msg=${err?.message || "unknown"}`
+        });
+        logStep(rootDir, user, "tts_error", { msg: err?.message || "unknown" });
+      }
       logStep(rootDir, user, "tts_done", { hasAudio: Boolean(audioUrl) });
       const soundFile = config.sound || null;
       const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
