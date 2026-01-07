@@ -409,26 +409,28 @@
           <div id="tab-storeconfig" class="tab-content hidden">
             <div class="section">
               <h3>Configuração da Loja <span class="pill">lead</span></h3>
-              <label class="label" for="store-name">Nome da loja</label>
-              <input id="store-name" class="input" placeholder="Ex: Loja do GGTEC" />
-              <label class="label" for="store-lead" style="margin-top:10px;">Texto de destaque da loja</label>
-              <input id="store-lead" class="input" placeholder="Ex: Compre interações para a live!" />
-              <p class="help-text">Este texto será exibido na loja pública, acima dos produtos.</p>
 
-              <label class="label" for="store-lead-bg" style="margin-top:12px;">Imagem de fundo do lead</label>
+              <label class="label" for="store-name">Título da loja</label>
+              <input id="store-name" class="input" placeholder="Ex: Loja do GGTEC" />
+
+              <label class="label" for="store-lead" style="margin-top:10px;">Lead da loja</label>
+              <input id="store-lead" class="input" placeholder="Ex: Compre interações para a live!" />
+              <p class="help-text">Exibido junto ao título nas páginas públicas /loja e /donate.</p>
+
+              <label class="label" for="store-lead-bg" style="margin-top:12px;">Fundo do banner (título + lead)</label>
               <input id="store-lead-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="store-lead-bg-url" type="hidden" />
-              <p class="help-text">Opcional. Clique para enviar ou escolher uma imagem (usada no topo da loja).</p>
+              <p class="help-text">Usado no topo das páginas /loja e /donate, atrás do título e do lead.</p>
 
-              <label class="label" for="store-bg" style="margin-top:12px;">Imagem de fundo da loja</label>
+              <label class="label" for="store-bg" style="margin-top:12px;">Background geral das páginas</label>
               <input id="store-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="store-bg-url" type="hidden" />
-              <p class="help-text">Opcional. Fundo exclusivo para a página /loja.</p>
+              <p class="help-text">Fundo principal aplicado em /loja e /donate.</p>
 
-              <label class="label" for="store-donate-bg" style="margin-top:12px;">Imagem de fundo do donate</label>
+              <label class="label" for="store-donate-bg" style="margin-top:12px;">Fundo do banner exclusivo do donate</label>
               <input id="store-donate-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="store-donate-bg-url" type="hidden" />
-              <p class="help-text">Opcional. Fundo exclusivo para a página /donate.</p>
+              <p class="help-text">Opcional. Sobrescreve o banner apenas na página /donate.</p>
             </div>
           </div>
 
@@ -868,10 +870,12 @@
       overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
 
       // Loja - nome, lead e imagens
+      const bannerBg = data.home?.bannerBg || data.home?.leadBg || data.home?.leadBackground || '';
+      const pageBg = data.home?.pageBg || data.home?.storeBg || '';
       document.getElementById('store-name').value = data.home?.name || '';
       document.getElementById('store-lead').value = data.home?.lead || '';
-      setImageValue(data.home?.leadBg || data.home?.leadBackground || '', 'lead');
-      setImageValue(data.home?.storeBg || '', 'store');
+      setImageValue(bannerBg, 'lead');
+      setImageValue(pageBg, 'store');
       setImageValue(data.home?.donateBg || '', 'donate');
 
       const goal = data.overlayGoal || {};
@@ -912,7 +916,9 @@
             home: {
               name: document.getElementById('store-name').value.trim() || undefined,
               lead: document.getElementById('store-lead').value.trim() || undefined,
+              bannerBg: document.getElementById('store-lead-bg-url').value.trim() || undefined,
               leadBg: document.getElementById('store-lead-bg-url').value.trim() || undefined,
+              pageBg: document.getElementById('store-bg-url').value.trim() || undefined,
               storeBg: document.getElementById('store-bg-url').value.trim() || undefined,
               donateBg: document.getElementById('store-donate-bg-url').value.trim() || undefined
             }
@@ -923,7 +929,9 @@
         configCache.home = configCache.home || {};
         configCache.home.name = document.getElementById('store-name').value.trim() || undefined;
         configCache.home.lead = document.getElementById('store-lead').value.trim() || undefined;
+        configCache.home.bannerBg = document.getElementById('store-lead-bg-url').value.trim() || undefined;
         configCache.home.leadBg = document.getElementById('store-lead-bg-url').value.trim() || undefined;
+        configCache.home.pageBg = document.getElementById('store-bg-url').value.trim() || undefined;
         configCache.home.storeBg = document.getElementById('store-bg-url').value.trim() || undefined;
         configCache.home.donateBg = document.getElementById('store-donate-bg-url').value.trim() || undefined;
         showToast('Configurações salvas!');
@@ -1035,7 +1043,7 @@
 
     function setImageValue(url, target = currentImageTarget) {
       const name = getFileNameFromUrl(url);
-      if (target === 'lead') {
+      if (target === 'lead' || target === 'banner') {
         document.getElementById('store-lead-bg-url').value = url || '';
         document.getElementById('store-lead-bg').value = name || '';
         return;
@@ -1045,7 +1053,7 @@
         document.getElementById('store-donate-bg').value = name || '';
         return;
       }
-      if (target === 'store') {
+      if (target === 'store' || target === 'page') {
         document.getElementById('store-bg-url').value = url || '';
         document.getElementById('store-bg').value = name || '';
         return;
@@ -1055,9 +1063,9 @@
     }
 
     function getImageValue(target = currentImageTarget) {
-      if (target === 'lead') return document.getElementById('store-lead-bg-url').value.trim();
+      if (target === 'lead' || target === 'banner') return document.getElementById('store-lead-bg-url').value.trim();
       if (target === 'donate') return document.getElementById('store-donate-bg-url').value.trim();
-      if (target === 'store') return document.getElementById('store-bg-url').value.trim();
+      if (target === 'store' || target === 'page') return document.getElementById('store-bg-url').value.trim();
       return document.getElementById('productImgUrl').value.trim();
     }
 

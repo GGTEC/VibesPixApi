@@ -142,9 +142,27 @@
     const basePath = window.location.pathname.replace(/\/?donate.*$/, '');
     const baseApi = basePath + '/api';
     const errorEl = document.getElementById('donate-error');
+    const defaultBodyBackground = getComputedStyle(document.body).background;
 
     function showError(msg) {
       errorEl.textContent = msg || '';
+    }
+
+    function applyPageBackground(bgUrl) {
+      if (!bgUrl) {
+        document.body.style.background = defaultBodyBackground;
+        document.body.style.backgroundSize = '';
+        document.body.style.backgroundPosition = '';
+        document.body.style.backgroundRepeat = '';
+        document.body.style.backgroundAttachment = '';
+        return;
+      }
+
+      document.body.style.background = `linear-gradient(135deg, rgba(13,11,22,0.82), rgba(13,11,22,0.7)), url('${bgUrl}')`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.body.style.backgroundAttachment = 'fixed';
     }
 
     function formatCents(value) {
@@ -163,12 +181,17 @@
         const headerEl = document.querySelector('header.card');
         if (data.home?.name) titleEl.textContent = data.home.name;
         if (data.home?.lead) leadEl.textContent = data.home.lead;
-        const bg = data.home?.donateBg || data.home?.leadBg || data.home?.leadBackground;
-        if (headerEl && bg) {
-          headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.78), rgba(13,11,22,0.6)), url('${bg}')`;
+
+        const bannerBg = data.home?.bannerBg || data.home?.leadBg || data.home?.leadBackground;
+        const headerBg = data.home?.donateBg || bannerBg;
+        if (headerEl && headerBg) {
+          headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.78), rgba(13,11,22,0.6)), url('${headerBg}')`;
           headerEl.style.backgroundSize = 'cover';
           headerEl.style.backgroundPosition = 'center';
         }
+
+        const pageBg = data.home?.pageBg || data.home?.storeBg;
+        applyPageBackground(pageBg);
       } catch (err) {
         console.warn('Falha ao carregar lead', err);
       }
