@@ -160,8 +160,15 @@
         const data = await res.json();
         const titleEl = document.getElementById('donate-title');
         const leadEl = document.getElementById('donate-lead');
+        const headerEl = document.querySelector('header.card');
         if (data.home?.name) titleEl.textContent = data.home.name;
         if (data.home?.lead) leadEl.textContent = data.home.lead;
+        const bg = data.home?.donateBg || data.home?.leadBg || data.home?.leadBackground;
+        if (headerEl && bg) {
+          headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.78), rgba(13,11,22,0.6)), url('${bg}')`;
+          headerEl.style.backgroundSize = 'cover';
+          headerEl.style.backgroundPosition = 'center';
+        }
       } catch (err) {
         console.warn('Falha ao carregar lead', err);
       }

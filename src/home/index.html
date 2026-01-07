@@ -419,6 +419,11 @@
               <input id="store-lead-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="store-lead-bg-url" type="hidden" />
               <p class="help-text">Opcional. Clique para enviar ou escolher uma imagem (usada no topo da loja).</p>
+
+              <label class="label" for="store-donate-bg" style="margin-top:12px;">Imagem de fundo do donate</label>
+              <input id="store-donate-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
+              <input id="store-donate-bg-url" type="hidden" />
+              <p class="help-text">Opcional. Fundo exclusivo para a página /donate.</p>
             </div>
           </div>
 
@@ -857,10 +862,11 @@
       const overlayLink = document.getElementById('overlay-link');
       overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
 
-      // Loja - nome, lead e imagem
+      // Loja - nome, lead e imagens
       document.getElementById('store-name').value = data.home?.name || '';
       document.getElementById('store-lead').value = data.home?.lead || '';
       setImageValue(data.home?.leadBg || data.home?.leadBackground || '', 'lead');
+      setImageValue(data.home?.donateBg || '', 'donate');
 
       const goal = data.overlayGoal || {};
       document.getElementById('goal-target').value = goal.target ?? '';
@@ -900,7 +906,8 @@
             home: {
               name: document.getElementById('store-name').value.trim() || undefined,
               lead: document.getElementById('store-lead').value.trim() || undefined,
-              leadBg: document.getElementById('store-lead-bg-url').value.trim() || undefined
+              leadBg: document.getElementById('store-lead-bg-url').value.trim() || undefined,
+              donateBg: document.getElementById('store-donate-bg-url').value.trim() || undefined
             }
           })
         });
@@ -910,6 +917,7 @@
         configCache.home.name = document.getElementById('store-name').value.trim() || undefined;
         configCache.home.lead = document.getElementById('store-lead').value.trim() || undefined;
         configCache.home.leadBg = document.getElementById('store-lead-bg-url').value.trim() || undefined;
+        configCache.home.donateBg = document.getElementById('store-donate-bg-url').value.trim() || undefined;
         showToast('Configurações salvas!');
       } catch {
         showToast('Erro ao salvar!', true);
@@ -1024,12 +1032,18 @@
         document.getElementById('store-lead-bg').value = name || '';
         return;
       }
+      if (target === 'donate') {
+        document.getElementById('store-donate-bg-url').value = url || '';
+        document.getElementById('store-donate-bg').value = name || '';
+        return;
+      }
       document.getElementById('productImgUrl').value = url || '';
       document.getElementById('productImg').value = name || '';
     }
 
     function getImageValue(target = currentImageTarget) {
       if (target === 'lead') return document.getElementById('store-lead-bg-url').value.trim();
+      if (target === 'donate') return document.getElementById('store-donate-bg-url').value.trim();
       return document.getElementById('productImgUrl').value.trim();
     }
 
@@ -1369,6 +1383,9 @@
     });
     document.getElementById('store-lead-bg').addEventListener('click', () => {
       openImageModal('lead');
+    });
+    document.getElementById('store-donate-bg').addEventListener('click', () => {
+      openImageModal('donate');
     });
     document.getElementById('store-link-btn').addEventListener('click', () => {
       const url = `${location.origin}/${encodeURIComponent(user)}/loja`;
