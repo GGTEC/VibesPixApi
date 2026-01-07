@@ -82,11 +82,14 @@ function renderGoal() {
 async function loadGoalConfig() {
   try {
     const res = await fetch(`/${user}/api/config`);
+    if (!res.ok) {
+      console.warn("goal: falha ao buscar config", { status: res.status, statusText: res.statusText });
+    }
     const data = await res.json();
     goal = normalizeGoal(data?.overlayGoal);
     renderGoal();
   } catch (err) {
-    console.warn("Erro ao carregar meta", err);
+    console.warn("goal: erro ao carregar meta", err);
     renderGoal();
   }
 }
@@ -98,14 +101,26 @@ source.addEventListener("purchase", (e) => {
     if (Number.isFinite(delta) && delta > 0) {
       goal.current = Math.max(0, goal.current + delta);
       renderGoal();
+    } else {
+      console.debug("goal: evento purchase ignorado - delta inválido", { totalValue: data?.totalValue });
     }
   } catch (err) {
-    console.warn("Falha ao processar purchase", err);
+    console.warn("goal: falha ao processar purchase", err);
   }
 });
 
-source.onerror = () => {
-  // Mantém overlay funcionando mesmo se SSE cair; pode reconectar automaticamente pelo EventSource
+source.addEventListener("goal-config", (e) => {
+  try {
+    const data = JSON.parse(e.data);
+    goal = normalizeGoal(data?.overlayGoal || data);
+    renderGoal();
+  } catch (err) {
+    console.warn("goal: falha ao aplicar goal-config", err);
+  }
+});
+
+source.onerror = (err) => {
+  console.warn("goal: SSE erro ou desconexão", { readyState: source.readyState, error: err });
 };
 
 loadGoalConfig();

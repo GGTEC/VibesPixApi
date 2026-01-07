@@ -1,4 +1,5 @@
 import { normalizeOverlayGoal, readConfig, writeConfig } from "../utils/config.js";
+import { broadcastEvent } from "../services/clients.js";
 
 export function makeGetConfigHandler(rootDir) {
   return async function getConfig(req, res) {
@@ -52,6 +53,11 @@ export function makeUpdateConfigHandler(rootDir) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
+    let overlayGoalNormalized = null;
+    if (hasOverlayGoal) {
+      overlayGoalNormalized = normalizeOverlayGoal(newConfig.overlayGoal);
+    }
+
     await writeConfig(rootDir, user, () => {
       const next = { ...current };
 
@@ -80,7 +86,7 @@ export function makeUpdateConfigHandler(rootDir) {
       }
 
       if (hasOverlayGoal) {
-        next.overlayGoal = normalizeOverlayGoal(newConfig.overlayGoal);
+        next.overlayGoal = overlayGoalNormalized;
       }
 
       if (hasTtsVoice) {
@@ -93,6 +99,10 @@ export function makeUpdateConfigHandler(rootDir) {
 
       return next;
     });
+
+    if (overlayGoalNormalized) {
+      broadcastEvent(user, "goal-config", { overlayGoal: overlayGoalNormalized });
+    }
 
     return res.json({ success: true });
   };

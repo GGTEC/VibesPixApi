@@ -231,6 +231,12 @@ export function makeWebhookHandler(rootDir) {
             message: `webhook_overlay_goal_update_failed msg=${err?.message || "unknown"}`
           });
         }
+      } else {
+        logEvent(rootDir, {
+          level: "warn",
+          user: user || null,
+          message: `webhook_goal_skip_zero_value orderNsu=${orderNsu || ""} totalValueReais=${totalValueReais}`
+        });
       }
 
       broadcastEvent(user, "purchase", {
