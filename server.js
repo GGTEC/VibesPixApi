@@ -2,9 +2,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { WebSocket } from "ws";
 import fetch from "node-fetch";
-import { createApp } from "./src/app.js";
-import "./src/services/mongo.js";
-import { logEvent } from "./src/services/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +17,7 @@ class SafeWebSocket extends BaseWebSocket {
   }
 }
 
+// Set globals before importing any code that might initialize WebSocket (edge-tts)
 if (typeof globalThis.WebSocket === "undefined") {
   globalThis.WebSocket = SafeWebSocket;
 } else if (globalThis.WebSocket !== SafeWebSocket) {
@@ -42,9 +40,21 @@ if (typeof Promise.withResolvers !== "function") {
   };
 }
 
-const app = createApp(__dirname);
+// Delay app import so globals are already patched for edge-tts
+const bootstrap = async () => {
+  const { createApp } = await import("./src/app.js");
+  await import("./src/services/mongo.js");
+  const { logEvent } = await import("./src/services/logger.js");
 
-app.listen(3000, () => {
-  console.log("Overlay multi-usuário rodando na porta 3000 versão 2.0.1");
-  logEvent(__dirname, { level: "info", message: "server_started" });
+  const app = createApp(__dirname);
+
+  app.listen(3000, () => {
+    console.log("Overlay multi-usuário rodando na porta 3000 versão 2.0.1");
+    logEvent(__dirname, { level: "info", message: "server_started" });
+  });
+};
+
+bootstrap().catch((err) => {
+  console.error("Server bootstrap failed", err);
+  process.exit(1);
 });
