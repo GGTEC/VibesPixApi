@@ -80,6 +80,11 @@
     .btn:active { transform: translateY(1px); }
     .notice { color: #ffb3c0; margin-top: 8px; min-height: 20px; }
     .footer { text-align: center; color: var(--muted); font-size: 14px; margin-top: 8px; }
+
+	.card-container {
+		display: flex;
+		justify-content: center;
+	}
   </style>
 </head>
 <body>
@@ -89,33 +94,37 @@
       <p class="lead" id="donate-lead">Envie um recado falado com o valor que preferir.</p>
     </header>
 
-    <section class="card">
-      <div class="row">
-        <div class="field">
-          <label class="label" for="donate-name">Seu nome</label>
-          <input id="donate-name" class="input" placeholder="Ex: SeuNickname" maxlength="60">
-        </div>
-        <div class="field">
-          <label class="label" for="donate-amount">Valor (R$)</label>
-          <input id="donate-amount" class="input" type="number" min="1" step="0.50" placeholder="Ex: 5.00">
-        </div>
-      </div>
+	<div class="card-container">
+		<section class="card">
+		<div class="row">
+			<div class="field">
+			<label class="label" for="donate-name">Seu nome</label>
+			<input id="donate-name" class="input" placeholder="Ex: SeuNickname" maxlength="60">
+			</div>
+			<div class="field">
+			<label class="label" for="donate-amount">Valor (R$)</label>
+			<input id="donate-amount" class="input" type="number" min="1" step="0.50" placeholder="Ex: 5.00">
+			</div>
+		</div>
 
-      <div class="field">
-        <label class="label" for="donate-tts">Texto que será falado (máx. 300 caracteres)</label>
-        <textarea id="donate-tts" class="input" maxlength="300" placeholder="Digite sua mensagem"></textarea>
-      </div>
+		<div class="field">
+			<label class="label" for="donate-tts">Texto que será falado (máx. 300 caracteres)</label>
+			<textarea id="donate-tts" class="input" maxlength="300" placeholder="Digite sua mensagem"></textarea>
+		</div>
 
-      <div class="field">
-        <label class="label" for="donate-voice">Voz</label>
-        <select id="donate-voice">
-          <option value="">Usar voz padrão do streamer</option>
-        </select>
-      </div>
+		<div class="field">
+			<label class="label" for="donate-voice">Voz</label>
+			<select id="donate-voice">
+			<option value="">Usar voz padrão do streamer</option>
+			</select>
+		</div>
 
-      <div class="notice" id="donate-error"></div>
-      <button id="donate-submit" class="btn">Prosseguir para pagamento</button>
-    </section>
+		<div class="notice" id="donate-error"></div>
+		<button id="donate-submit" class="btn">Prosseguir para pagamento</button>
+		</section>
+	</div>
+
+
 
     <p class="footer">Pagamentos via InfinitePay. Você será redirecionado para concluir.</p>
   </div>
