@@ -48,15 +48,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  justify-content: center;
 }
 
-.store-section {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 /* Scrollbar fino e translúcido alinhado ao tema */
 body,
 #products,
