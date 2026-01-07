@@ -474,7 +474,7 @@
           </div>
         </div>
 
-        <div id="purchases-section" class="card hidden">
+        <div id="purchases-section" class="card hidden" style="display:flex;flex-direction:column;gap:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
             <div>
               <h2 style="margin:0 0 6px;">Registro de compras</h2>
@@ -482,7 +482,7 @@
             </div>
             <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
           </div>
-          <div id="purchaseList" class="list"></div>
+          <div id="purchaseList" class="list" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
         </div>
       </div>
     </main>
