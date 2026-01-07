@@ -14,7 +14,8 @@ const defaults = {
   textPosition: "inside",
   barBgColor: "#0f172a",
   barFillColor: "#22d3ee",
-  textColor: "#e5e7eb"
+  textColor: "#e5e7eb",
+  showCurrencySymbol: true
 };
 
 let goal = { ...defaults };
@@ -35,13 +36,17 @@ function normalizeGoal(raw) {
     textPosition: raw?.textPosition === "above" ? "above" : "inside",
     barBgColor: safeColor(raw?.barBgColor, defaults.barBgColor),
     barFillColor: safeColor(raw?.barFillColor, defaults.barFillColor),
-    textColor: safeColor(raw?.textColor, defaults.textColor)
+    textColor: safeColor(raw?.textColor, defaults.textColor),
+    showCurrencySymbol: raw?.showCurrencySymbol === false ? false : true
   };
 }
 
-function formatBRL(value) {
+function formatValue(value) {
   const n = Number(value);
   const safe = Number.isFinite(n) ? n : 0;
+  if (goal.showCurrencySymbol === false) {
+    return safe.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
   return safe.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 }
 
@@ -57,9 +62,9 @@ function renderGoal() {
 
   const remaining = Math.max(0, goal.target - goal.current);
   const formatted = goal.textTemplate
-    .replace(/\{current\}/gi, formatBRL(goal.current))
-    .replace(/\{target\}/gi, formatBRL(goal.target))
-    .replace(/\{remaining\}/gi, formatBRL(remaining));
+    .replace(/\{current\}/gi, formatValue(goal.current))
+    .replace(/\{target\}/gi, formatValue(goal.target))
+    .replace(/\{remaining\}/gi, formatValue(remaining));
 
   progressTextEl.textContent = formatted;
   textAboveEl.textContent = formatted;

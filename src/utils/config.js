@@ -10,7 +10,8 @@ const DEFAULT_GOAL = {
   textPosition: "inside",
   barBgColor: "#0f172a",
   barFillColor: "#22d3ee",
-  textColor: "#e5e7eb"
+  textColor: "#e5e7eb",
+  showCurrencySymbol: true
 };
 
 function safeNumber(value, fallback = 0) {
@@ -38,7 +39,8 @@ export function normalizeOverlayGoal(goal) {
     textPosition: textPos,
     barBgColor: safeColor(goal?.barBgColor, DEFAULT_GOAL.barBgColor),
     barFillColor: safeColor(goal?.barFillColor, DEFAULT_GOAL.barFillColor),
-    textColor: safeColor(goal?.textColor, DEFAULT_GOAL.textColor)
+    textColor: safeColor(goal?.textColor, DEFAULT_GOAL.textColor),
+    showCurrencySymbol: goal?.showCurrencySymbol === false ? false : true
   };
 }
 

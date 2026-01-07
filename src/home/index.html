@@ -207,7 +207,7 @@
       z-index: 25;
       display: none;
     }
-
+    #purchaseList {padding-bottom: 20px; margin-top:10px; display:flex; flex-direction:column; gap:10px;}
     #purchaseList .card { height: auto;}
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
@@ -350,6 +350,14 @@
                     </select>
                   </div>
                   <div>
+                    <label class="label">Símbolo de moeda</label>
+                    <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-weight:600;">
+                      <input id="goal-show-currency" type="checkbox" checked style="width:18px;height:18px;" />
+                      Mostrar "R$" nos valores
+                    </label>
+                    <p class="help-text">Desmarque para esconder o símbolo e deixar apenas o número.</p>
+                  </div>
+                  <div>
                     <label class="label">Cor do fundo da barra</label>
                     <div class="color-control">
                       <div id="goal-bar-bg-swatch" class="color-swatch"></div>
@@ -474,7 +482,7 @@
             </div>
             <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
           </div>
-          <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+          <div id="purchaseList" class="list"></div>
         </div>
       </div>
     </main>
@@ -852,6 +860,7 @@
       document.getElementById('goal-current').value = goal.current ?? '';
       document.getElementById('goal-text-template').value = goal.textTemplate || '';
       document.getElementById('goal-text-position').value = goal.textPosition === 'above' ? 'above' : 'inside';
+      document.getElementById('goal-show-currency').checked = goal.showCurrencySymbol !== false;
       if (colorSetters['bar-bg']) colorSetters['bar-bg'](goal.barBgColor || colorDefaults['bar-bg']);
       if (colorSetters['bar-fill']) colorSetters['bar-fill'](goal.barFillColor || colorDefaults['bar-fill']);
       if (colorSetters['text-color']) colorSetters['text-color'](goal.textColor || colorDefaults['text-color']);
@@ -865,6 +874,7 @@
           current: Number(document.getElementById('goal-current').value) || 0,
           textTemplate: document.getElementById('goal-text-template').value.trim() || undefined,
           textPosition: document.getElementById('goal-text-position').value === 'above' ? 'above' : 'inside',
+          showCurrencySymbol: document.getElementById('goal-show-currency').checked,
           barBgColor: readColorValue('bar-bg'),
           barFillColor: readColorValue('bar-fill'),
           textColor: readColorValue('text-color')
