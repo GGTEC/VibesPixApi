@@ -44,6 +44,36 @@
       flex-direction: column;
       gap: 14px;
     }
+
+    /* Scrollbar fino e translúcido alinhado ao tema */
+    body, #products, .summary {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.24) rgba(255,255,255,0.08);
+    }
+    body::-webkit-scrollbar,
+    #products::-webkit-scrollbar,
+    .summary::-webkit-scrollbar {
+      width: 10px;
+    }
+    body::-webkit-scrollbar-track,
+    #products::-webkit-scrollbar-track,
+    .summary::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+    }
+    body::-webkit-scrollbar-thumb,
+    #products::-webkit-scrollbar-thumb,
+    .summary::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(124,77,255,0.55), rgba(0,224,255,0.48));
+      border-radius: var(--radius);
+      border: 2px solid rgba(13,11,22,0.65);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+    body::-webkit-scrollbar-thumb:hover,
+    #products::-webkit-scrollbar-thumb:hover,
+    .summary::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(124,77,255,0.7), rgba(0,224,255,0.62));
+    }
     h1 { margin: 0 0 12px; font-size: 28px; }
     p.lead { margin: 0 0 20px; color: var(--muted); }
     .card {
