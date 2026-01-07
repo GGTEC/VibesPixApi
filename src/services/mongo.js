@@ -11,6 +11,14 @@ async function getClient() {
   return clientPromise;
 }
 
+export async function listDatabases() {
+  const client = await getClient();
+  const admin = client.db("admin");
+  const resp = await admin.command({ listDatabases: 1, nameOnly: true });
+  const dbs = Array.isArray(resp?.databases) ? resp.databases : [];
+  return dbs.map((d) => d.name).filter(Boolean);
+}
+
 function sanitizeDbName(user) {
   const sanitized = String(user || "user").replace(/[^a-zA-Z0-9_-]/g, "_");
   return sanitized || "user";
