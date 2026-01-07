@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import { synthesize, synthesizeStream } from "@echristian/edge-tts";
+import sdk from "microsoft-cognitiveservices-speech-sdk";
 import { logEvent } from "./logger.js";
 
 const ALLOWED_TTS_VOICES = new Set([
@@ -11,11 +11,24 @@ const ALLOWED_TTS_VOICES = new Set([
   "pt-PT-DuarteNeural",
   "pt-PT-RaquelNeural"
 ]);
+const DEFAULT_VOICE = "pt-BR-AntonioNeural";
+const DEFAULT_REGION = "brazilsouth";
+const AUDIO_FORMAT = sdk.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3;
 
 export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioNeural") {
   if (!text) return null;
 
-  const finalVoice = ALLOWED_TTS_VOICES.has(voice) ? voice : "pt-BR-AntonioNeural";
+  const finalVoice = ALLOWED_TTS_VOICES.has(voice) ? voice : DEFAULT_VOICE;
+  const { key: speechKey, region: speechRegion } = resolveAzureCredentials();
+
+  if (!speechKey || !speechRegion) {
+    logEvent(rootDir, {
+      level: "error",
+      user: user || null,
+      message: "tts_missing_azure_credentials"
+    });
+    return null;
+  }
 
   const safeText = text.slice(0, 240);
   const hash = crypto
@@ -47,54 +60,18 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
       return `/${user}/tts/${hash}.mp3`;
     }
 
-    let audioBuffer = null;
+    await synthesizeWithAzure({
+      text: safeText,
+      voice: finalVoice,
+      filePath: outPath,
+      speechKey,
+      speechRegion
+    });
 
-    try {
-      const chunks = [];
-      for await (const chunk of synthesizeStream({
-        text: safeText,
-        voice: finalVoice,
-        language: finalVoice.split("-").slice(0, 2).join("-") || "pt-BR",
-        outputFormat: "audio-24khz-48kbitrate-mono-mp3"
-      })) {
-        if (chunk?.length) chunks.push(Buffer.from(chunk));
-      }
-      if (chunks.length) {
-        audioBuffer = Buffer.concat(chunks);
-      }
-    } catch (errStream) {
-      console.warn("TTS WARN synthesizeStream falhou, tentando synthesize", errStream);
-      logEvent(rootDir, {
-        level: "warn",
-        user: user || null,
-        message: `tts_stream_failed msg=${errStream?.message || "unknown"}`
-      });
+    const stats = fs.statSync(outPath);
+    if (!stats?.size) {
+      throw new Error("azure-tts wrote empty file");
     }
-
-    if (!audioBuffer) {
-      logEvent(rootDir, {
-        level: "info",
-        user: user || null,
-        message: "tts_fallback_synthesize"
-      });
-      const res = await synthesize({
-        text: safeText,
-        voice: finalVoice,
-        language: finalVoice.split("-").slice(0, 2).join("-") || "pt-BR",
-        outputFormat: "audio-24khz-48kbitrate-mono-mp3"
-      });
-      const audio = res?.audio;
-      if (audio) {
-        const buf = Buffer.from(audio);
-        if (buf.length) audioBuffer = buf;
-      }
-    }
-
-    if (!audioBuffer || audioBuffer.length === 0) {
-      throw new Error("edge-tts (echristian) returned empty audio buffer");
-    }
-
-    fs.writeFileSync(outPath, audioBuffer);
 
     logEvent(rootDir, {
       level: "info",
@@ -117,4 +94,35 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
     } catch {}
     return null;
   }
+}
+
+function resolveAzureCredentials() {
+  const key = (process.env.AZURE_SPEECH_KEY || process.env.SPEECH_KEY || "").trim();
+  const region = (process.env.AZURE_SPEECH_REGION || process.env.SPEECH_REGION || DEFAULT_REGION).trim();
+  return { key, region };
+}
+
+async function synthesizeWithAzure({ text, voice, filePath, speechKey, speechRegion }) {
+  const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, speechRegion);
+  speechConfig.speechSynthesisVoiceName = voice;
+  speechConfig.speechSynthesisOutputFormat = AUDIO_FORMAT;
+  const audioConfig = sdk.AudioConfig.fromAudioFileOutput(filePath, AUDIO_FORMAT);
+  const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+
+  await new Promise((resolve, reject) => {
+    synthesizer.speakTextAsync(
+      text,
+      (result) => {
+        synthesizer.close();
+        if (result?.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+          return resolve();
+        }
+        return reject(new Error(result?.errorDetails || "azure-tts failed"));
+      },
+      (err) => {
+        synthesizer.close();
+        reject(err);
+      }
+    );
+  });
 }

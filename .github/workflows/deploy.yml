@@ -57,6 +57,8 @@ jobs:
 
             # Export envs for pm2 start/restart
             export MONGO_URI="${{ secrets.MONGO_URI }}"
+            export AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}"
+            export AZURE_SPEECH_REGION="${{ secrets.AZURE_SPEECH_REGION }}"
 
             # Ensure pm2 knows about existing process; start if missing
             if pm2 pid vibespixapi >/dev/null 2>&1; then
