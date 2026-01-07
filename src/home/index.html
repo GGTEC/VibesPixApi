@@ -255,6 +255,7 @@
           <button class="sub-btn" data-tab="tab-storeconfig">Loja</button>
         </div>
         <button class="nav-btn" data-main="store">Loja / Produtos</button>
+        <button class="nav-btn" data-main="purchases">Registro de compras</button>
         <button id="store-link-btn" class="nav-btn" type="button">Abrir loja pública →</button>
         <button id="logout-btn" class="nav-btn" style="margin-top:6px;">Sair</button>
       </div>
@@ -416,12 +417,6 @@
               <p class="subtitle" style="text-align:left;margin:0;">Gerencie produtos e mídias da sua loja.</p>
             </div>
           </div>
-
-          <div class="subnav" id="store-subnav" style="margin-top:10px;">
-            <button class="sub-btn store-sub-btn" data-store-tab="store-products">Produtos</button>
-            <button class="sub-btn store-sub-btn" data-store-tab="store-purchases">Registro de compras</button>
-          </div>
-
           <div id="store-tab-products" class="tab-content">
             <div class="section">
               <div class="row">
@@ -467,16 +462,17 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <div id="store-tab-purchases" class="tab-content hidden">
-            <div class="section">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-                <h3 style="margin:0;">Registro de compras</h3>
-                <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
-              </div>
-              <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+        <div id="purchases-section" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0 0 6px;">Registro de compras</h2>
+              <p class="subtitle" style="text-align:left;margin:0;">Histórico e replay dos pedidos.</p>
             </div>
+            <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
           </div>
+          <div id="purchaseList" class="list" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </div>
       </div>
     </main>
@@ -583,7 +579,6 @@
     let imagens = [];
     let modalOpen = false;
     let currentMainTab = 'config';
-    let currentStoreTab = 'store-products';
 
     const toastContainer = document.getElementById('toast-container');
     function showToast(message, isError = false) {
@@ -612,7 +607,8 @@
     const actionBarStore = document.getElementById('action-bar-store');
     const mainSections = {
       config: document.getElementById('config-section'),
-      store: document.getElementById('store-section')
+      store: document.getElementById('store-section'),
+      purchases: document.getElementById('purchases-section')
     };
 
     function updateFloatingButtons() {
@@ -626,7 +622,7 @@
         actionBarStore.classList.add('hidden');
       } else if (currentMainTab === 'store') {
         const formVisible = !document.getElementById('productFormSection').classList.contains('hidden');
-        if (formVisible && currentStoreTab === 'store-products') {
+        if (formVisible) {
           actionBarStore.classList.remove('hidden');
         } else {
           actionBarStore.classList.add('hidden');
@@ -647,23 +643,6 @@
       if (subnav) subnav.classList.toggle('hidden', target !== 'config');
       const sidebar = document.querySelector('.sidebar');
       if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
-      updateFloatingButtons();
-    }
-
-    const storeTabs = Array.from(document.querySelectorAll('.store-sub-btn'));
-    const storeSections = {
-      'store-products': document.getElementById('store-tab-products'),
-      'store-purchases': document.getElementById('store-tab-purchases')
-    };
-
-    function setStoreTab(id) {
-      currentStoreTab = id;
-      storeTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.storeTab === id));
-      Object.entries(storeSections).forEach(([key, section]) => {
-        if (!section) return;
-        const shouldShow = key === id;
-        section.classList.toggle('hidden', !shouldShow);
-      });
       updateFloatingButtons();
     }
 
@@ -699,12 +678,8 @@
 
     mainTabs.forEach(btn => btn.addEventListener('click', () => setMainTab(btn.dataset.main)));
     subTabs.forEach(btn => btn.addEventListener('click', () => setSubTab(btn.dataset.tab)));
-
-    storeTabs.forEach(btn => btn.addEventListener('click', () => setStoreTab(btn.dataset.storeTab)));
-
     setMainTab('config');
     setSubTab('tab-rcon');
-    setStoreTab('store-products');
     initColorControls();
 
     // Login
