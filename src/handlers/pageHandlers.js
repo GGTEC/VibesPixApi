@@ -31,6 +31,12 @@ export function makeThanksMiddleware(rootDir) {
   };
 }
 
+export function makeDonateMiddleware(rootDir) {
+  return function donate(req, res, next) {
+    return express.static(path.join(rootDir, "src", "donate"))(req, res, next);
+  };
+}
+
 export function makeOverlayHandler(rootDir) {
   return function overlay(req, res) {
     return res.sendFile(path.join(rootDir, "src", "overlay", "index.html"));

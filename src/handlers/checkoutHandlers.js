@@ -61,6 +61,7 @@ export function makeCreateCheckoutHandler(rootDir) {
       order_id: body.order_id || null,
       username: body.customer_name || "Cliente",
       tts_message: body.tts_text || "",
+      tts_voice: body.tts_voice || body.ttsVoice || null,
       items: normalizedItems,
       created_at: now,
       expires_at: new Date(now.getTime() + CHECKOUT_TTL_MS)

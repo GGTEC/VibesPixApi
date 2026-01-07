@@ -119,6 +119,7 @@ export function makeWebhookHandler(rootDir) {
       || payload?.name
       || "Cliente";
     const ttsTexto = savedBuyer?.tts_message || payload?.tts_text || "";
+    const ttsVoice = savedBuyer?.tts_voice || payload?.tts_voice || payload?.ttsVoice || null;
 
     const rawItems = Array.isArray(savedBuyer?.items) && savedBuyer.items.length
       ? savedBuyer.items
@@ -207,7 +208,7 @@ export function makeWebhookHandler(rootDir) {
 
       const ttsCombined = [overlayFilled, ttsTexto].filter(Boolean).join("; ");
 
-      const voice = config?.ttsVoice || undefined;
+      const voice = ttsVoice || config?.ttsVoice || undefined;
 
       const audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
       const soundFile = config.sound || null;
@@ -275,7 +276,7 @@ export function makeTestProductHandler(rootDir) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 
-    const { productId, quantity = 1, username = "Tester", ttsText = "", simulateOverlay = true } = req.body || {};
+    const { productId, quantity = 1, username = "Tester", ttsText = "", simulateOverlay = true, ttsVoice = null } = req.body || {};
     if (!productId) {
       return res.status(400).json({ error: "productId obrigatório" });
     }
@@ -318,7 +319,7 @@ export function makeTestProductHandler(rootDir) {
         .replace(/\{valor\}/gi, valorText);
 
       const ttsCombined = [overlayMessage, ttsText].filter(Boolean).join("; ");
-      const voice = config?.ttsVoice || undefined;
+      const voice = ttsVoice || config?.ttsVoice || undefined;
 
       try {
         audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
@@ -345,6 +346,7 @@ export function makeTestProductHandler(rootDir) {
           username,
           overlayMessage,
           ttsMessage: ttsText || "",
+          ttsVoice: ttsVoice || config?.ttsVoice || null,
           totalValue: purchaseValue,
           items: items.map(it => ({ description: it.description, quantity: it.quantity })),
           source: "test-product"
@@ -438,7 +440,7 @@ export function makeReplayPurchaseHandler(rootDir) {
         .replace(/\{valor\}/gi, formatValorReais(Number(purchase.totalValue || 0)));
 
     const ttsMessage = purchase.ttsMessage || "";
-    const voice = config?.ttsVoice || undefined;
+    const voice = purchase.ttsVoice || purchase.tts_voice || config?.ttsVoice || undefined;
     let audioUrl = null;
     try {
       const ttsCombined = [overlayMessage, ttsMessage].filter(Boolean).join("; ");

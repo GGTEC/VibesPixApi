@@ -10,7 +10,7 @@ import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler, 
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler, makeTestProductHandler, makeListPurchasesHandler, makeReplayPurchaseHandler } from "./handlers/webhookHandlers.js";
 import { makeTestTtsHandler } from "./handlers/ttsHandlers.js";
-import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler, makeGoalHandler } from "./handlers/pageHandlers.js";
+import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler, makeGoalHandler, makeDonateMiddleware } from "./handlers/pageHandlers.js";
 import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic, makeGoalStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
@@ -153,6 +153,7 @@ export function createApp(rootDir) {
   userRouter.get("/config", makeConfigHandler(rootDir));
   userRouter.get("/productpanel", makeProductPanelHandler(rootDir));
   userRouter.use("/loja", makeLojaMiddleware(rootDir));
+  userRouter.use("/donate", makeDonateMiddleware(rootDir));
   userRouter.use("/thanks", makeThanksMiddleware(rootDir));
   userRouter.get("/overlay", makeOverlayHandler(rootDir));
   userRouter.get("/goal", makeGoalHandler(rootDir));
