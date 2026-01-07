@@ -400,6 +400,23 @@ p.lead {
   }
 }
 
+@media (max-width: 640px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .container {
+    min-height: auto;
+    height: auto;
+  }
+  #products {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 header.card {
   text-align: center;
 }
