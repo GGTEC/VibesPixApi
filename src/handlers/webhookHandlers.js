@@ -8,6 +8,14 @@ import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
 import { logEvent } from "../services/logger.js";
 
+function logStep(rootDir, user, step, extra = {}) {
+  logEvent(rootDir, {
+    level: "info",
+    user: user || null,
+    message: `webhook_step ${step} ${JSON.stringify(extra)}`
+  });
+}
+
 function sanitizeItems(payload) {
   const items = Array.isArray(payload.items) && payload.items.length
     ? payload.items
@@ -108,7 +116,7 @@ export function makeWebhookHandler(rootDir) {
       console.warn("Webhook log write failed", err);
     }
 
-    logEvent(rootDir, { level: "info", user: user || null, message: `webhook_received ${JSON.stringify(payload)}` });
+    logStep(rootDir, user, "received", { hasPayload: Boolean(payload), items: payload?.items?.length || 0, order_nsu: payload?.order_nsu });
 
     const orderNsu = payload?.order_nsu;
     const configForUser = await readConfig(rootDir, user);
@@ -136,6 +144,7 @@ export function makeWebhookHandler(rootDir) {
     const totalValueReais = Number.isFinite(totalValueCents) ? totalValueCents / 100 : 0;
 
     if (!payload || !rawItems.length) {
+      logStep(rootDir, user, "reject_payload", { hasPayload: Boolean(payload), rawItems: rawItems.length });
       const reasons = [];
       if (!payload) reasons.push("payload ausente ou inválido");
       if (!rawItems.length) reasons.push("sem itens válidos no payload");
@@ -143,6 +152,7 @@ export function makeWebhookHandler(rootDir) {
     }
 
     if (!configForUser) {
+      logStep(rootDir, user, "reject_config_missing", {});
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
@@ -152,8 +162,8 @@ export function makeWebhookHandler(rootDir) {
     const itemsFromSaved = Array.isArray(savedBuyer?.items) ? sanitizeItems({ items: savedBuyer.items }) : [];
     const items = itemsFromPayload.length ? itemsFromPayload : itemsFromSaved;
 
-
     if (!items.length) {
+      logStep(rootDir, user, "reject_items_empty", {});
       return res.status(400).json({ error: "Nenhum item/descrição válido no payload" });
     }
 
@@ -161,28 +171,16 @@ export function makeWebhookHandler(rootDir) {
       const rconConfig = config?.rcon || {};
 
       if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
-        logEvent(rootDir, {
-          level: "error",
-          user: user || null,
-          message: `webhook_skip_rcon missing_rcon_config host=${rconConfig.host || ""} port=${rconConfig.port || ""} hasPassword=${Boolean(rconConfig.password)}`
-        });
+        logStep(rootDir, user, "skip_rcon_missing_config", { host: rconConfig.host || "", port: rconConfig.port || "", hasPassword: Boolean(rconConfig.password) });
         return;
       }
 
-      logEvent(rootDir, {
-        level: "info",
-        user: user || null,
-        message: `webhook_rcon_connect host=${rconConfig.host} port=${rconConfig.port}`
-      });
+      logStep(rootDir, user, "rcon_connect_start", { host: rconConfig.host, port: rconConfig.port, items: items.length });
 
       const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
 
       rcon.on("end", () => {
-        logEvent(rootDir, {
-          level: "info",
-          user: user || null,
-          message: `webhook_rcon_closed host=${rconConfig.host} port=${rconConfig.port}`
-        });
+        logStep(rootDir, user, "rcon_closed", { host: rconConfig.host, port: rconConfig.port });
       });
 
       rcon.on("error", (err) => {
@@ -194,7 +192,9 @@ export function makeWebhookHandler(rootDir) {
       });
 
       try {
+        logStep(rootDir, user, "rcon_dispatch_start", { items: items.map(it => ({ d: it.description, q: it.quantity })) });
         await dispatchCommands(rcon, config, items, username);
+        logStep(rootDir, user, "rcon_dispatch_done", {});
       } finally {
         rcon.end();
       }
@@ -210,7 +210,9 @@ export function makeWebhookHandler(rootDir) {
 
       const voice = ttsVoice || config?.ttsVoice || undefined;
 
+      logStep(rootDir, user, "tts_start", { voice });
       const audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+      logStep(rootDir, user, "tts_done", { hasAudio: Boolean(audioUrl) });
       const soundFile = config.sound || null;
       const soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
       const overlayMessage = overlayFilled || "Nova compra";
@@ -219,11 +221,13 @@ export function makeWebhookHandler(rootDir) {
       const purchaseValue = Number.isFinite(totalValueReais) ? totalValueReais : 0;
       if (purchaseValue > 0) {
         try {
+          logStep(rootDir, user, "goal_update_start", { add: purchaseValue });
           await writeConfig(rootDir, user, (current) => {
             const goal = normalizeOverlayGoal(current?.overlayGoal);
             goal.current = Math.max(0, (goal.current || 0) + purchaseValue);
             return { ...current, overlayGoal: goal };
           });
+          logStep(rootDir, user, "goal_update_done", {});
         } catch (err) {
           logEvent(rootDir, {
             level: "error",
@@ -249,9 +253,11 @@ export function makeWebhookHandler(rootDir) {
         ttsMessage: buyerMessage,
         totalValue: purchaseValue
       });
+      logStep(rootDir, user, "broadcast_purchase", { overlayMessage, hasAudio: Boolean(audioUrl), hasSound: Boolean(soundUrl) });
 
       if (orderNsu) {
         await removeBuyer(rootDir, user, orderNsu);
+        logStep(rootDir, user, "remove_buyer_done", { orderNsu });
       }
     })().catch(err => {
       const context = {
@@ -268,6 +274,7 @@ export function makeWebhookHandler(rootDir) {
       });
     });
 
+    logStep(rootDir, user, "response_sent", {});
     res.json({ status: "OK", dispatchedAsync: true });
 
     void backgroundWork;
