@@ -37,6 +37,8 @@ function createUserStorage(rootDir, folder = "images") {
 
 export function createApp(rootDir) {
   const app = express();
+  // Rodando atrás de proxy (Nginx): respeita X-Forwarded-* (ex.: protocolo HTTPS externo)
+  app.set("trust proxy", true);
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: "2mb" }));
   app.use(bodyParser.json());

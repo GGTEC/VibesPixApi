@@ -10,11 +10,21 @@ const backBtn = document.getElementById("btn-voltar");
 const selections = new Map(); // id -> {produto, qty}
 const defaultBodyBackground = getComputedStyle(document.body).background;
 
+function toHttpsUrl(inputUrl) {
+  if (!inputUrl || typeof inputUrl !== "string") return inputUrl;
+  const url = inputUrl.trim();
+  if (!url) return url;
+  if (url.startsWith("//")) return `${window.location.protocol}${url}`;
+  if (url.toLowerCase().startsWith("http://")) return `https://${url.slice(7)}`;
+  return url;
+}
+
 function showError(msg) {
   errorEl.textContent = msg || "";
 }
 
 function applyPageBackground(bgUrl) {
+  bgUrl = toHttpsUrl(bgUrl);
   if (!bgUrl) {
     document.body.style.background = defaultBodyBackground;
     document.body.style.backgroundSize = "";
@@ -56,14 +66,14 @@ async function loadConfig() {
     const headerEl = document.querySelector("header.card");
     const bannerBg =
       data.home.bannerBg || data.home.leadBg || data.home.leadBackground;
-    const headerBg = bannerBg || data.home.pageBg || data.home.storeBg;
+    const headerBg = toHttpsUrl(bannerBg || data.home.pageBg || data.home.storeBg);
     if (headerEl && headerBg) {
       headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.72), rgba(13,11,22,0.6)), url('${headerBg}')`;
       headerEl.style.backgroundSize = "cover";
       headerEl.style.backgroundPosition = "center";
     }
 
-    const pageBg = data.home.pageBg || data.home.storeBg;
+    const pageBg = toHttpsUrl(data.home.pageBg || data.home.storeBg);
     applyPageBackground(pageBg);
   }
 }
@@ -87,7 +97,7 @@ function renderProducts(config) {
     card.className = "card product";
 
     const img = document.createElement("img");
-    img.src = p.imagem || "https://vibesbot.com.br/assets/img/about.png";
+    img.src = toHttpsUrl(p.imagem) || "https://vibesbot.com.br/assets/img/about.png";
     img.alt = id;
 
     const info = document.createElement("div");
