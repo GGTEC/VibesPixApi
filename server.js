@@ -9,8 +9,21 @@ import { logEvent } from "./src/services/logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Wrap WebSocket to avoid process-crashing errors (e.g., 403 handshakes from providers)
+const BaseWebSocket = WebSocket;
+class SafeWebSocket extends BaseWebSocket {
+  constructor(...args) {
+    super(...args);
+    this.on("error", (err) => {
+      console.warn("WebSocket connection error", err?.message || err);
+    });
+  }
+}
+
 if (typeof globalThis.WebSocket === "undefined") {
-  globalThis.WebSocket = WebSocket;
+  globalThis.WebSocket = SafeWebSocket;
+} else if (globalThis.WebSocket !== SafeWebSocket) {
+  globalThis.WebSocket = SafeWebSocket;
 }
 
 if (typeof globalThis.fetch !== "function") {
