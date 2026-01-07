@@ -344,7 +344,13 @@
     function renderProducts(config) {
       productsEl.innerHTML = '';
       const produtos = config.produtos || {};
-      const entries = Object.entries(produtos);
+      const entries = Object.entries(produtos)
+        .sort((a, b) => {
+          const va = getValor(a[1]);
+          const vb = getValor(b[1]);
+          if (va === vb) return 0;
+          return va < vb ? -1 : 1;
+        });
       if (!entries.length) {
         productsEl.innerHTML = '<p class="notice">Nenhum produto configurado.</p>';
         return;
