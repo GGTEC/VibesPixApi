@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { synthesize, synthesizeStream } from "@echristian/edge-tts";
+import { logEvent } from "./logger.js";
 
 const ALLOWED_TTS_VOICES = new Set([
   "pt-BR-ThalitaMultilingualNeural",
@@ -26,12 +27,23 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
   const ttsDir = path.join(rootDir, "users", user, "tts");
   const outPath = path.join(ttsDir, `${hash}.mp3`);
 
+  logEvent(rootDir, {
+    level: "info",
+    user: user || null,
+    message: `tts_begin voice=${finalVoice} len=${safeText.length}`
+  });
+
   try {
     if (!fs.existsSync(ttsDir)) {
       fs.mkdirSync(ttsDir, { recursive: true });
     }
 
     if (fs.existsSync(outPath)) {
+      logEvent(rootDir, {
+        level: "info",
+        user: user || null,
+        message: `tts_cache_hit voice=${finalVoice} file=${hash}.mp3`
+      });
       return `/${user}/tts/${hash}.mp3`;
     }
 
@@ -52,9 +64,19 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
       }
     } catch (errStream) {
       console.warn("TTS WARN synthesizeStream falhou, tentando synthesize", errStream);
+      logEvent(rootDir, {
+        level: "warn",
+        user: user || null,
+        message: `tts_stream_failed msg=${errStream?.message || "unknown"}`
+      });
     }
 
     if (!audioBuffer) {
+      logEvent(rootDir, {
+        level: "info",
+        user: user || null,
+        message: "tts_fallback_synthesize"
+      });
       const res = await synthesize({
         text: safeText,
         voice: finalVoice,
@@ -74,9 +96,20 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
 
     fs.writeFileSync(outPath, audioBuffer);
 
+    logEvent(rootDir, {
+      level: "info",
+      user: user || null,
+      message: `tts_done voice=${finalVoice} file=${hash}.mp3`
+    });
+
     return `/${user}/tts/${hash}.mp3`;
   } catch (err) {
     console.error("TTS ERROR:", err);
+    logEvent(rootDir, {
+      level: "error",
+      user: user || null,
+      message: `tts_exception msg=${err?.message || "unknown"}`
+    });
     try {
       if (fs.existsSync(outPath) && fs.statSync(outPath).size === 0) {
         fs.unlinkSync(outPath);
