@@ -112,7 +112,6 @@ p.lead {
   gap: 12px;
   align-items: center;
   min-height: 120px;
-  max-height: 140px;
 }
 .product img {
   width: 84px;
@@ -340,13 +339,13 @@ p.lead {
     padding: 16px;
   }
   .product {
-    grid-template-columns: 92px 1fr;
+    grid-template-columns: 90px 1fr;
     grid-template-areas:
-      "img title"
-      "img meta"
+      "img info"
       "check qty";
+    row-gap: 10px;
     align-items: start;
-    max-height: none;
+    min-height: 0;
   }
   .product img {
     width: 92px;
@@ -354,7 +353,8 @@ p.lead {
     grid-area: img;
   }
   .product .info {
-    grid-area: title;
+    grid-area: info;
+    gap: 4px;
   }
   .product h3 {
     font-size: 16px;
@@ -362,10 +362,10 @@ p.lead {
   }
   .product p {
     font-size: 13px;
-    grid-area: meta;
   }
   .price {
     font-size: 16px;
+    display: inline-block;
   }
   .check-col {
     grid-area: check;
@@ -374,12 +374,12 @@ p.lead {
   }
   .qty {
     grid-area: qty;
-    width: 40%;
+    width: 100%;
     justify-content: space-between;
     margin-top: 4px;
     padding: 4px 6px;
     font-size: 14px;
-    justify-self: end;
+    justify-self: stretch;
   }
   .qty button {
     width: 28px;
@@ -407,7 +407,7 @@ header.card {
 .footer {
   text-align: center;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 8px;
 }
 
 .footer-title {
