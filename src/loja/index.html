@@ -340,7 +340,7 @@
         if (titleEl && data.home.name) titleEl.textContent = data.home.name;
 
         const headerEl = document.querySelector('header.card');
-        const bg = data.home.donateBg || data.home.leadBg || data.home.leadBackground;
+        const bg = data.home.storeBg || data.home.donateBg || data.home.leadBg || data.home.leadBackground;
         if (headerEl && bg) {
           headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.72), rgba(13,11,22,0.6)), url('${bg}')`;
           headerEl.style.backgroundSize = 'cover';
