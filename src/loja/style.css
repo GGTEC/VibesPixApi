@@ -411,3 +411,19 @@ p.lead {
 header.card {
   text-align: center;
 }
+
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.footer-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.footer-subtitle {
+  margin: 4px 0 0;
+  font-weight: 400;
+}
