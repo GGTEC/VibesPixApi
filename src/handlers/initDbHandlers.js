@@ -1,4 +1,4 @@
-import { getDbForUser } from "../services/mongo.js";
+import { ensureUserDbSetup } from "../services/mongo.js";
 import { logEvent } from "../services/logger.js";
 
 function toArrayFromMap(produtosObj = {}) {
@@ -22,12 +22,13 @@ export function makeInitDbHandler(rootDir) {
     };
 
     try {
-      const db = await getDbForUser(user);
+      const { db, createdCollections } = await ensureUserDbSetup(user);
 
       const buyersCol = db.collection("current_buyers");
       const rconCol = db.collection("rcon");
       const produtosCol = db.collection("produtos");
       const configCol = db.collection("config");
+      // Garante existência via ensureUserDbSetup (não limpamos histórico aqui)
 
       await Promise.all([
         buyersCol.deleteMany({}),
@@ -68,11 +69,13 @@ export function makeInitDbHandler(rootDir) {
       return res.json({
         ok: true,
         db: db.databaseName,
+        createdCollections,
         collections: {
           current_buyers: buyersDocs.length,
           produtos: produtosDocs.length,
           rcon: 1,
-          config: 1
+          config: 1,
+          purchases: "ready"
         }
       });
     } catch (err) {

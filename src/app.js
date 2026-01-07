@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { makeGetConfigHandler, makeUpdateConfigHandler } from "./handlers/configHandlers.js";
 import { makeInitDbHandler } from "./handlers/initDbHandlers.js";
+import { makeDbSchemaHandler } from "./handlers/dbSchemaHandlers.js";
 import { makeUploadImageHandler, makeUploadSoundHandler, makeListImagesHandler, makeListSoundsHandler } from "./handlers/uploadHandlers.js";
 import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler, makeTestProductHandler, makeListPurchasesHandler, makeReplayPurchaseHandler } from "./handlers/webhookHandlers.js";
@@ -114,6 +115,7 @@ export function createApp(rootDir) {
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
   userRouter.post("/api/tts-test", makeTestTtsHandler(rootDir));
   userRouter.post("/api/init-db", makeInitDbHandler(rootDir));
+  userRouter.get("/api/db-schema", makeDbSchemaHandler(rootDir));
   userRouter.post(
     "/api/upload-image",
     (req, res, next) => {
