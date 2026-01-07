@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+defaults:
+  run:
+    working-directory: VibesPixApi
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -34,7 +38,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           key: ${{ secrets.DEPLOY_KEY }}
-          source: "release.tar.gz"
+          source: "VibesPixApi/release.tar.gz"
           target: "/tmp"
 
       - name: Unpack and restart
