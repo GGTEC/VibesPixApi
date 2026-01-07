@@ -414,6 +414,11 @@
               <label class="label" for="store-lead" style="margin-top:10px;">Texto de destaque da loja</label>
               <input id="store-lead" class="input" placeholder="Ex: Compre interações para a live!" />
               <p class="help-text">Este texto será exibido na loja pública, acima dos produtos.</p>
+
+              <label class="label" for="store-lead-bg" style="margin-top:12px;">Imagem de fundo do lead</label>
+              <input id="store-lead-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
+              <input id="store-lead-bg-url" type="hidden" />
+              <p class="help-text">Opcional. Clique para enviar ou escolher uma imagem (usada no topo da loja).</p>
             </div>
           </div>
 
@@ -588,6 +593,7 @@
     let purchases = [];
     let imagens = [];
     let modalOpen = false;
+    let currentImageTarget = 'product';
     let currentMainTab = 'config';
 
     const toastContainer = document.getElementById('toast-container');
@@ -851,9 +857,10 @@
       const overlayLink = document.getElementById('overlay-link');
       overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
 
-      // Loja - nome e lead
+      // Loja - nome, lead e imagem
       document.getElementById('store-name').value = data.home?.name || '';
       document.getElementById('store-lead').value = data.home?.lead || '';
+      setImageValue(data.home?.leadBg || data.home?.leadBackground || '', 'lead');
 
       const goal = data.overlayGoal || {};
       document.getElementById('goal-target').value = goal.target ?? '';
@@ -892,7 +899,8 @@
             overlayGoal,
             home: {
               name: document.getElementById('store-name').value.trim() || undefined,
-              lead: document.getElementById('store-lead').value.trim() || undefined
+              lead: document.getElementById('store-lead').value.trim() || undefined,
+              leadBg: document.getElementById('store-lead-bg-url').value.trim() || undefined
             }
           })
         });
@@ -901,6 +909,7 @@
         configCache.home = configCache.home || {};
         configCache.home.name = document.getElementById('store-name').value.trim() || undefined;
         configCache.home.lead = document.getElementById('store-lead').value.trim() || undefined;
+        configCache.home.leadBg = document.getElementById('store-lead-bg-url').value.trim() || undefined;
         showToast('Configurações salvas!');
       } catch {
         showToast('Erro ao salvar!', true);
@@ -1008,13 +1017,21 @@
       }
     }
 
-    function setImageValue(url) {
+    function setImageValue(url, target = currentImageTarget) {
       const name = getFileNameFromUrl(url);
+      if (target === 'lead') {
+        document.getElementById('store-lead-bg-url').value = url || '';
+        document.getElementById('store-lead-bg').value = name || '';
+        return;
+      }
       document.getElementById('productImgUrl').value = url || '';
       document.getElementById('productImg').value = name || '';
     }
 
-    function getImageValue() { return document.getElementById('productImgUrl').value.trim(); }
+    function getImageValue(target = currentImageTarget) {
+      if (target === 'lead') return document.getElementById('store-lead-bg-url').value.trim();
+      return document.getElementById('productImgUrl').value.trim();
+    }
 
     function renderImageGallery() {
       const container = document.getElementById('imageGallery');
@@ -1077,7 +1094,7 @@
       document.getElementById('productPrice').value = '';
       document.getElementById('productQty').value = '';
       document.getElementById('productCmds').value = '';
-      setImageValue('');
+      setImageValue('', 'product');
     }
 
     function fillForm(id) {
@@ -1088,7 +1105,7 @@
       document.getElementById('productPrice').value = data.valor ? (data.valor / 100).toFixed(2) : '';
       document.getElementById('productQty').value = data.quantity || '';
       document.getElementById('productCmds').value = (data.comandos || []).join('\n');
-      setImageValue(data.imagem || '');
+      setImageValue(data.imagem || '', 'product');
     }
 
     function showForm(show) {
@@ -1348,7 +1365,10 @@
     });
 
     document.getElementById('productImg').addEventListener('click', () => {
-      openImageModal();
+      openImageModal('product');
+    });
+    document.getElementById('store-lead-bg').addEventListener('click', () => {
+      openImageModal('lead');
     });
     document.getElementById('store-link-btn').addEventListener('click', () => {
       const url = `${location.origin}/${encodeURIComponent(user)}/loja`;
@@ -1356,7 +1376,8 @@
     });
 
     // Modal de imagens
-    function openImageModal() {
+    function openImageModal(target = 'product') {
+      currentImageTarget = target;
       modalOpen = true;
       document.getElementById('imageModal').style.display = 'flex';
       renderImageGallery();

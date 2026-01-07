@@ -338,6 +338,14 @@
         const titleEl = document.getElementById('store-title');
         if (leadEl && data.home.lead) leadEl.textContent = data.home.lead;
         if (titleEl && data.home.name) titleEl.textContent = data.home.name;
+
+        const headerEl = document.querySelector('header.card');
+        const leadBg = data.home.leadBg || data.home.leadBackground;
+        if (headerEl && leadBg) {
+          headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.72), rgba(13,11,22,0.6)), url('${leadBg}')`;
+          headerEl.style.backgroundSize = 'cover';
+          headerEl.style.backgroundPosition = 'center';
+        }
       }
     }
 
