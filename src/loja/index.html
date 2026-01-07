@@ -359,7 +359,7 @@
 
         const headerEl = document.querySelector('header.card');
         const bannerBg = data.home.bannerBg || data.home.leadBg || data.home.leadBackground;
-        const headerBg = bannerBg || data.home.storeBg || data.home.donateBg;
+        const headerBg = bannerBg || data.home.pageBg || data.home.storeBg;
         if (headerEl && headerBg) {
           headerEl.style.backgroundImage = `linear-gradient(135deg, rgba(13,11,22,0.72), rgba(13,11,22,0.6)), url('${headerBg}')`;
           headerEl.style.backgroundSize = 'cover';

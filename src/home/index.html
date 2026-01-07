@@ -426,11 +426,6 @@
               <input id="store-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
               <input id="store-bg-url" type="hidden" />
               <p class="help-text">Fundo principal aplicado em /loja e /donate.</p>
-
-              <label class="label" for="store-donate-bg" style="margin-top:12px;">Fundo do banner exclusivo do donate</label>
-              <input id="store-donate-bg" class="input" placeholder="Escolha uma imagem" readonly style="cursor:pointer;" />
-              <input id="store-donate-bg-url" type="hidden" />
-              <p class="help-text">Opcional. Sobrescreve o banner apenas na página /donate.</p>
             </div>
           </div>
 
@@ -876,7 +871,6 @@
       document.getElementById('store-lead').value = data.home?.lead || '';
       setImageValue(bannerBg, 'lead');
       setImageValue(pageBg, 'store');
-      setImageValue(data.home?.donateBg || '', 'donate');
 
       const goal = data.overlayGoal || {};
       document.getElementById('goal-target').value = goal.target ?? '';
@@ -919,8 +913,7 @@
               bannerBg: document.getElementById('store-lead-bg-url').value.trim() || undefined,
               leadBg: document.getElementById('store-lead-bg-url').value.trim() || undefined,
               pageBg: document.getElementById('store-bg-url').value.trim() || undefined,
-              storeBg: document.getElementById('store-bg-url').value.trim() || undefined,
-              donateBg: document.getElementById('store-donate-bg-url').value.trim() || undefined
+              storeBg: document.getElementById('store-bg-url').value.trim() || undefined
             }
           })
         });
@@ -933,7 +926,6 @@
         configCache.home.leadBg = document.getElementById('store-lead-bg-url').value.trim() || undefined;
         configCache.home.pageBg = document.getElementById('store-bg-url').value.trim() || undefined;
         configCache.home.storeBg = document.getElementById('store-bg-url').value.trim() || undefined;
-        configCache.home.donateBg = document.getElementById('store-donate-bg-url').value.trim() || undefined;
         showToast('Configurações salvas!');
       } catch {
         showToast('Erro ao salvar!', true);
@@ -1048,11 +1040,6 @@
         document.getElementById('store-lead-bg').value = name || '';
         return;
       }
-      if (target === 'donate') {
-        document.getElementById('store-donate-bg-url').value = url || '';
-        document.getElementById('store-donate-bg').value = name || '';
-        return;
-      }
       if (target === 'store' || target === 'page') {
         document.getElementById('store-bg-url').value = url || '';
         document.getElementById('store-bg').value = name || '';
@@ -1064,7 +1051,6 @@
 
     function getImageValue(target = currentImageTarget) {
       if (target === 'lead' || target === 'banner') return document.getElementById('store-lead-bg-url').value.trim();
-      if (target === 'donate') return document.getElementById('store-donate-bg-url').value.trim();
       if (target === 'store' || target === 'page') return document.getElementById('store-bg-url').value.trim();
       return document.getElementById('productImgUrl').value.trim();
     }
@@ -1408,9 +1394,6 @@
     });
     document.getElementById('store-bg').addEventListener('click', () => {
       openImageModal('store');
-    });
-    document.getElementById('store-donate-bg').addEventListener('click', () => {
-      openImageModal('donate');
     });
     document.getElementById('store-link-btn').addEventListener('click', () => {
       const url = `${location.origin}/${encodeURIComponent(user)}/loja`;
