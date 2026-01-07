@@ -19,7 +19,7 @@ body {
 }
 
 .goal-root {
-  width: min(92vw, 860px);
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
