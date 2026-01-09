@@ -56,6 +56,8 @@ jobs:
             fi
 
             # Export envs for pm2 start/restart
+            export ADMIN_USER="${{ secrets.ADMIN_USER }}"
+            export ADMIN_PASS="${{ secrets.ADMIN_PASS }}"
             export MONGO_URI="${{ secrets.MONGO_URI }}"
             export AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}"
             export AZURE_SPEECH_REGION="${{ secrets.AZURE_SPEECH_REGION }}"
