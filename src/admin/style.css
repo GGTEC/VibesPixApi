@@ -348,14 +348,6 @@ body {
 	margin-top: 12px;
 }
 
-.metrics-chart {
-	width: 100%;
-	height: auto;
-	background: rgba(0,0,0,0.18);
-	border: 1px solid rgba(255,255,255,0.08);
-	border-radius: var(--radius);
-}
-
 .metrics-summary {
 	margin-top: 2px;
 	border: 1px solid rgba(255,255,255,0.08);

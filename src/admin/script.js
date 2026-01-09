@@ -58,7 +58,6 @@ const elMetricsForm = document.getElementById("metricsForm");
 const elMetricsBtn = document.getElementById("metricsBtn");
 const elMetricsResult = document.getElementById("metricsResult");
 const elMetricsPurchases = document.getElementById("metricsPurchases");
-const elMetricsChart = document.getElementById("metricsChart");
 
 const elSectionTest = document.getElementById("sectionTest");
 const elSectionLogs = document.getElementById("sectionLogs");
@@ -256,74 +255,6 @@ function renderPurchasesTable(purchases) {
 
     elMetricsPurchases.appendChild(row);
   }
-}
-
-function bucketByDay(purchases) {
-  const map = new Map();
-  for (const p of Array.isArray(purchases) ? purchases : []) {
-    const d = new Date(p?.createdAt);
-    if (Number.isNaN(d.getTime())) continue;
-    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
-    const v = Number(p?.totalValue);
-    map.set(key, (map.get(key) || 0) + (Number.isFinite(v) ? v : 0));
-  }
-  const keys = Array.from(map.keys()).sort();
-  return keys.map((k) => ({ day: k, total: map.get(k) || 0 }));
-}
-
-function drawBarChart(canvas, series) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-
-  const accent = getCssVar("--accent", "#7c4dff");
-  const accent2 = getCssVar("--accent-2", "#00e0ff");
-  const text = getCssVar("--text", "#f6f6f6");
-  const muted = getCssVar("--muted", "#9ba0b5");
-
-  const data = Array.isArray(series) ? series : [];
-  if (!data.length) {
-    ctx.fillStyle = muted;
-    ctx.font = "14px system-ui";
-    ctx.fillText("Sem dados no período.", 16, 28);
-    return;
-  }
-
-  const padding = 18;
-  const chartW = width - padding * 2;
-  const chartH = height - padding * 2;
-  const max = Math.max(...data.map((d) => Number(d.total) || 0), 1);
-
-  // eixo
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padding, padding);
-  ctx.lineTo(padding, height - padding);
-  ctx.lineTo(width - padding, height - padding);
-  ctx.stroke();
-
-  const barGap = 6;
-  const barW = Math.max(6, (chartW - barGap * (data.length - 1)) / data.length);
-
-  for (let i = 0; i < data.length; i++) {
-    const v = Number(data[i].total) || 0;
-    const h = (v / max) * (chartH - 18);
-    const x = padding + i * (barW + barGap);
-    const y = height - padding - h;
-
-    const grad = ctx.createLinearGradient(0, y, 0, height - padding);
-    grad.addColorStop(0, accent2);
-    grad.addColorStop(1, accent);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y, barW, h);
-  }
-
-  // Sem textos extras no canvas (apenas o gráfico)
 }
 
 function initCollapsibles() {
@@ -622,7 +553,6 @@ elMetricsForm?.addEventListener("submit", async (e) => {
       elMetricsResult.textContent = "Calculando...";
     }
     if (elMetricsPurchases) elMetricsPurchases.hidden = true;
-    if (elMetricsChart) elMetricsChart.hidden = true;
 
     const resp = await api(
       `/admin/api/metrics?user=${encodeURIComponent(selectedUser)}&from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`
@@ -648,12 +578,6 @@ elMetricsForm?.addEventListener("submit", async (e) => {
       elMetricsPurchases.hidden = false;
       renderPurchasesTable(purchases);
     }
-
-    if (elMetricsChart) {
-      elMetricsChart.hidden = false;
-      const series = bucketByDay(purchases);
-      drawBarChart(elMetricsChart, series);
-    }
   } catch (err) {
     if (elMetricsResult) {
       elMetricsResult.hidden = false;
@@ -661,7 +585,6 @@ elMetricsForm?.addEventListener("submit", async (e) => {
       elMetricsResult.textContent = `Erro: ${err?.message || err}`;
     }
     if (elMetricsPurchases) elMetricsPurchases.hidden = true;
-    if (elMetricsChart) elMetricsChart.hidden = true;
   } finally {
     if (elMetricsBtn) elMetricsBtn.disabled = !selectedUser;
   }

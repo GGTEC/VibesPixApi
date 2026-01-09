@@ -241,17 +241,9 @@ body {
 /* Métricas (mesmo padrão do /admin, adaptado ao tema do painel) */
 .metrics-grid {
   display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr;
   gap: 12px;
   margin-top: 12px;
-}
-
-.metrics-chart {
-  width: 100%;
-  height: auto;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius);
 }
 
 .metrics-summary {

@@ -141,70 +141,6 @@ function calcDaysInclusive(fromIso, toIso) {
   return Math.floor(ms / (24 * 60 * 60 * 1000)) + 1;
 }
 
-function bucketByDay(purchasesArr) {
-  const map = new Map();
-  for (const p of Array.isArray(purchasesArr) ? purchasesArr : []) {
-    const d = new Date(p?.createdAt);
-    if (Number.isNaN(d.getTime())) continue;
-    const key = d.toISOString().slice(0, 10);
-    const v = Number(p?.totalValue);
-    map.set(key, (map.get(key) || 0) + (Number.isFinite(v) ? v : 0));
-  }
-  const keys = Array.from(map.keys()).sort();
-  return keys.map((k) => ({ day: k, total: map.get(k) || 0 }));
-}
-
-function drawBarChart(canvas, series) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-
-  const accent = getCssVar("--accent", "#7c4dff");
-  const accent2 = getCssVar("--accent-2", "#00e0ff");
-  const muted = getCssVar("--muted", "#9ba0b5");
-
-  const data = Array.isArray(series) ? series : [];
-  if (!data.length) {
-    ctx.fillStyle = muted;
-    ctx.font = "14px system-ui";
-    ctx.fillText("Sem dados no período.", 16, 28);
-    return;
-  }
-
-  const padding = 18;
-  const chartW = width - padding * 2;
-  const chartH = height - padding * 2;
-  const max = Math.max(...data.map((d) => Number(d.total) || 0), 1);
-
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padding, padding);
-  ctx.lineTo(padding, height - padding);
-  ctx.lineTo(width - padding, height - padding);
-  ctx.stroke();
-
-  const barGap = 6;
-  const barW = Math.max(6, (chartW - barGap * (data.length - 1)) / data.length);
-
-  for (let i = 0; i < data.length; i++) {
-    const v = Number(data[i].total) || 0;
-    const h = (v / max) * (chartH - 18);
-    const x = padding + i * (barW + barGap);
-    const y = height - padding - h;
-
-    const grad = ctx.createLinearGradient(0, y, 0, height - padding);
-    grad.addColorStop(0, accent2);
-    grad.addColorStop(1, accent);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y, barW, h);
-  }
-}
-
 function renderMetricsSummary(container, resp) {
   if (!container) return;
   container.innerHTML = "";
@@ -954,7 +890,6 @@ const metricsForm = document.getElementById("metricsForm");
 const metricsFrom = document.getElementById("metricsFrom");
 const metricsTo = document.getElementById("metricsTo");
 const metricsBtn = document.getElementById("metricsBtn");
-const metricsChart = document.getElementById("metricsChart");
 const metricsResult = document.getElementById("metricsResult");
 const metricsPurchases = document.getElementById("metricsPurchases");
 
@@ -978,7 +913,6 @@ metricsForm?.addEventListener("submit", async (e) => {
       metricsResult.textContent = "";
     }
     if (metricsPurchases) metricsPurchases.hidden = true;
-    if (metricsChart) metricsChart.hidden = true;
 
     const resp = await loadMetrics(fromIso, toIso);
     const purchasesArr = Array.isArray(resp?.purchases) ? resp.purchases : [];
@@ -991,11 +925,6 @@ metricsForm?.addEventListener("submit", async (e) => {
     if (metricsPurchases) {
       metricsPurchases.hidden = false;
       renderPurchasesTable(metricsPurchases, purchasesArr);
-    }
-
-    if (metricsChart) {
-      metricsChart.hidden = false;
-      drawBarChart(metricsChart, bucketByDay(purchasesArr));
     }
   } catch (err) {
     showToast(err?.message || "Erro ao carregar métricas", true);
