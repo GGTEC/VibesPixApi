@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getNamedDb } from "./mongo.js";
 
 const SESSION_TTL_MS = 60 * 60 * 1000; // 1h
-const SESSION_SECRET = process.env.SESSION_SECRET || "vibes-session-secret";
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
 function parseCookies(cookieHeader = "") {
   return cookieHeader.split(";").reduce((acc, part) => {
