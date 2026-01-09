@@ -80,6 +80,11 @@ export function createApp(rootDir) {
     origin(origin, cb) {
       // Alguns clientes (curl, server-to-server, same-origin) não mandam Origin.
       if (!origin) return cb(null, !!allowNoOrigin);
+
+      // Alguns ambientes (OBS Browser Source, iframes sandbox, extensões) enviam Origin: "null".
+      // Sem permitir isso, overlays podem parar de conectar no SSE/fetch.
+      if (origin === "null") return cb(null, !!allowNoOrigin);
+
       if (allowedOrigins.includes(origin)) return cb(null, true);
       // Não estoura erro (500). Apenas não aplica CORS para origens não permitidas.
       return cb(null, false);
