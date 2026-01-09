@@ -150,7 +150,7 @@ export function makeAdminLoginHandler() {
       });
 
       setAdminCookie(res, token, req);
-      return res.json({ ok: true, username: adminDoc.username, expiresAt: expiresAt.toISOString() });
+      return res.json({ ok: true, username: adminDoc.username, token, expiresAt: expiresAt.toISOString() });
     } catch (err) {
       return res.status(500).json({ error: "Erro ao autenticar admin", detail: err?.message || String(err) });
     }
@@ -163,8 +163,11 @@ export function makeAdminLogoutHandler() {
       await ensureAdminDbSetup();
       const db = await getAdminDb();
 
+      const auth = String(req.headers?.authorization || "");
+      const bearer = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
+
       const cookies = parseCookies(req.headers?.cookie || "");
-      const token = cookies.admin_token;
+      const token = bearer || cookies.admin_token;
       if (token) {
         await db.collection("tokens").deleteOne({ token });
       }

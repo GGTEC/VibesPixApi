@@ -1,6 +1,32 @@
+const TOKEN_KEY = "vibespix_admin_token";
+
+function getToken() {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setToken(token) {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 async function api(path, opts) {
+  const token = getToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(opts?.headers || {})
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   const resp = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
     ...opts
   });
@@ -91,8 +117,15 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
       method: "POST",
       body: JSON.stringify({ username, password })
     });
+    if (resp?.token) setToken(resp.token);
     showPanel(resp.username);
-    await loadUsers();
+    try {
+      await loadUsers();
+    } catch (err) {
+      // Mantém o painel aberto e mostra o erro nos logs (evita parecer que "não logou")
+      elSelectedTitle.textContent = "Logs";
+      elLogs.textContent = `Falha ao carregar usuários/logs: ${err?.message || err}`;
+    }
   } catch (err) {
     showLogin(err);
   }
@@ -102,6 +135,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => {
   try {
     await api("/admin/api/logout", { method: "POST" });
   } finally {
+    setToken(null);
     showLogin();
   }
 });
