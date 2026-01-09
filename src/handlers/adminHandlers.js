@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { readRecentLogs } from "../services/logger.js";
+import { runTestProduct } from "./webhookHandlers.js";
 
 function uniq(arr) {
   return Array.from(new Set(arr.filter(Boolean)));
@@ -60,5 +61,22 @@ export function makeAdminLogsHandler(rootDir) {
 
     const sliced = filtered.slice(-limit);
     return res.json({ ok: true, user: user || null, logs: sliced });
+  };
+}
+
+export function makeAdminTestProductHandler(rootDir) {
+  return async function adminTestProduct(req, res) {
+    const targetUser = safeUserName(req.body?.user);
+    if (!targetUser) {
+      return res.status(400).json({ error: "Informe o usuário (user)" });
+    }
+
+    try {
+      const result = await runTestProduct(rootDir, targetUser, req.body);
+      return res.json({ ok: true, user: targetUser, result });
+    } catch (err) {
+      const status = Number(err?.statusCode) || 500;
+      return res.status(status).json({ error: err?.message || "Erro ao testar produto" });
+    }
   };
 }

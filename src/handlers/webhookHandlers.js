@@ -44,6 +44,12 @@ function computeProdutoValorReais(produto, quantity = 1) {
   return (valorCents * qty) / 100;
 }
 
+function httpError(status, message) {
+  const err = new Error(message);
+  err.statusCode = status;
+  return err;
+}
+
 async function logPurchase(rootDir, user, purchase) {
   const { db } = await ensureUserDbSetup(user);
   const col = db.collection("purchases");
@@ -352,88 +358,95 @@ export function makeTestProductHandler(rootDir) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 
-    const { productId, quantity = 1, username = "Tester", ttsText = "", simulateOverlay = true, ttsVoice = null } = req.body || {};
-    if (!productId) {
-      return res.status(400).json({ error: "productId obrigatório" });
-    }
-
-    const config = await readConfig(rootDir, user);
-    if (!config) {
-      return res.status(404).json({ error: "Config não encontrada" });
-    }
-
-    const produto = config?.produtos?.[productId];
-    if (!produto) {
-      return res.status(404).json({ error: "Produto não encontrado" });
-    }
-
-    const rconConfig = config?.rcon || {};
-    if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
-      return res.status(400).json({ error: "Config RCON ausente para teste" });
-    }
-
-    const items = [{ description: productId, quantity: Number(quantity) > 0 ? Number(quantity) : 1 }];
-
-    // Envia comandos via RCON
-    const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
     try {
-      await dispatchCommands(rcon, config, items, username);
-    } finally {
-      rcon.end();
-    }
-
-    const purchaseValue = computeProdutoValorReais(produto, quantity);
-    let audioUrl = null;
-    let overlayMessage = null;
-    let soundUrl = null;
-
-    if (simulateOverlay) {
-      const overlayTemplate = config?.overlayMessage || "Nova compra";
-      const valorText = formatValorReais(purchaseValue);
-      overlayMessage = overlayTemplate
-        .replace(/\{username\}/gi, username)
-        .replace(/\{valor\}/gi, valorText);
-
-      const ttsCombined = [overlayMessage, ttsText].filter(Boolean).join("; ");
-      const voice = ttsVoice || config?.ttsVoice || undefined;
-
-      try {
-        audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
-      } catch (err) {
-        console.warn("Teste: falha ao sintetizar TTS", err);
+      const result = await runTestProduct(rootDir, user, req.body);
+      return res.json(result);
+    } catch (err) {
+      const status = Number(err?.statusCode) || 500;
+      if (status >= 500) {
+        logEvent(rootDir, { level: "error", user, message: `test_product_failed msg=${err?.message || "unknown"}` });
       }
-
-      const soundFile = config?.sound || null;
-      soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
-
-      broadcastEvent(user, "purchase", {
-        username,
-        audioUrl,
-        soundUrl,
-        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
-        overlayMessage,
-        buyerMessage: ttsText || "",
-        ttsMessage: ttsText || "",
-        totalValue: purchaseValue
-      });
-
-      try {
-        await logPurchase(rootDir, user, {
-          username,
-          overlayMessage,
-          ttsMessage: ttsText || "",
-          ttsVoice: ttsVoice || config?.ttsVoice || null,
-          totalValue: purchaseValue,
-          items: items.map(it => ({ description: it.description, quantity: it.quantity })),
-          source: "test-product"
-        });
-      } catch (err) {
-        logEvent(rootDir, { level: "error", user, message: `test_purchase_log_failed msg=${err?.message || "unknown"}` });
-      }
+      return res.status(status).json({ error: err?.message || "Erro ao testar produto" });
     }
-
-    return res.json({ ok: true, purchaseValue, overlayMessage, audioUrl, soundUrl });
   };
+}
+
+// Permite reuso do fluxo de teste pelo /admin.
+export async function runTestProduct(rootDir, user, body) {
+  const { productId, quantity = 1, username = "Tester", ttsText = "", simulateOverlay = true, ttsVoice = null } = body || {};
+  if (!productId) throw httpError(400, "productId obrigatório");
+
+  const config = await readConfig(rootDir, user);
+  if (!config) throw httpError(404, "Config não encontrada");
+
+  const produto = config?.produtos?.[productId];
+  if (!produto) throw httpError(404, "Produto não encontrado");
+
+  const rconConfig = config?.rcon || {};
+  if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
+    throw httpError(400, "Config RCON ausente para teste");
+  }
+
+  const items = [{ description: productId, quantity: Number(quantity) > 0 ? Number(quantity) : 1 }];
+
+  const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
+  try {
+    await dispatchCommands(rcon, config, items, username);
+  } finally {
+    rcon.end();
+  }
+
+  const purchaseValue = computeProdutoValorReais(produto, quantity);
+  let audioUrl = null;
+  let overlayMessage = null;
+  let soundUrl = null;
+
+  if (simulateOverlay) {
+    const overlayTemplate = config?.overlayMessage || "Nova compra";
+    const valorText = formatValorReais(purchaseValue);
+    overlayMessage = overlayTemplate
+      .replace(/\{username\}/gi, username)
+      .replace(/\{valor\}/gi, valorText);
+
+    const ttsCombined = [overlayMessage, ttsText].filter(Boolean).join("; ");
+    const voice = ttsVoice || config?.ttsVoice || undefined;
+
+    try {
+      audioUrl = await synthesizeTTS(rootDir, user, ttsCombined, voice);
+    } catch (err) {
+      logEvent(rootDir, { level: "warn", user, message: `test_tts_failed msg=${err?.message || "unknown"}` });
+    }
+
+    const soundFile = config?.sound || null;
+    soundUrl = soundFile ? `/${user}/sounds/${soundFile}` : null;
+
+    broadcastEvent(user, "purchase", {
+      username,
+      audioUrl,
+      soundUrl,
+      items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+      overlayMessage,
+      buyerMessage: ttsText || "",
+      ttsMessage: ttsText || "",
+      totalValue: purchaseValue
+    });
+
+    try {
+      await logPurchase(rootDir, user, {
+        username,
+        overlayMessage,
+        ttsMessage: ttsText || "",
+        ttsVoice: ttsVoice || config?.ttsVoice || null,
+        totalValue: purchaseValue,
+        items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+        source: "test-product"
+      });
+    } catch (err) {
+      logEvent(rootDir, { level: "error", user, message: `test_purchase_log_failed msg=${err?.message || "unknown"}` });
+    }
+  }
+
+  return { ok: true, purchaseValue, overlayMessage, audioUrl, soundUrl };
 }
 
 export function makeListPurchasesHandler(rootDir) {

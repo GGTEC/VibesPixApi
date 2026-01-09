@@ -47,6 +47,18 @@ const elLogs = document.getElementById("logs");
 const elSelectedTitle = document.getElementById("selectedUserTitle");
 const elSidebar = document.querySelector(".sidebar");
 const elMobileToggle = document.getElementById("mobileToggle");
+const elSelectedUserLabel = document.getElementById("selectedUserLabel");
+const elTestProductForm = document.getElementById("testProductForm");
+const elTestProductBtn = document.getElementById("testProductBtn");
+const elTestProductResult = document.getElementById("testProductResult");
+
+let selectedUser = null;
+
+function setSelectedUser(user) {
+  selectedUser = user || null;
+  if (elSelectedUserLabel) elSelectedUserLabel.textContent = selectedUser || "—";
+  if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
+}
 
 function toggleSidebar(forceOpen) {
   if (!elSidebar) return;
@@ -92,6 +104,8 @@ async function loadUsers() {
   const { users } = await api("/admin/api/users");
   elUserButtons.innerHTML = "";
 
+  setSelectedUser(null);
+
   for (const user of users) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -102,6 +116,7 @@ async function loadUsers() {
         node.classList.remove("active");
       }
       btn.classList.add("active");
+      setSelectedUser(user);
       elSelectedTitle.textContent = `Logs: ${user}`;
       const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
       renderLogs(logs);
@@ -111,6 +126,14 @@ async function loadUsers() {
     });
     elUserButtons.appendChild(btn);
   }
+}
+
+function showTestResult(obj, isError = false) {
+  if (!elTestProductResult) return;
+  elTestProductResult.hidden = false;
+  elTestProductResult.classList.toggle("admin-error", !!isError);
+  elTestProductResult.textContent =
+    typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
 }
 
 async function init() {
@@ -153,6 +176,44 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => {
   } finally {
     setToken(null);
     showLogin();
+  }
+});
+
+elTestProductForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!selectedUser) {
+    showTestResult("Selecione um usuário na sidebar.", true);
+    return;
+  }
+
+  const form = e.currentTarget;
+  const productId = form.productId.value.trim();
+  const quantity = Number(form.quantity.value || 1);
+  const username = form.username.value.trim();
+  const ttsText = form.ttsText.value.trim();
+  const simulateOverlay = !!form.simulateOverlay.checked;
+  const ttsVoice = form.ttsVoice.value.trim();
+
+  try {
+    if (elTestProductBtn) elTestProductBtn.disabled = true;
+    showTestResult("Executando...", false);
+    const resp = await api("/admin/api/test-product", {
+      method: "POST",
+      body: JSON.stringify({
+        user: selectedUser,
+        productId,
+        quantity,
+        username: username || undefined,
+        ttsText: ttsText || "",
+        simulateOverlay,
+        ttsVoice: ttsVoice || null
+      })
+    });
+    showTestResult(resp, false);
+  } catch (err) {
+    showTestResult({ error: err?.message || String(err) }, true);
+  } finally {
+    if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
   }
 });
 

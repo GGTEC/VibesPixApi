@@ -18,7 +18,7 @@ import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
 import { sessionMiddleware, makeLoginHandler, makeLogoutHandler } from "./services/auth.js";
 import { adminAuthMiddleware, makeAdminLoginHandler, makeAdminLogoutHandler } from "./services/adminAuth.js";
-import { makeAdminPageHandler, makeAdminMeHandler, makeAdminUsersHandler, makeAdminLogsHandler } from "./handlers/adminHandlers.js";
+import { makeAdminPageHandler, makeAdminMeHandler, makeAdminUsersHandler, makeAdminLogsHandler, makeAdminTestProductHandler } from "./handlers/adminHandlers.js";
 
 function createUserStorage(rootDir, folder = "images") {
   return multer.diskStorage({
@@ -76,6 +76,7 @@ export function createApp(rootDir) {
   app.get("/admin/api/me", adminAuthMiddleware, makeAdminMeHandler());
   app.get("/admin/api/users", adminAuthMiddleware, makeAdminUsersHandler(rootDir));
   app.get("/admin/api/logs", adminAuthMiddleware, makeAdminLogsHandler(rootDir));
+  app.post("/admin/api/test-product", adminAuthMiddleware, makeAdminTestProductHandler(rootDir));
 
   // Página pública raiz (fallback explícito)
   app.get("/", (req, res) => {
