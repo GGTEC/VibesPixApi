@@ -56,8 +56,13 @@ async function loadUsers() {
   for (const user of users) {
     const btn = document.createElement("button");
     btn.type = "button";
+    btn.className = "nav-btn";
     btn.textContent = user;
     btn.addEventListener("click", async () => {
+      for (const node of elUserButtons.querySelectorAll(".nav-btn")) {
+        node.classList.remove("active");
+      }
+      btn.classList.add("active");
       elSelectedTitle.textContent = `Logs: ${user}`;
       const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
       renderLogs(logs);

@@ -4,42 +4,46 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin</title>
-    <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/admin/style.css" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <main class="admin-root">
-      <section id="login" class="admin-card" hidden>
-        <h1>Admin</h1>
-        <form id="loginForm">
-          <label>
-            Usuário
-            <input name="username" autocomplete="username" required />
-          </label>
-          <label>
-            Senha
-            <input name="password" type="password" autocomplete="current-password" required />
-          </label>
-          <button type="submit">Entrar</button>
+    <section id="login" class="login-layer" hidden>
+      <div class="glass-card login-box">
+        <h1 class="title">Admin</h1>
+        <p class="subtitle">Acesso restrito para visualizar logs.</p>
+        <form id="loginForm" class="login-form">
+          <input class="input" name="username" autocomplete="username" placeholder="Usuário" required />
+          <input class="input" name="password" type="password" autocomplete="current-password" placeholder="Senha" required />
+          <button class="btn-primary" type="submit">Entrar</button>
         </form>
         <pre id="loginError" class="admin-error" hidden></pre>
-      </section>
+      </div>
+    </section>
 
-      <section id="panel" class="admin-panel" hidden>
-        <aside class="admin-sidebar">
-          <div class="admin-sidebar-header">
-            <strong id="adminUser"></strong>
-            <button id="logoutBtn" type="button">Sair</button>
+    <main id="panel" class="layout" hidden>
+      <aside class="sidebar">
+        <div class="brand">VibesPix · Admin</div>
+        <div class="admin-sidebar-header">
+          <span id="adminUser" class="pill"></span>
+          <button id="logoutBtn" class="btn-secondary" type="button">Sair</button>
+        </div>
+        <div id="userButtons" class="nav-group"></div>
+      </aside>
+      <section class="content">
+        <div class="panel">
+          <div class="card admin-card">
+            <h2 id="selectedUserTitle" class="admin-title">Logs</h2>
+            <div class="section">
+              <pre id="logs" class="admin-logs"></pre>
+            </div>
           </div>
-          <div id="userButtons" class="admin-user-buttons"></div>
-        </aside>
-        <section class="admin-content">
-          <h2 id="selectedUserTitle">Logs</h2>
-          <pre id="logs" class="admin-logs"></pre>
-        </section>
+        </div>
       </section>
     </main>
 
-    <script src="/admin/script.js" type="module"></script>
+    <script src="./script.js" type="module"></script>
   </body>
 </html>
