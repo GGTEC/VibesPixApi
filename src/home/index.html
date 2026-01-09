@@ -36,6 +36,7 @@
           <button class="sub-btn" data-tab="tab-storeconfig">Loja</button>
         </div>
         <button class="nav-btn" data-main="store">Loja / Produtos</button>
+        <button class="nav-btn" data-main="metrics">Métricas</button>
         <button class="nav-btn" data-main="purchases">Registro de compras</button>
         <button id="store-link-btn" class="nav-btn" type="button">Abrir loja pública →</button>
         <button id="logout-btn" class="nav-btn" style="margin-top:6px;">Sair</button>
@@ -265,13 +266,10 @@
           </div>
         </div>
 
-        <div id="purchases-section" class="card hidden" style="display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-            <div>
-              <h2 style="margin:0 0 6px;">Registro de compras</h2>
-              <p class="subtitle" style="text-align:left;margin:0;">Histórico e replay dos pedidos.</p>
-            </div>
-            <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
+        <div id="metrics-section" class="card hidden" style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <h2 style="margin:0 0 6px;">Métricas</h2>
+            <p class="subtitle" style="text-align:left;margin:0;">Resumo por período (total, ticket médio e lista).</p>
           </div>
 
           <div class="section" style="margin-top:0;">
@@ -294,6 +292,16 @@
               <div id="metricsResult" class="metrics-summary" hidden></div>
               <div id="metricsPurchases" class="purchases-table" hidden></div>
             </div>
+          </div>
+        </div>
+
+        <div id="purchases-section" class="card hidden" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin:0 0 6px;">Registro de compras</h2>
+              <p class="subtitle" style="text-align:left;margin:0;">Histórico e replay dos pedidos.</p>
+            </div>
+            <button id="refreshPurchases" class="btn-secondary" type="button" style="width:auto;padding:10px 12px;">Atualizar</button>
           </div>
 
           <div id="purchaseList" class="list" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>

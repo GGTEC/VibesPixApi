@@ -290,6 +290,7 @@ const actionBarStore = document.getElementById("action-bar-store");
 const mainSections = {
   config: document.getElementById("config-section"),
   store: document.getElementById("store-section"),
+  metrics: document.getElementById("metrics-section"),
   purchases: document.getElementById("purchases-section"),
 };
 
