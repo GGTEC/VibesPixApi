@@ -11,6 +11,9 @@
 
 * { box-sizing: border-box; }
 
+/* Garante que o atributo HTML `hidden` funcione mesmo com regras de layout (ex.: display:flex). */
+[hidden] { display: none !important; }
+
 body {
 	margin: 0;
 	min-height: 100vh;
