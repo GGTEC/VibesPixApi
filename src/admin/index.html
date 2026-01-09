@@ -45,13 +45,15 @@
               <div class="admin-hint">Usuário selecionado: <span id="selectedUserLabel" class="pill">—</span></div>
               <form id="testProductForm" class="admin-form">
                 <div class="admin-form-row">
-                  <input class="input" name="productId" placeholder="productId (ex: vip)" required />
+                  <input class="input" name="productId" placeholder="productId (ex: vip)" list="productOptions" required />
+                  <datalist id="productOptions"></datalist>
                   <input class="input" name="quantity" type="number" min="1" step="1" value="1" />
                 </div>
                 <input class="input" name="username" placeholder="username (opcional)" />
                 <input class="input" name="ttsText" placeholder="ttsText (opcional)" />
                 <label class="admin-check"><input type="checkbox" name="simulateOverlay" checked /> Simular overlay + TTS</label>
-                <input class="input" name="ttsVoice" placeholder="ttsVoice (opcional)" />
+                <input class="input" name="ttsVoice" placeholder="ttsVoice (opcional)" list="voiceOptions" />
+                <datalist id="voiceOptions"></datalist>
                 <button id="testProductBtn" class="btn-primary" type="submit" disabled>Testar produto</button>
               </form>
               <pre id="testProductResult" class="admin-result" hidden></pre>

@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { readRecentLogs } from "../services/logger.js";
+import { readConfig } from "../utils/config.js";
+import { getAllowedTtsVoices, getDefaultTtsVoice } from "../services/tts.js";
 import { runTestProduct } from "./webhookHandlers.js";
 
 function uniq(arr) {
@@ -78,5 +80,35 @@ export function makeAdminTestProductHandler(rootDir) {
       const status = Number(err?.statusCode) || 500;
       return res.status(status).json({ error: err?.message || "Erro ao testar produto" });
     }
+  };
+}
+
+export function makeAdminTestOptionsHandler(rootDir) {
+  return async function adminTestOptions(req, res) {
+    const user = safeUserName(req.query?.user);
+    if (!user) {
+      return res.status(400).json({ error: "Informe o usuário (user)" });
+    }
+
+    const config = await readConfig(rootDir, user);
+    if (!config) {
+      return res.status(404).json({ error: "Config não encontrada" });
+    }
+
+    const products = Object.keys(config?.produtos || {}).sort((a, b) => a.localeCompare(b));
+    const allowedVoices = getAllowedTtsVoices().slice().sort((a, b) => a.localeCompare(b));
+    const defaultVoice = getDefaultTtsVoice();
+    const currentVoice = (config?.ttsVoice || "").toString().trim() || null;
+
+    return res.json({
+      ok: true,
+      user,
+      products,
+      voices: {
+        allowed: allowedVoices,
+        default: defaultVoice,
+        current: currentVoice
+      }
+    });
   };
 }

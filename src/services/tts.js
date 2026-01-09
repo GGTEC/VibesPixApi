@@ -96,6 +96,14 @@ export async function synthesizeTTS(rootDir, user, text, voice = "pt-BR-AntonioN
   }
 }
 
+export function getAllowedTtsVoices() {
+  return Array.from(ALLOWED_TTS_VOICES);
+}
+
+export function getDefaultTtsVoice() {
+  return DEFAULT_VOICE;
+}
+
 function resolveAzureCredentials() {
   const key = (process.env.AZURE_SPEECH_KEY || process.env.SPEECH_KEY || "").trim();
   const region = (process.env.AZURE_SPEECH_REGION || process.env.SPEECH_REGION || DEFAULT_REGION).trim();

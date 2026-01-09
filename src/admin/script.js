@@ -51,6 +51,8 @@ const elSelectedUserLabel = document.getElementById("selectedUserLabel");
 const elTestProductForm = document.getElementById("testProductForm");
 const elTestProductBtn = document.getElementById("testProductBtn");
 const elTestProductResult = document.getElementById("testProductResult");
+const elProductOptions = document.getElementById("productOptions");
+const elVoiceOptions = document.getElementById("voiceOptions");
 
 let selectedUser = null;
 
@@ -58,6 +60,36 @@ function setSelectedUser(user) {
   selectedUser = user || null;
   if (elSelectedUserLabel) elSelectedUserLabel.textContent = selectedUser || "—";
   if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
+}
+
+function fillDatalist(el, values) {
+  if (!el) return;
+  el.innerHTML = "";
+  for (const v of Array.isArray(values) ? values : []) {
+    const opt = document.createElement("option");
+    opt.value = String(v);
+    el.appendChild(opt);
+  }
+}
+
+async function loadTestOptionsForUser(user) {
+  try {
+    const data = await api(`/admin/api/test-options?user=${encodeURIComponent(user)}`);
+    fillDatalist(elProductOptions, data?.products || []);
+    fillDatalist(elVoiceOptions, data?.voices?.allowed || []);
+
+    // Sugere a voz atual/padrão (sem forçar)
+    if (elTestProductForm?.ttsVoice) {
+      const current = (data?.voices?.current || "").toString().trim();
+      const def = (data?.voices?.default || "").toString().trim();
+      if (!elTestProductForm.ttsVoice.value) {
+        elTestProductForm.ttsVoice.value = current || def || "";
+      }
+    }
+  } catch (err) {
+    // Não bloqueia o teste; apenas não preenche listas.
+    showTestResult({ error: `Falha ao carregar produtos/vozes: ${err?.message || err}` }, true);
+  }
 }
 
 function toggleSidebar(forceOpen) {
@@ -117,6 +149,7 @@ async function loadUsers() {
       }
       btn.classList.add("active");
       setSelectedUser(user);
+      await loadTestOptionsForUser(user);
       elSelectedTitle.textContent = `Logs: ${user}`;
       const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
       renderLogs(logs);
