@@ -12,7 +12,7 @@ import { makeCreateCheckoutHandler } from "./handlers/checkoutHandlers.js";
 import { makeWebhookHandler, makeTestProductHandler, makeListPurchasesHandler, makeReplayPurchaseHandler } from "./handlers/webhookHandlers.js";
 import { makeTestTtsHandler } from "./handlers/ttsHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler, makeGoalHandler, makeDonateMiddleware } from "./handlers/pageHandlers.js";
-import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic, makeGoalStatic } from "./handlers/staticHandlers.js";
+import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic, makeGoalStatic, makeHomeStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
@@ -161,6 +161,8 @@ export function createApp(rootDir) {
   userRouter.use(sessionMiddleware);
 
   // Assets e estáticos do usuário
+  // Home (style.css/script.js) é referenciado de /:user/ via paths relativos.
+  userRouter.use(makeHomeStatic(rootDir));
   userRouter.use("/overlay", makeOverlayStatic(rootDir));
   userRouter.use("/goal", makeGoalStatic(rootDir));
   userRouter.use("/tts", makeUserAssetsStatic(rootDir, "tts"));

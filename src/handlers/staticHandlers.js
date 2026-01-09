@@ -19,6 +19,12 @@ export function makeConfigStatic(rootDir) {
   };
 }
 
+export function makeHomeStatic(rootDir) {
+  return function homeStatic(req, res, next) {
+    return express.static(path.join(rootDir, "src", "home"))(req, res, next);
+  };
+}
+
 export function makeUserAssetsStatic(rootDir, subdir) {
   return function assets(req, res, next) {
     return express.static(path.join(rootDir, "users", req.params.user, subdir))(req, res, next);
