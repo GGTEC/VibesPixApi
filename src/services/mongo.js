@@ -105,6 +105,13 @@ async function ensureIndexes(db) {
   } catch (err) {
     if (!isIgnorableIndexError(err)) throw err;
   }
+
+  // Compras: referência do provedor (webhook) para deduplicação/consulta
+  try {
+    await db.collection("purchases").createIndex({ order_nsu: 1 }, { name: "order_nsu" });
+  } catch (err) {
+    if (!isIgnorableIndexError(err)) throw err;
+  }
 }
 
 // Garante que um DB de usuário tenha todas as collections/índices necessários.

@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { Rcon } from "rcon-client";
 import { normalizeOverlayGoal, readConfig, removeBuyer, writeConfig } from "../utils/config.js";
-import { getDbForUser } from "../services/mongo.js";
+import { ensureUserDbSetup, getDbForUser } from "../services/mongo.js";
 import { ObjectId } from "mongodb";
 import { synthesizeTTS } from "../services/tts.js";
 import { broadcastEvent } from "../services/clients.js";
@@ -45,12 +45,25 @@ function computeProdutoValorReais(produto, quantity = 1) {
 }
 
 async function logPurchase(rootDir, user, purchase) {
-  const db = await getDbForUser(user);
+  const { db } = await ensureUserDbSetup(user);
   const col = db.collection("purchases");
-  await col.insertOne({
-    ...purchase,
-    createdAt: new Date()
-  });
+  const now = new Date();
+
+  const orderNsu = purchase?.order_nsu || purchase?.orderNsu || null;
+  if (orderNsu) {
+    // Webhooks podem repetir: tornamos idempotente por order_nsu.
+    await col.updateOne(
+      { order_nsu: orderNsu },
+      {
+        $set: { ...purchase, order_nsu: orderNsu, updatedAt: now },
+        $setOnInsert: { createdAt: now }
+      },
+      { upsert: true }
+    );
+    return;
+  }
+
+  await col.insertOne({ ...purchase, createdAt: now });
 }
 
 async function dispatchCommands(rconClient, config, items, nameAboveMobHead) {
@@ -170,33 +183,51 @@ export function makeWebhookHandler(rootDir) {
     const backgroundWork = (async () => {
       const rconConfig = config?.rcon || {};
 
+      // Garante collection/índices do usuário antes de registrar compra.
+      await ensureUserDbSetup(user);
+
       if (!rconConfig.host || !rconConfig.port || !rconConfig.password) {
-        logStep(rootDir, user, "skip_rcon_missing_config", { host: rconConfig.host || "", port: rconConfig.port || "", hasPassword: Boolean(rconConfig.password) });
-        return;
-      }
-
-      logStep(rootDir, user, "rcon_connect_start", { host: rconConfig.host, port: rconConfig.port, items: items.length });
-
-      const rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
-
-      rcon.on("end", () => {
-        logStep(rootDir, user, "rcon_closed", { host: rconConfig.host, port: rconConfig.port });
-      });
-
-      rcon.on("error", (err) => {
-        logEvent(rootDir, {
-          level: "error",
-          user: user || null,
-          message: `webhook_rcon_error host=${rconConfig.host} port=${rconConfig.port} msg=${err?.message || "unknown"}`
+        logStep(rootDir, user, "skip_rcon_missing_config", {
+          host: rconConfig.host || "",
+          port: rconConfig.port || "",
+          hasPassword: Boolean(rconConfig.password)
         });
-      });
+      } else {
+        logStep(rootDir, user, "rcon_connect_start", { host: rconConfig.host, port: rconConfig.port, items: items.length });
 
-      try {
-        logStep(rootDir, user, "rcon_dispatch_start", { items: items.map(it => ({ d: it.description, q: it.quantity })) });
-        await dispatchCommands(rcon, config, items, username);
-        logStep(rootDir, user, "rcon_dispatch_done", {});
-      } finally {
-        rcon.end();
+        let rcon = null;
+        try {
+          rcon = await Rcon.connect({ ...rconConfig, timeout: 5000 });
+
+          rcon.on("end", () => {
+            logStep(rootDir, user, "rcon_closed", { host: rconConfig.host, port: rconConfig.port });
+          });
+
+          rcon.on("error", (err) => {
+            logEvent(rootDir, {
+              level: "error",
+              user: user || null,
+              message: `webhook_rcon_error host=${rconConfig.host} port=${rconConfig.port} msg=${err?.message || "unknown"}`
+            });
+          });
+
+          logStep(rootDir, user, "rcon_dispatch_start", { items: items.map(it => ({ d: it.description, q: it.quantity })) });
+          await dispatchCommands(rcon, config, items, username);
+          logStep(rootDir, user, "rcon_dispatch_done", {});
+        } catch (err) {
+          logEvent(rootDir, {
+            level: "error",
+            user: user || null,
+            message: `webhook_rcon_dispatch_failed msg=${err?.message || "unknown"}`
+          });
+          logStep(rootDir, user, "rcon_dispatch_error", { msg: err?.message || "unknown" });
+        } finally {
+          try {
+            rcon?.end?.();
+          } catch {
+            // ignore
+          }
+        }
       }
 
       const overlayTemplate = config?.overlayMessage || "Nova compra";
@@ -264,6 +295,28 @@ export function makeWebhookHandler(rootDir) {
         totalValue: purchaseValue
       });
       logStep(rootDir, user, "broadcast_purchase", { overlayMessage, hasAudio: Boolean(audioUrl), hasSound: Boolean(soundUrl) });
+
+      // Registra a compra no Mongo (purchases)
+      try {
+        await logPurchase(rootDir, user, {
+          order_nsu: orderNsu || null,
+          username,
+          overlayMessage,
+          ttsMessage: buyerMessage,
+          ttsVoice: ttsVoice || config?.ttsVoice || null,
+          totalValue: purchaseValue,
+          items: items.map(it => ({ description: it.description, quantity: it.quantity })),
+          source: "webhook"
+        });
+        logStep(rootDir, user, "purchase_logged", { orderNsu: orderNsu || null });
+      } catch (err) {
+        logEvent(rootDir, {
+          level: "error",
+          user: user || null,
+          message: `webhook_purchase_log_failed msg=${err?.message || "unknown"}`
+        });
+        logStep(rootDir, user, "purchase_log_error", { msg: err?.message || "unknown" });
+      }
 
       if (orderNsu) {
         await removeBuyer(rootDir, user, orderNsu);
