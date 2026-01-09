@@ -323,13 +323,7 @@ function drawBarChart(canvas, series) {
     ctx.fillRect(x, y, barW, h);
   }
 
-  // legenda simples
-  ctx.fillStyle = text;
-  ctx.font = "12px system-ui";
-  const last = data[data.length - 1];
-  ctx.fillText(`Total no período: ${formatCurrencyBRL(data.reduce((a, d) => a + (Number(d.total) || 0), 0))}`, padding, padding - 4);
-  ctx.fillStyle = muted;
-  ctx.fillText(`Último dia: ${last.day}`, width - padding - 150, padding - 4);
+  // Sem textos extras no canvas (apenas o gráfico)
 }
 
 function initCollapsibles() {
