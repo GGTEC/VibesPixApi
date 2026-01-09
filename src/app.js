@@ -19,6 +19,7 @@ import { pingMongo } from "./services/mongo.js";
 import { sessionMiddleware, makeLoginHandler, makeLogoutHandler } from "./services/auth.js";
 import { adminAuthMiddleware, makeAdminLoginHandler, makeAdminLogoutHandler } from "./services/adminAuth.js";
 import { makeAdminPageHandler, makeAdminMeHandler, makeAdminUsersHandler, makeAdminLogsHandler, makeAdminTestProductHandler, makeAdminTestOptionsHandler, makeAdminMetricsHandler } from "./handlers/adminHandlers.js";
+import { makeUserMetricsHandler } from "./handlers/metricsHandlers.js";
 
 function createUserStorage(rootDir, folder = "images") {
   return multer.diskStorage({
@@ -177,6 +178,7 @@ export function createApp(rootDir) {
   userRouter.post("/api/webhook", makeWebhookHandler(rootDir));
   userRouter.post("/api/test-product", makeTestProductHandler(rootDir));
   userRouter.get("/api/purchases", makeListPurchasesHandler(rootDir));
+  userRouter.get("/api/metrics", makeUserMetricsHandler(rootDir));
   userRouter.post("/api/purchases/replay", makeReplayPurchaseHandler(rootDir));
   userRouter.get("/api/config", makeGetConfigHandler(rootDir));
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
