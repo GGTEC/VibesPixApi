@@ -18,8 +18,8 @@ const DEFAULT_OVERLAY_ALERT = {
   backgroundType: "default", // 'default' | 'color' | 'image'
   backgroundColor: "#0d1016",
   backgroundImageUrl: "",
-  fontTagPx: 18,
-  fontMessagePx: 28
+  fontTagPx: null,
+  fontMessagePx: null
 };
 
 function safeNumber(value, fallback = 0) {
@@ -70,12 +70,30 @@ export function normalizeOverlayAlert(overlayAlert) {
   const t = overlayAlert?.backgroundType;
   const backgroundType = t === "color" || t === "image" || t === "default" ? t : DEFAULT_OVERLAY_ALERT.backgroundType;
 
+  const rawTag = overlayAlert?.fontTagPx;
+  const rawMsg = overlayAlert?.fontMessagePx;
+  const hasTag = rawTag !== undefined && rawTag !== null && String(rawTag).trim() !== "";
+  const hasMsg = rawMsg !== undefined && rawMsg !== null && String(rawMsg).trim() !== "";
+
+  const fontTagPx = hasTag ? safeInt(rawTag, 18, 10, 80) : null;
+  const fontMessagePx = hasMsg ? safeInt(rawMsg, 28, 10, 120) : null;
+
+  const backgroundColor =
+    backgroundType === "color"
+      ? safeHexColor(overlayAlert?.backgroundColor, DEFAULT_OVERLAY_ALERT.backgroundColor)
+      : "";
+
+  const backgroundImageUrl =
+    backgroundType === "image"
+      ? safeImageUrl(overlayAlert?.backgroundImageUrl, DEFAULT_OVERLAY_ALERT.backgroundImageUrl)
+      : "";
+
   return {
     backgroundType,
-    backgroundColor: safeHexColor(overlayAlert?.backgroundColor, DEFAULT_OVERLAY_ALERT.backgroundColor),
-    backgroundImageUrl: safeImageUrl(overlayAlert?.backgroundImageUrl, DEFAULT_OVERLAY_ALERT.backgroundImageUrl),
-    fontTagPx: safeInt(overlayAlert?.fontTagPx, DEFAULT_OVERLAY_ALERT.fontTagPx, 10, 80),
-    fontMessagePx: safeInt(overlayAlert?.fontMessagePx, DEFAULT_OVERLAY_ALERT.fontMessagePx, 10, 120)
+    backgroundColor,
+    backgroundImageUrl,
+    fontTagPx,
+    fontMessagePx
   };
 }
 
