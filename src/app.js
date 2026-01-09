@@ -14,6 +14,7 @@ import { makeTestTtsHandler } from "./handlers/ttsHandlers.js";
 import { makeOverlayHandler, makeConfigHandler, makeThanksMiddleware, makeLojaMiddleware, makeProductPanelHandler, makeProductPanelStatic, makeHomeHandler, makeNotFoundHandler, makeGoalHandler, makeDonateMiddleware } from "./handlers/pageHandlers.js";
 import { makeOverlayStatic, makeUserAssetsStatic, makeConfigStatic, makeGoalStatic, makeHomeStatic } from "./handlers/staticHandlers.js";
 import { makeSseHandler } from "./handlers/sseHandlers.js";
+import { makeOverlayTestHandler } from "./handlers/overlayTestHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
 import { sessionMiddleware, makeLoginHandler, makeLogoutHandler } from "./services/auth.js";
@@ -184,6 +185,7 @@ export function createApp(rootDir) {
   userRouter.post("/api/purchases/replay", makeReplayPurchaseHandler(rootDir));
   userRouter.get("/api/config", makeGetConfigHandler(rootDir));
   userRouter.post("/api/config", makeUpdateConfigHandler(rootDir));
+  userRouter.post("/api/overlay-test", makeOverlayTestHandler(rootDir));
   userRouter.post("/api/tts-test", makeTestTtsHandler(rootDir));
   userRouter.post("/api/init-db", makeInitDbHandler(rootDir));
   userRouter.get("/api/db-schema", makeDbSchemaHandler(rootDir));

@@ -85,6 +85,11 @@ body {
   background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.05), transparent 55%);
 }
 
+.panel.custom-bg::before,
+.panel.custom-bg::after {
+  opacity: 0;
+}
+
 .heart {
   position: absolute;
   top: 50%;

@@ -107,6 +107,63 @@
               </div>
 
               <div class="section" style="margin-top:14px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);">
+                <h3>Estilo do alerta <span class="pill">background &amp; fonte</span></h3>
+                <p class="help-text">Personalize o fundo do alerta (cor ou imagem) e o tamanho da fonte do título/mensagem no overlay.</p>
+
+                <div class="form-grid">
+                  <div>
+                    <label class="label">Background</label>
+                    <select id="overlay-alert-bg-type" class="input">
+                      <option value="default">Padrão</option>
+                      <option value="color">Cor</option>
+                      <option value="image">Imagem</option>
+                    </select>
+                  </div>
+
+                  <div id="overlay-alert-bg-color-wrap">
+                    <label class="label">Cor do background</label>
+                    <input id="overlay-alert-bg-color" type="color" class="input" style="height:46px;padding:8px;" value="#0d1016" />
+                    <p class="help-text">Usado quando "Background" = Cor.</p>
+                  </div>
+
+                  <div id="overlay-alert-bg-image-wrap" style="grid-column: 1 / -1;">
+                    <label class="label">URL da imagem</label>
+                    <input id="overlay-alert-bg-image" placeholder="Ex: /:user/images/minha.png ou https://..." class="input" autocomplete="off">
+                    <p class="help-text">Dica: envie uma imagem em "Imagens do usuário" e use o link em /:user/images/...</p>
+                  </div>
+
+                  <div>
+                    <label class="label">Fonte do título (px)</label>
+                    <input id="overlay-font-tag" type="number" min="10" max="80" step="1" class="input" placeholder="18">
+                  </div>
+
+                  <div>
+                    <label class="label">Fonte da mensagem (px)</label>
+                    <input id="overlay-font-message" type="number" min="10" max="120" step="1" class="input" placeholder="28">
+                  </div>
+                </div>
+
+                <div class="form-grid" style="margin-top:12px;">
+                  <div>
+                    <label class="label">Usuário (teste)</label>
+                    <input id="overlay-test-username" class="input" placeholder="Teste" autocomplete="off">
+                  </div>
+                  <div>
+                    <label class="label">Valor (teste)</label>
+                    <input id="overlay-test-value" type="number" step="0.01" min="0" class="input" placeholder="5.00">
+                  </div>
+                  <div style="grid-column: 1 / -1;">
+                    <label class="label">Mensagem (teste)</label>
+                    <input id="overlay-test-message" class="input" placeholder="Isso é um alerta de teste." autocomplete="off">
+                  </div>
+                  <div style="grid-column: 1 / -1; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button id="overlay-test-btn" class="btn-secondary" type="button" style="width:auto;">Enviar alerta de teste</button>
+                    <span class="help-text">Abra o overlay no OBS para ver o resultado.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section" style="margin-top:14px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);">
                 <h3>Meta de arrecadação <span class="pill">goal overlay</span></h3>
                 <p class="help-text">Configure a barra de meta exibida em /:user/goal. Use {current}, {target} ou {remaining} para personalizar o texto.</p>
                 <div class="form-grid">

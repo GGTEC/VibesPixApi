@@ -14,6 +14,14 @@ const DEFAULT_GOAL = {
   showCurrencySymbol: true
 };
 
+const DEFAULT_OVERLAY_ALERT = {
+  backgroundType: "default", // 'default' | 'color' | 'image'
+  backgroundColor: "#0d1016",
+  backgroundImageUrl: "",
+  fontTagPx: 18,
+  fontMessagePx: 28
+};
+
 function safeNumber(value, fallback = 0) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return fallback;
@@ -25,6 +33,50 @@ function safeColor(value, fallback) {
   const trimmed = value.trim();
   if (!trimmed) return fallback;
   return trimmed;
+}
+
+function safeInt(value, fallback, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  const i = Math.round(n);
+  if (typeof min === "number" && i < min) return min;
+  if (typeof max === "number" && i > max) return max;
+  return i;
+}
+
+function safeHexColor(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const v = value.trim();
+  if (!v) return fallback;
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  if (/^#[0-9a-fA-F]{3}$/.test(v)) {
+    // expande #RGB -> #RRGGBB
+    return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`;
+  }
+  return fallback;
+}
+
+function safeImageUrl(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const v = value.trim();
+  if (!v) return fallback;
+  // Permite URLs absolutas http(s) ou caminhos relativos do próprio site (/user/images/...)
+  if (v.startsWith("/")) return v;
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+  return fallback;
+}
+
+export function normalizeOverlayAlert(overlayAlert) {
+  const t = overlayAlert?.backgroundType;
+  const backgroundType = t === "color" || t === "image" || t === "default" ? t : DEFAULT_OVERLAY_ALERT.backgroundType;
+
+  return {
+    backgroundType,
+    backgroundColor: safeHexColor(overlayAlert?.backgroundColor, DEFAULT_OVERLAY_ALERT.backgroundColor),
+    backgroundImageUrl: safeImageUrl(overlayAlert?.backgroundImageUrl, DEFAULT_OVERLAY_ALERT.backgroundImageUrl),
+    fontTagPx: safeInt(overlayAlert?.fontTagPx, DEFAULT_OVERLAY_ALERT.fontTagPx, 10, 80),
+    fontMessagePx: safeInt(overlayAlert?.fontMessagePx, DEFAULT_OVERLAY_ALERT.fontMessagePx, 10, 120)
+  };
 }
 
 export function normalizeOverlayGoal(goal) {
@@ -106,11 +158,13 @@ export async function readConfig(rootDir, user) {
 
   const { _id: _ignore, ...configClean } = configDoc;
   const overlayGoal = normalizeOverlayGoal(configClean?.overlayGoal);
+  const overlayAlert = normalizeOverlayAlert(configClean?.overlayAlert);
   const home = configClean?.home || {};
 
   return {
     ...configClean,
     overlayGoal,
+    overlayAlert,
     home,
     rcon: {
       host: rconDoc?.host || "",
@@ -141,6 +195,7 @@ export async function writeConfig(rootDir, user, updater) {
           sound: next.sound || null,
           ttsVoice: next.ttsVoice || "",
           overlayGoal: normalizeOverlayGoal(next.overlayGoal),
+          overlayAlert: normalizeOverlayAlert(next.overlayAlert),
           home: next.home || {}
         }
       },

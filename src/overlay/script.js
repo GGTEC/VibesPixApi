@@ -1,12 +1,65 @@
 const user = location.pathname.split("/")[1];
 const source = new EventSource(`/${user}/events`);
+const baseApi = `/${user}/api`;
 
 const alertBox = document.getElementById("alert");
 const alertText = document.getElementById("alert-text");
 const tagText = document.getElementById("tag-text");
+const panelEl = document.querySelector(".panel");
 
 const DEFAULT_DURATION = 5000;
 let playing = false;
+
+function applyOverlayAlertStyle(overlayAlert) {
+  if (!overlayAlert) return;
+
+  const bgType = overlayAlert?.backgroundType || "default";
+  const bgColor = overlayAlert?.backgroundColor || "";
+  const bgImageUrl = overlayAlert?.backgroundImageUrl || "";
+
+  if (panelEl) {
+    panelEl.classList.toggle("custom-bg", bgType === "color" || bgType === "image");
+
+    if (bgType === "color" && bgColor) {
+      panelEl.style.backgroundImage = "none";
+      panelEl.style.background = bgColor;
+    } else if (bgType === "image" && bgImageUrl) {
+      panelEl.style.background = "transparent";
+      panelEl.style.backgroundImage = `url("${bgImageUrl}")`;
+      panelEl.style.backgroundSize = "cover";
+      panelEl.style.backgroundPosition = "center";
+      panelEl.style.backgroundRepeat = "no-repeat";
+    } else {
+      panelEl.classList.remove("custom-bg");
+      panelEl.style.background = "";
+      panelEl.style.backgroundImage = "";
+      panelEl.style.backgroundSize = "";
+      panelEl.style.backgroundPosition = "";
+      panelEl.style.backgroundRepeat = "";
+    }
+  }
+
+  const fontTagPx = Number(overlayAlert?.fontTagPx);
+  const fontMessagePx = Number(overlayAlert?.fontMessagePx);
+
+  if (tagText) {
+    tagText.style.fontSize = Number.isFinite(fontTagPx) && fontTagPx > 0 ? `${fontTagPx}px` : "";
+  }
+  if (alertText) {
+    alertText.style.fontSize = Number.isFinite(fontMessagePx) && fontMessagePx > 0 ? `${fontMessagePx}px` : "";
+  }
+}
+
+async function loadOverlayAlertConfig() {
+  try {
+    const res = await fetch(`${baseApi}/config`, { credentials: "omit" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    applyOverlayAlertStyle(data?.overlayAlert);
+  } catch {
+    // ignore
+  }
+}
 
 async function showAlert({ title, message, duration = DEFAULT_DURATION, audioUrl, soundUrl }) {
   if (playing) return;
@@ -68,6 +121,17 @@ source.addEventListener("purchase", e => {
     // ignora mensagens malformadas
   }
 });
+
+source.addEventListener("overlay-config", (e) => {
+  try {
+    const data = JSON.parse(e.data);
+    applyOverlayAlertStyle(data?.overlayAlert || data);
+  } catch {
+    // ignore
+  }
+});
+
+loadOverlayAlertConfig();
 
 function playAudio(url) {
   if (!url) return Promise.resolve();

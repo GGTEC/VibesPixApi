@@ -485,6 +485,29 @@ async function carregarConfig() {
   const overlayLink = document.getElementById("overlay-link");
   overlayLink.value = `${location.origin}/${encodeURIComponent(user)}/overlay`;
 
+  // Estilo do alerta (overlay)
+  const overlayAlert = data.overlayAlert || {};
+  const bgTypeEl = document.getElementById("overlay-alert-bg-type");
+  const bgColorEl = document.getElementById("overlay-alert-bg-color");
+  const bgImageEl = document.getElementById("overlay-alert-bg-image");
+  const fontTagEl = document.getElementById("overlay-font-tag");
+  const fontMsgEl = document.getElementById("overlay-font-message");
+  const testUserEl = document.getElementById("overlay-test-username");
+  const testValueEl = document.getElementById("overlay-test-value");
+  const testMsgEl = document.getElementById("overlay-test-message");
+
+  if (bgTypeEl) bgTypeEl.value = overlayAlert.backgroundType || "default";
+  if (bgColorEl) bgColorEl.value = overlayAlert.backgroundColor || "#0d1016";
+  if (bgImageEl) bgImageEl.value = overlayAlert.backgroundImageUrl || "";
+  if (fontTagEl) fontTagEl.value = overlayAlert.fontTagPx ?? "";
+  if (fontMsgEl) fontMsgEl.value = overlayAlert.fontMessagePx ?? "";
+
+  if (testUserEl && !testUserEl.value) testUserEl.value = "Teste";
+  if (testValueEl && !testValueEl.value) testValueEl.value = "5";
+  if (testMsgEl && !testMsgEl.value) testMsgEl.value = "Isso é um alerta de teste.";
+
+  updateOverlayAlertUi();
+
   // Loja - nome, lead e imagens
   const bannerBg =
     data.home?.bannerBg || data.home?.leadBg || data.home?.leadBackground || "";
@@ -529,6 +552,16 @@ async function salvarConfig() {
       barFillColor: readColorValue("bar-fill"),
       textColor: readColorValue("text-color"),
     };
+
+    const overlayAlert = {
+      backgroundType: document.getElementById("overlay-alert-bg-type")?.value || "default",
+      backgroundColor: document.getElementById("overlay-alert-bg-color")?.value || undefined,
+      backgroundImageUrl:
+        document.getElementById("overlay-alert-bg-image")?.value?.trim() || undefined,
+      fontTagPx: Number(document.getElementById("overlay-font-tag")?.value) || undefined,
+      fontMessagePx: Number(document.getElementById("overlay-font-message")?.value) || undefined
+    };
+
     await fetch(`${baseApi}/config`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -543,6 +576,7 @@ async function salvarConfig() {
           document.getElementById("overlay-message").value.trim() || undefined,
         ttsVoice: document.getElementById("tts-voice").value || undefined,
         overlayGoal,
+        overlayAlert,
         home: {
           name: document.getElementById("store-name").value.trim() || undefined,
           lead: document.getElementById("store-lead").value.trim() || undefined,
@@ -561,6 +595,7 @@ async function salvarConfig() {
     });
     configCache = configCache || {};
     configCache.overlayGoal = overlayGoal;
+    configCache.overlayAlert = overlayAlert;
     configCache.home = configCache.home || {};
     configCache.home.name =
       document.getElementById("store-name").value.trim() || undefined;
@@ -577,6 +612,51 @@ async function salvarConfig() {
     showToast("Configurações salvas!");
   } catch {
     showToast("Erro ao salvar!", true);
+  }
+}
+
+function updateOverlayAlertUi() {
+  const type = document.getElementById("overlay-alert-bg-type")?.value || "default";
+  const colorWrap = document.getElementById("overlay-alert-bg-color-wrap");
+  const imageWrap = document.getElementById("overlay-alert-bg-image-wrap");
+  if (colorWrap) colorWrap.style.display = type === "color" ? "block" : "none";
+  if (imageWrap) imageWrap.style.display = type === "image" ? "block" : "none";
+}
+
+async function sendOverlayTest() {
+  if (!loggedIn) return showToast("Faça login para testar o overlay", true);
+  const btn = document.getElementById("overlay-test-btn");
+  const payload = {
+    username: document.getElementById("overlay-test-username")?.value?.trim() || "Teste",
+    totalValue: Number(document.getElementById("overlay-test-value")?.value) || 5,
+    message: document.getElementById("overlay-test-message")?.value?.trim() || "Isso é um alerta de teste.",
+    title: document.getElementById("overlay-message")?.value?.trim() || undefined
+  };
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+    }
+    const res = await fetch(`${baseApi}/overlay-test`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload)
+    });
+    const raw = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch {}
+    if (!res.ok) throw new Error(data?.error || raw || "Falha ao enviar teste");
+    showToast("Alerta de teste enviado!");
+  } catch (err) {
+    showToast(err?.message || "Erro ao enviar teste", true);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Enviar alerta de teste";
+    }
   }
 }
 
@@ -651,6 +731,14 @@ document
       showToast("Não foi possível copiar", true);
     }
   });
+
+document
+  .getElementById("overlay-alert-bg-type")
+  ?.addEventListener("change", updateOverlayAlertUi);
+
+document
+  .getElementById("overlay-test-btn")
+  ?.addEventListener("click", sendOverlayTest);
 
 document
   .getElementById("copy-goal-overlay-link")

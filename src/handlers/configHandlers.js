@@ -1,4 +1,4 @@
-import { normalizeOverlayGoal, readConfig, writeConfig } from "../utils/config.js";
+import { normalizeOverlayAlert, normalizeOverlayGoal, readConfig, writeConfig } from "../utils/config.js";
 import { broadcastEvent } from "../services/clients.js";
 
 export function makeGetConfigHandler(rootDir) {
@@ -46,16 +46,22 @@ export function makeUpdateConfigHandler(rootDir) {
     const hasInfinity = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "infinitypayHandle");
     const hasOverlay = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayMessage");
     const hasOverlayGoal = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayGoal");
+    const hasOverlayAlert = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "overlayAlert");
     const hasTtsVoice = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "ttsVoice");
     const hasHome = newConfig && Object.prototype.hasOwnProperty.call(newConfig, "home");
 
-    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice && !hasOverlayGoal && !hasHome) {
+    if (!hasRcon && !hasProdutos && !hasSound && !hasInfinity && !hasOverlay && !hasTtsVoice && !hasOverlayGoal && !hasOverlayAlert && !hasHome) {
       return res.status(400).json({ error: "Config inválida" });
     }
 
     let overlayGoalNormalized = null;
     if (hasOverlayGoal) {
       overlayGoalNormalized = normalizeOverlayGoal(newConfig.overlayGoal);
+    }
+
+    let overlayAlertNormalized = null;
+    if (hasOverlayAlert) {
+      overlayAlertNormalized = normalizeOverlayAlert(newConfig.overlayAlert);
     }
 
     await writeConfig(rootDir, user, () => {
@@ -89,6 +95,10 @@ export function makeUpdateConfigHandler(rootDir) {
         next.overlayGoal = overlayGoalNormalized;
       }
 
+      if (hasOverlayAlert) {
+        next.overlayAlert = overlayAlertNormalized;
+      }
+
       if (hasTtsVoice) {
         next.ttsVoice = (newConfig.ttsVoice || "").toString();
       }
@@ -102,6 +112,10 @@ export function makeUpdateConfigHandler(rootDir) {
 
     if (overlayGoalNormalized) {
       broadcastEvent(user, "goal-config", { overlayGoal: overlayGoalNormalized });
+    }
+
+    if (overlayAlertNormalized) {
+      broadcastEvent(user, "overlay-config", { overlayAlert: overlayAlertNormalized });
     }
 
     return res.json({ success: true });
