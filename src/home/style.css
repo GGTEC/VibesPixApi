@@ -227,8 +227,8 @@ body {
   letter-spacing: 0.2px;
 }
 .form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	display: grid;
+	grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 12px;
 }

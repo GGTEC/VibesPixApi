@@ -274,18 +274,16 @@
 
           <div class="section" style="margin-top:0;">
             <h3>Métricas <span class="pill">período</span></h3>
-            <form id="metricsForm" class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items:end;">
-              <div>
+            <form id="metricsForm" class="form-grid">
+              <div class="metricInput">
                 <label class="label">De</label>
                 <input id="metricsFrom" class="input" type="date" required />
               </div>
-              <div>
+              <div class="metricInput">
                 <label class="label">Até</label>
                 <input id="metricsTo" class="input" type="date" required />
               </div>
-              <div>
                 <button id="metricsBtn" class="btn-secondary" type="submit" style="width:auto;">Calcular</button>
-              </div>
             </form>
             <div class="metrics-grid">
               <canvas id="metricsChart" class="metrics-chart" width="900" height="220" hidden></canvas>
