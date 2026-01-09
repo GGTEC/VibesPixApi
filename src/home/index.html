@@ -128,12 +128,8 @@
                 <p class="help-text">Usado quando "Background" = Cor.</p>
               </div>
 
-              <div id="overlay-alert-bg-image-wrap" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                
-                <div>
-                    <label class="label">URL da imagem</label>
-                    <input id="overlay-alert-bg-image" placeholder="Ex: imagem.png ou https://..." class="input" autocomplete="off">
-                </div>
+              <div id="overlay-alert-bg-image-wrap" style="display:grid; grid-template-columns: 1fr; gap: 10px;">
+                <input id="overlay-alert-bg-image" type="hidden" value="">
 
                 <div class="file-input" id="overlay-bg-upload-box">
                   <span class="file-label">Enviar imagem</span>
@@ -141,7 +137,7 @@
                   <input id="overlay-bg-upload" type="file" accept="image/*">
                 </div>
 
-                <p class="help-text">Ao enviar, o link é preenchido automaticamente acima.</p>
+                <p class="help-text" id="overlay-bg-current">Imagem atual: nenhuma</p>
               </div>
 
               <div>

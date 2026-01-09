@@ -483,6 +483,7 @@ async function carregarConfig() {
   if (testMsgEl && !testMsgEl.value) testMsgEl.value = "Isso é um alerta de teste.";
 
   updateOverlayAlertUi();
+  updateOverlayBgCurrentLabel();
 
   // Loja - nome, lead e imagens
   const bannerBg =
@@ -596,7 +597,18 @@ function updateOverlayAlertUi() {
   const colorWrap = document.getElementById("overlay-alert-bg-color-wrap");
   const imageWrap = document.getElementById("overlay-alert-bg-image-wrap");
   if (colorWrap) colorWrap.style.display = type === "color" ? "block" : "none";
-  if (imageWrap) imageWrap.style.display = type === "image" ? "block" : "none";
+  if (imageWrap) imageWrap.style.display = type === "image" ? "grid" : "none";
+}
+
+function updateOverlayBgCurrentLabel() {
+  const label = document.getElementById("overlay-bg-current");
+  const url = document.getElementById("overlay-alert-bg-image")?.value?.trim();
+  if (!label) return;
+  if (!url) {
+    label.textContent = "Imagem atual: nenhuma";
+    return;
+  }
+  label.textContent = `Imagem atual: ${getFileNameFromUrl(url)}`;
 }
 
 async function sendOverlayTest() {
@@ -753,6 +765,7 @@ document
         if (bgTypeEl) bgTypeEl.value = "image";
         if (bgUrlEl) bgUrlEl.value = url;
         updateOverlayAlertUi();
+        updateOverlayBgCurrentLabel();
       }
 
       // Atualiza galeria global também.
