@@ -353,8 +353,7 @@ async function trySessionLogin() {
 }
 
 // Config (RCON/overlay/etc)
-const tabButtons = subTabs;
-const tabContents = Array.from(document.querySelectorAll(".tab-content"));
+// (Sem sub-tabs: cada bloco virou uma aba principal)
 
 function addSoundOption(name, selectIt = false) {
   if (!name) return;
