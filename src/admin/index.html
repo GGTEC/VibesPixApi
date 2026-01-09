@@ -74,6 +74,23 @@
                 <pre id="logs" class="admin-logs"></pre>
               </div>
             </div>
+
+            <div class="section collapsible" data-collapsible>
+              <button class="collapsible-toggle" type="button" aria-expanded="true" aria-controls="metricsSectionBody">
+                <span class="collapsible-title">Métricas</span>
+                <span class="collapsible-icon" aria-hidden="true"></span>
+              </button>
+              <div id="metricsSectionBody" class="collapsible-body">
+                <form id="metricsForm" class="admin-form">
+                  <div class="admin-form-row">
+                    <input class="input" name="from" type="date" required />
+                    <input class="input" name="to" type="date" required />
+                  </div>
+                  <button id="metricsBtn" class="btn-secondary" type="submit" disabled>Calcular período</button>
+                </form>
+                <pre id="metricsResult" class="admin-result" hidden></pre>
+              </div>
+            </div>
           </div>
         </div>
       </section>

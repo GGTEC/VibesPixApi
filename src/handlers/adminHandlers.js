@@ -3,6 +3,7 @@ import path from "path";
 import { readRecentLogs } from "../services/logger.js";
 import { readConfig } from "../utils/config.js";
 import { getAllowedTtsVoices, getDefaultTtsVoice } from "../services/tts.js";
+import { getDbForUser } from "../services/mongo.js";
 import { runTestProduct } from "./webhookHandlers.js";
 
 function uniq(arr) {
@@ -109,6 +110,63 @@ export function makeAdminTestOptionsHandler(rootDir) {
         default: defaultVoice,
         current: currentVoice
       }
+    });
+  };
+}
+
+function parseDateParam(value) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export function makeAdminMetricsHandler(_rootDir) {
+  return async function adminMetrics(req, res) {
+    const user = safeUserName(req.query?.user);
+    if (!user) return res.status(400).json({ error: "Informe o usuário (user)" });
+
+    const from = parseDateParam(req.query?.from);
+    const to = parseDateParam(req.query?.to);
+    if (!from || !to) {
+      return res.status(400).json({ error: "Informe 'from' e 'to' (ISO ou data)" });
+    }
+    if (from > to) {
+      return res.status(400).json({ error: "Período inválido (from > to)" });
+    }
+
+    const db = await getDbForUser(user);
+    const col = db.collection("purchases");
+
+    const match = {
+      createdAt: { $gte: from, $lte: to },
+      totalValue: { $type: "number" }
+    };
+
+    const [agg] = await col
+      .aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalValue: { $sum: "$totalValue" }
+          }
+        }
+      ])
+      .toArray();
+
+    const count = Number(agg?.count || 0);
+    const totalValue = Number(agg?.totalValue || 0);
+
+    return res.json({
+      ok: true,
+      user,
+      from: from.toISOString(),
+      to: to.toISOString(),
+      count,
+      totalValue
     });
   };
 }

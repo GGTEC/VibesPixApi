@@ -54,6 +54,9 @@ const elTestProductResult = document.getElementById("testProductResult");
 const elUserPanel = document.getElementById("userPanel");
 const elProductOptions = document.getElementById("productOptions");
 const elVoiceOptions = document.getElementById("voiceOptions");
+const elMetricsForm = document.getElementById("metricsForm");
+const elMetricsBtn = document.getElementById("metricsBtn");
+const elMetricsResult = document.getElementById("metricsResult");
 
 let selectedUser = null;
 
@@ -61,6 +64,7 @@ function setSelectedUser(user) {
   selectedUser = user || null;
   if (elSelectedUserLabel) elSelectedUserLabel.textContent = selectedUser || "—";
   if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
+  if (elMetricsBtn) elMetricsBtn.disabled = !selectedUser;
 
   if (elUserPanel) elUserPanel.hidden = !selectedUser;
 
@@ -77,7 +81,22 @@ function setSelectedUser(user) {
     if (elSelectedTitle) elSelectedTitle.textContent = "Logs";
     if (elLogs) elLogs.textContent = "";
     if (elTestProductResult) elTestProductResult.hidden = true;
+    if (elMetricsResult) elMetricsResult.hidden = true;
   }
+}
+
+function formatCurrencyBRL(value) {
+  const n = Number(value);
+  const safe = Number.isFinite(n) ? n : 0;
+  return safe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function isoFromDateInput(dateStr, isEnd) {
+  // dateStr: YYYY-MM-DD
+  if (!dateStr) return null;
+  const base = `${dateStr}T${isEnd ? "23:59:59.999" : "00:00:00.000"}`;
+  const d = new Date(base);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 function initCollapsibles() {
@@ -283,6 +302,67 @@ elTestProductForm?.addEventListener("submit", async (e) => {
     showTestResult({ error: err?.message || String(err) }, true);
   } finally {
     if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
+  }
+});
+
+elMetricsForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!selectedUser) {
+    if (elMetricsResult) {
+      elMetricsResult.hidden = false;
+      elMetricsResult.classList.add("admin-error");
+      elMetricsResult.textContent = "Selecione um usuário na sidebar.";
+    }
+    return;
+  }
+
+  const form = e.currentTarget;
+  const fromIso = isoFromDateInput(form.from.value, false);
+  const toIso = isoFromDateInput(form.to.value, true);
+
+  if (!fromIso || !toIso) {
+    if (elMetricsResult) {
+      elMetricsResult.hidden = false;
+      elMetricsResult.classList.add("admin-error");
+      elMetricsResult.textContent = "Informe um período válido.";
+    }
+    return;
+  }
+
+  try {
+    if (elMetricsBtn) elMetricsBtn.disabled = true;
+    if (elMetricsResult) {
+      elMetricsResult.hidden = false;
+      elMetricsResult.classList.remove("admin-error");
+      elMetricsResult.textContent = "Calculando...";
+    }
+
+    const resp = await api(
+      `/admin/api/metrics?user=${encodeURIComponent(selectedUser)}&from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`
+    );
+
+    const out = {
+      user: resp.user,
+      from: resp.from,
+      to: resp.to,
+      count: resp.count,
+      totalValue: resp.totalValue,
+      totalValueFormatted: formatCurrencyBRL(resp.totalValue)
+    };
+
+    if (elMetricsResult) {
+      elMetricsResult.hidden = false;
+      elMetricsResult.classList.remove("admin-error");
+      elMetricsResult.textContent = JSON.stringify(out, null, 2);
+    }
+  } catch (err) {
+    if (elMetricsResult) {
+      elMetricsResult.hidden = false;
+      elMetricsResult.classList.add("admin-error");
+      elMetricsResult.textContent = `Erro: ${err?.message || err}`;
+    }
+  } finally {
+    if (elMetricsBtn) elMetricsBtn.disabled = !selectedUser;
   }
 });
 
