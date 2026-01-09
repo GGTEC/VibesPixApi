@@ -60,7 +60,32 @@ const elMetricsResult = document.getElementById("metricsResult");
 const elMetricsPurchases = document.getElementById("metricsPurchases");
 const elMetricsChart = document.getElementById("metricsChart");
 
+const elSectionTest = document.getElementById("sectionTest");
+const elSectionLogs = document.getElementById("sectionLogs");
+const elSectionMetrics = document.getElementById("sectionMetrics");
+
 let selectedUser = null;
+let selectedSection = null; // 'test' | 'logs' | 'metrics'
+
+function showOnlySection(section) {
+  selectedSection = section || null;
+  if (elSectionTest) elSectionTest.hidden = selectedSection !== "test";
+  if (elSectionLogs) elSectionLogs.hidden = selectedSection !== "logs";
+  if (elSectionMetrics) elSectionMetrics.hidden = selectedSection !== "metrics";
+
+  // Mantém a seção visível expandida.
+  const map = {
+    test: elSectionTest,
+    logs: elSectionLogs,
+    metrics: elSectionMetrics
+  };
+  const target = map[selectedSection];
+  if (target) {
+    target.dataset.collapsed = "false";
+    const btn = target.querySelector(".collapsible-toggle");
+    if (btn) btn.setAttribute("aria-expanded", "true");
+  }
+}
 
 function setSelectedUser(user) {
   selectedUser = user || null;
@@ -84,7 +109,14 @@ function setSelectedUser(user) {
     if (elLogs) elLogs.textContent = "";
     if (elTestProductResult) elTestProductResult.hidden = true;
     if (elMetricsResult) elMetricsResult.hidden = true;
+
+    showOnlySection(null);
   }
+}
+
+async function loadLogsForUser(user) {
+  const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
+  renderLogs(logs);
 }
 
 function formatCurrencyBRL(value) {
@@ -394,25 +426,83 @@ async function loadUsers() {
   setSelectedUser(null);
 
   for (const user of users) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "nav-btn";
-    btn.textContent = user;
-    btn.addEventListener("click", async () => {
-      for (const node of elUserButtons.querySelectorAll(".nav-btn")) {
-        node.classList.remove("active");
-      }
-      btn.classList.add("active");
-      setSelectedUser(user);
-      await loadTestOptionsForUser(user);
-      elSelectedTitle.textContent = `Logs: ${user}`;
-      const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
-      renderLogs(logs);
+    const item = document.createElement("div");
+    item.className = "user-item";
+    item.dataset.open = "false";
 
-      // Em mobile, fecha o menu após selecionar.
-      toggleSidebar(false);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "user-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.appendChild(document.createTextNode(user));
+    const chevron = document.createElement("span");
+    chevron.className = "user-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    toggle.appendChild(chevron);
+
+    const subnav = document.createElement("div");
+    subnav.className = "user-subnav";
+    subnav.hidden = true;
+
+    const makeSub = (label, section) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "user-subbtn";
+      b.textContent = label;
+      b.dataset.section = section;
+      b.addEventListener("click", async () => {
+        // ativa visual
+        for (const node of elUserButtons.querySelectorAll(".user-subbtn")) {
+          node.classList.remove("active");
+        }
+        b.classList.add("active");
+
+        setSelectedUser(user);
+        showOnlySection(section);
+
+        if (elSelectedTitle) elSelectedTitle.textContent = `${label}: ${user}`;
+
+        if (section === "test") {
+          await loadTestOptionsForUser(user);
+        }
+
+        if (section === "logs") {
+          await loadLogsForUser(user);
+        }
+
+        // Métricas: não auto-calcula (depende do período), só mostra a seção.
+
+        // Em mobile, fecha o menu após escolher.
+        toggleSidebar(false);
+      });
+      return b;
+    };
+
+    subnav.appendChild(makeSub("Teste de produto", "test"));
+    subnav.appendChild(makeSub("Logs", "logs"));
+    subnav.appendChild(makeSub("Métricas", "metrics"));
+
+    toggle.addEventListener("click", () => {
+      const open = item.dataset.open === "true";
+
+      // Fecha os demais para ficar organizado.
+      for (const other of elUserButtons.querySelectorAll(".user-item")) {
+        if (other === item) continue;
+        other.dataset.open = "false";
+        const s = other.querySelector(".user-subnav");
+        if (s) s.hidden = true;
+        const t = other.querySelector(".user-toggle");
+        if (t) t.setAttribute("aria-expanded", "false");
+      }
+
+      item.dataset.open = open ? "false" : "true";
+      subnav.hidden = open;
+      toggle.setAttribute("aria-expanded", open ? "false" : "true");
     });
-    elUserButtons.appendChild(btn);
+
+    item.appendChild(toggle);
+    item.appendChild(subnav);
+    elUserButtons.appendChild(item);
   }
 }
 
