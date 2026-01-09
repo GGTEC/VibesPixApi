@@ -1,0 +1,13 @@
+.admin-root{padding:16px}
+.admin-card{max-width:420px}
+.admin-card form{display:flex;flex-direction:column;gap:12px}
+.admin-card label{display:flex;flex-direction:column;gap:6px}
+.admin-error{white-space:pre-wrap}
+
+.admin-panel{display:flex;gap:16px;min-height:70vh}
+.admin-sidebar{width:260px;display:flex;flex-direction:column;gap:12px}
+.admin-sidebar-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.admin-user-buttons{display:flex;flex-direction:column;gap:8px}
+.admin-user-buttons button{text-align:left}
+.admin-content{flex:1;min-width:0}
+.admin-logs{white-space:pre-wrap;overflow:auto;max-height:70vh}

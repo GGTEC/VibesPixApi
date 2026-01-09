@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/admin/style.css" />
+  </head>
+  <body>
+    <main class="admin-root">
+      <section id="login" class="admin-card" hidden>
+        <h1>Admin</h1>
+        <form id="loginForm">
+          <label>
+            Usuário
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            Senha
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit">Entrar</button>
+        </form>
+        <pre id="loginError" class="admin-error" hidden></pre>
+      </section>
+
+      <section id="panel" class="admin-panel" hidden>
+        <aside class="admin-sidebar">
+          <div class="admin-sidebar-header">
+            <strong id="adminUser"></strong>
+            <button id="logoutBtn" type="button">Sair</button>
+          </div>
+          <div id="userButtons" class="admin-user-buttons"></div>
+        </aside>
+        <section class="admin-content">
+          <h2 id="selectedUserTitle">Logs</h2>
+          <pre id="logs" class="admin-logs"></pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="/admin/script.js" type="module"></script>
+  </body>
+</html>

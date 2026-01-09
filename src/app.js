@@ -17,6 +17,8 @@ import { makeSseHandler } from "./handlers/sseHandlers.js";
 import { logEvent, readRecentLogs } from "./services/logger.js";
 import { pingMongo } from "./services/mongo.js";
 import { sessionMiddleware, makeLoginHandler, makeLogoutHandler } from "./services/auth.js";
+import { adminAuthMiddleware, makeAdminLoginHandler, makeAdminLogoutHandler } from "./services/adminAuth.js";
+import { makeAdminPageHandler, makeAdminMeHandler, makeAdminUsersHandler, makeAdminLogsHandler } from "./handlers/adminHandlers.js";
 
 function createUserStorage(rootDir, folder = "images") {
   return multer.diskStorage({
@@ -66,16 +68,21 @@ export function createApp(rootDir) {
   // Assets públicos compartilhados
   app.use(express.static(publicDir));
 
+  // Admin (página + assets + APIs)
+  app.use("/admin", express.static(path.join(rootDir, "src", "admin")));
+  app.get("/admin", makeAdminPageHandler(rootDir));
+  app.post("/admin/api/login", makeAdminLoginHandler());
+  app.post("/admin/api/logout", makeAdminLogoutHandler());
+  app.get("/admin/api/me", adminAuthMiddleware, makeAdminMeHandler());
+  app.get("/admin/api/users", adminAuthMiddleware, makeAdminUsersHandler(rootDir));
+  app.get("/admin/api/logs", adminAuthMiddleware, makeAdminLogsHandler(rootDir));
+
   // Página pública raiz (fallback explícito)
   app.get("/", (req, res) => {
     return res.sendFile(path.join(publicDir, "index.html"));
   });
 
-  // Logs públicos (sanitizados e limitados)
-  app.get("/status/logs", (req, res) => {
-    const logs = readRecentLogs(rootDir, 120);
-    return res.json({ logs });
-  });
+  // Logs: removido do endpoint público; agora apenas via /admin
 
   // Saúde do banco (ping simples)
   app.get("/status/db", async (req, res) => {
@@ -169,7 +176,7 @@ export function createApp(rootDir) {
     const user = req.params[0];
 
     // Rotas públicas já tratadas mantêm comportamento normal
-    if (["status"].includes(user)) return next();
+    if (["status", "admin"].includes(user)) return next();
 
     const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
     return res.redirect(302, `/${encodeURIComponent(user)}/${query}`);

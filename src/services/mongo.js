@@ -3,6 +3,8 @@ import { MongoClient } from "mongodb";
 const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017";
 let clientPromise = null;
 
+const ADMIN_DB_NAME = process.env.ADMIN_DB_NAME || "VibesAdmin";
+
 async function getClient() {
   if (!clientPromise) {
     const client = new MongoClient(uri, { maxPoolSize: 10 });
@@ -28,6 +30,11 @@ export async function getDbForUser(user) {
   const client = await getClient();
   const dbName = sanitizeDbName(user);
   return client.db(dbName);
+}
+
+export async function getAdminDb() {
+  const client = await getClient();
+  return client.db(ADMIN_DB_NAME);
 }
 
 async function listCollectionNames(db) {
@@ -115,6 +122,42 @@ export async function ensureUserDbSetup(user) {
   }
 
   await ensureIndexes(db);
+  return { db, createdCollections: created };
+}
+
+// Setup do banco exclusivo do admin (collections e índices). Idempotente.
+export async function ensureAdminDbSetup() {
+  const db = await getAdminDb();
+  const created = [];
+
+  const existingNames = new Set(await listCollectionNames(db));
+
+  for (const name of ["admins", "tokens"]) {
+    // eslint-disable-next-line no-await-in-loop
+    const didCreate = await createCollectionIfMissing(db, name, existingNames);
+    if (didCreate) created.push(name);
+  }
+
+  // Admins: username único
+  try {
+    await db.collection("admins").createIndex({ username: 1 }, { unique: true, name: "uniq_username" });
+  } catch (err) {
+    if (!isIgnorableIndexError(err)) throw err;
+  }
+
+  // Tokens: token único e (opcionalmente) TTL
+  try {
+    await db.collection("tokens").createIndex({ token: 1 }, { unique: true, name: "uniq_token" });
+  } catch (err) {
+    if (!isIgnorableIndexError(err)) throw err;
+  }
+
+  try {
+    await db.collection("tokens").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0, name: "ttl_expiresAt" });
+  } catch (err) {
+    if (!isIgnorableIndexError(err)) throw err;
+  }
+
   return { db, createdCollections: created };
 }
 
