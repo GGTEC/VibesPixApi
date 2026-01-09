@@ -45,6 +45,19 @@ const elAdminUser = document.getElementById("adminUser");
 const elUserButtons = document.getElementById("userButtons");
 const elLogs = document.getElementById("logs");
 const elSelectedTitle = document.getElementById("selectedUserTitle");
+const elSidebar = document.querySelector(".sidebar");
+const elMobileToggle = document.getElementById("mobileToggle");
+
+function toggleSidebar(forceOpen) {
+  if (!elSidebar) return;
+  const next = typeof forceOpen === "boolean" ? forceOpen : !elSidebar.classList.contains("open");
+  elSidebar.classList.toggle("open", next);
+  if (elMobileToggle) elMobileToggle.setAttribute("aria-expanded", next ? "true" : "false");
+}
+
+elMobileToggle?.addEventListener("click", () => {
+  toggleSidebar();
+});
 
 function showLogin(err) {
   elPanel.hidden = true;
@@ -92,6 +105,9 @@ async function loadUsers() {
       elSelectedTitle.textContent = `Logs: ${user}`;
       const { logs } = await api(`/admin/api/logs?user=${encodeURIComponent(user)}&limit=200`);
       renderLogs(logs);
+
+      // Em mobile, fecha o menu após selecionar.
+      toggleSidebar(false);
     });
     elUserButtons.appendChild(btn);
   }

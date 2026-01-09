@@ -25,13 +25,16 @@
     </section>
 
     <main id="panel" class="layout" hidden>
+      <button id="mobileToggle" class="mobile-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+        <span class="burger" aria-hidden="true"></span>
+      </button>
       <aside class="sidebar">
         <div class="brand">VibesPix · Admin</div>
         <div class="admin-sidebar-header">
           <span id="adminUser" class="pill"></span>
-          <button id="logoutBtn" class="btn-secondary" type="button">Sair</button>
         </div>
         <div id="userButtons" class="nav-group"></div>
+        <button id="logoutBtn" class="btn-secondary admin-logout" type="button">Sair</button>
       </aside>
       <section class="content">
         <div class="panel">
