@@ -741,6 +741,59 @@ document
   ?.addEventListener("click", sendOverlayTest);
 
 document
+  .getElementById("overlay-bg-upload")
+  ?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const nameEl = document.getElementById("overlay-bg-file-name");
+    if (nameEl) nameEl.textContent = file.name;
+
+    if (!loggedIn) {
+      showToast("Faça login para enviar imagem", true);
+      e.target.value = "";
+      if (nameEl) nameEl.textContent = "Selecione um arquivo";
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${baseApi}/upload-image`, {
+        method: "POST",
+        credentials: "include",
+        body: fd
+      });
+      const raw = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {}
+      if (!res.ok) throw new Error(data?.error || raw || "Erro ao enviar imagem");
+
+      const url = data?.url;
+      if (url) {
+        const bgTypeEl = document.getElementById("overlay-alert-bg-type");
+        const bgUrlEl = document.getElementById("overlay-alert-bg-image");
+        if (bgTypeEl) bgTypeEl.value = "image";
+        if (bgUrlEl) bgUrlEl.value = url;
+        updateOverlayAlertUi();
+      }
+
+      // Atualiza galeria global também.
+      try {
+        await loadImagens();
+      } catch {}
+
+      showToast("Imagem enviada!");
+    } catch (err) {
+      showToast(err?.message || "Erro ao enviar imagem", true);
+      if (nameEl) nameEl.textContent = "Selecione um arquivo";
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+document
   .getElementById("copy-goal-overlay-link")
   .addEventListener("click", async () => {
     const link = document.getElementById("goal-overlay-link").value;
