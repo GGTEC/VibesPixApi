@@ -88,7 +88,11 @@
                   </div>
                   <button id="metricsBtn" class="btn-secondary" type="submit" disabled>Calcular período</button>
                 </form>
-                <pre id="metricsResult" class="admin-result" hidden></pre>
+                <div class="metrics-grid">
+                  <canvas id="metricsChart" class="metrics-chart" width="900" height="220" hidden></canvas>
+                  <pre id="metricsResult" class="admin-result" hidden></pre>
+                  <pre id="metricsPurchases" class="admin-logs" hidden></pre>
+                </div>
               </div>
             </div>
           </div>

@@ -57,6 +57,8 @@ const elVoiceOptions = document.getElementById("voiceOptions");
 const elMetricsForm = document.getElementById("metricsForm");
 const elMetricsBtn = document.getElementById("metricsBtn");
 const elMetricsResult = document.getElementById("metricsResult");
+const elMetricsPurchases = document.getElementById("metricsPurchases");
+const elMetricsChart = document.getElementById("metricsChart");
 
 let selectedUser = null;
 
@@ -97,6 +99,100 @@ function isoFromDateInput(dateStr, isEnd) {
   const base = `${dateStr}T${isEnd ? "23:59:59.999" : "00:00:00.000"}`;
   const d = new Date(base);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function getCssVar(name, fallback) {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function formatPurchaseLine(p) {
+  const ts = p?.createdAt ? String(p.createdAt) : "";
+  const username = p?.username ? String(p.username) : "";
+  const src = p?.source ? String(p.source) : "";
+  const nsu = p?.order_nsu ? String(p.order_nsu) : "";
+  const v = Number(p?.totalValue);
+  const money = formatCurrencyBRL(v);
+  const msg = p?.overlayMessage ? String(p.overlayMessage) : "";
+  return `${ts} | ${money} | ${username} | ${src}${nsu ? ` | ${nsu}` : ""}${msg ? ` | ${msg}` : ""}`;
+}
+
+function bucketByDay(purchases) {
+  const map = new Map();
+  for (const p of Array.isArray(purchases) ? purchases : []) {
+    const d = new Date(p?.createdAt);
+    if (Number.isNaN(d.getTime())) continue;
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+    const v = Number(p?.totalValue);
+    map.set(key, (map.get(key) || 0) + (Number.isFinite(v) ? v : 0));
+  }
+  const keys = Array.from(map.keys()).sort();
+  return keys.map((k) => ({ day: k, total: map.get(k) || 0 }));
+}
+
+function drawBarChart(canvas, series) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const accent = getCssVar("--accent", "#7c4dff");
+  const accent2 = getCssVar("--accent-2", "#00e0ff");
+  const text = getCssVar("--text", "#f6f6f6");
+  const muted = getCssVar("--muted", "#9ba0b5");
+
+  const data = Array.isArray(series) ? series : [];
+  if (!data.length) {
+    ctx.fillStyle = muted;
+    ctx.font = "14px system-ui";
+    ctx.fillText("Sem dados no período.", 16, 28);
+    return;
+  }
+
+  const padding = 18;
+  const chartW = width - padding * 2;
+  const chartH = height - padding * 2;
+  const max = Math.max(...data.map((d) => Number(d.total) || 0), 1);
+
+  // eixo
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, height - padding);
+  ctx.lineTo(width - padding, height - padding);
+  ctx.stroke();
+
+  const barGap = 6;
+  const barW = Math.max(6, (chartW - barGap * (data.length - 1)) / data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    const v = Number(data[i].total) || 0;
+    const h = (v / max) * (chartH - 18);
+    const x = padding + i * (barW + barGap);
+    const y = height - padding - h;
+
+    const grad = ctx.createLinearGradient(0, y, 0, height - padding);
+    grad.addColorStop(0, accent2);
+    grad.addColorStop(1, accent);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, barW, h);
+  }
+
+  // legenda simples
+  ctx.fillStyle = text;
+  ctx.font = "12px system-ui";
+  const last = data[data.length - 1];
+  ctx.fillText(`Total no período: ${formatCurrencyBRL(data.reduce((a, d) => a + (Number(d.total) || 0), 0))}`, padding, padding - 4);
+  ctx.fillStyle = muted;
+  ctx.fillText(`Último dia: ${last.day}`, width - padding - 150, padding - 4);
 }
 
 function initCollapsibles() {
@@ -336,6 +432,8 @@ elMetricsForm?.addEventListener("submit", async (e) => {
       elMetricsResult.classList.remove("admin-error");
       elMetricsResult.textContent = "Calculando...";
     }
+    if (elMetricsPurchases) elMetricsPurchases.hidden = true;
+    if (elMetricsChart) elMetricsChart.hidden = true;
 
     const resp = await api(
       `/admin/api/metrics?user=${encodeURIComponent(selectedUser)}&from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`
@@ -355,12 +453,26 @@ elMetricsForm?.addEventListener("submit", async (e) => {
       elMetricsResult.classList.remove("admin-error");
       elMetricsResult.textContent = JSON.stringify(out, null, 2);
     }
+
+    const purchases = Array.isArray(resp?.purchases) ? resp.purchases : [];
+    if (elMetricsPurchases) {
+      elMetricsPurchases.hidden = false;
+      elMetricsPurchases.textContent = purchases.map(formatPurchaseLine).join("\n");
+    }
+
+    if (elMetricsChart) {
+      elMetricsChart.hidden = false;
+      const series = bucketByDay(purchases);
+      drawBarChart(elMetricsChart, series);
+    }
   } catch (err) {
     if (elMetricsResult) {
       elMetricsResult.hidden = false;
       elMetricsResult.classList.add("admin-error");
       elMetricsResult.textContent = `Erro: ${err?.message || err}`;
     }
+    if (elMetricsPurchases) elMetricsPurchases.hidden = true;
+    if (elMetricsChart) elMetricsChart.hidden = true;
   } finally {
     if (elMetricsBtn) elMetricsBtn.disabled = !selectedUser;
   }

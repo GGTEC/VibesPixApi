@@ -139,26 +139,30 @@ export function makeAdminMetricsHandler(_rootDir) {
     const db = await getDbForUser(user);
     const col = db.collection("purchases");
 
+    const limit = Math.max(1, Math.min(10000, Number(req.query?.limit || 5000)));
+
     const match = {
-      createdAt: { $gte: from, $lte: to },
-      totalValue: { $type: "number" }
+      createdAt: { $gte: from, $lte: to }
     };
 
-    const [agg] = await col
-      .aggregate([
-        { $match: match },
-        {
-          $group: {
-            _id: null,
-            count: { $sum: 1 },
-            totalValue: { $sum: "$totalValue" }
-          }
-        }
-      ])
+    const docs = await col
+      .find(match)
+      .sort({ createdAt: 1 })
+      .limit(limit)
       .toArray();
 
-    const count = Number(agg?.count || 0);
-    const totalValue = Number(agg?.totalValue || 0);
+    const purchases = docs.map((doc) => ({
+      ...doc,
+      _id: doc._id?.toString?.() || doc._id,
+      createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
+      updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : doc.updatedAt
+    }));
+
+    const count = purchases.length;
+    const totalValue = purchases.reduce((acc, p) => {
+      const v = Number(p?.totalValue);
+      return acc + (Number.isFinite(v) ? v : 0);
+    }, 0);
 
     return res.json({
       ok: true,
@@ -166,7 +170,9 @@ export function makeAdminMetricsHandler(_rootDir) {
       from: from.toISOString(),
       to: to.toISOString(),
       count,
-      totalValue
+      totalValue,
+      purchases,
+      truncated: docs.length >= limit
     });
   };
 }
