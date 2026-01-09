@@ -83,8 +83,14 @@
               <div id="metricsSectionBody" class="collapsible-body">
                 <form id="metricsForm" class="admin-form">
                   <div class="admin-form-row">
-                    <input class="input" name="from" type="date" required />
-                    <input class="input" name="to" type="date" required />
+					<div class="input-metrics">
+						<label for="from">De</label>
+                    	<input class="input" name="from" type="date" required />
+					</div>
+					<div class="input-metrics">
+						<label for="to">Até</label>
+                    	<input class="input" name="to" type="date" required />
+					</div>
                   </div>
                   <button id="metricsBtn" class="btn-secondary" type="submit" disabled>Calcular período</button>
                 </form>
