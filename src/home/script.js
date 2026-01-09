@@ -77,7 +77,7 @@ let purchases = [];
 let imagens = [];
 let modalOpen = false;
 let currentImageTarget = "product";
-let currentMainTab = "config";
+let currentMainTab = "rcon";
 
 const toastContainer = document.getElementById("toast-container");
 function showToast(message, isError = false) {
@@ -219,39 +219,53 @@ function renderPurchasesTable(container, purchasesArr) {
 
 // Navegação lateral
 const mainTabs = Array.from(document.querySelectorAll(".nav-btn[data-main]"));
-const subTabs = Array.from(document.querySelectorAll(".sub-btn[data-tab]"));
-const subnav = document.getElementById("config-subnav");
 const actionBarConfig = document.getElementById("action-bar-config");
 const actionBarStore = document.getElementById("action-bar-store");
 const mainSections = {
-  config: document.getElementById("config-section"),
+  rcon: document.getElementById("rcon-section"),
+  checkout: document.getElementById("checkout-section"),
+  sound: document.getElementById("sound-section"),
+  overlay: document.getElementById("overlay-section"),
+  goal: document.getElementById("goal-section"),
+  tts: document.getElementById("tts-section"),
+  storeconfig: document.getElementById("storeconfig-section"),
   store: document.getElementById("store-section"),
   metrics: document.getElementById("metrics-section"),
   purchases: document.getElementById("purchases-section"),
 };
 
+const CONFIG_MAIN_TABS = new Set([
+  "rcon",
+  "checkout",
+  "sound",
+  "overlay",
+  "goal",
+  "tts",
+  "storeconfig",
+]);
+
 function updateFloatingButtons() {
   if (!loggedIn) {
-    actionBarConfig.classList.add("hidden");
-    actionBarStore.classList.add("hidden");
+    actionBarConfig?.classList.add("hidden");
+    actionBarStore?.classList.add("hidden");
     return;
   }
-  if (currentMainTab === "config") {
-    actionBarConfig.classList.remove("hidden");
-    actionBarStore.classList.add("hidden");
+  if (CONFIG_MAIN_TABS.has(currentMainTab)) {
+    actionBarConfig?.classList.remove("hidden");
+    actionBarStore?.classList.add("hidden");
   } else if (currentMainTab === "store") {
     const formVisible = !document
       .getElementById("productFormSection")
       .classList.contains("hidden");
     if (formVisible) {
-      actionBarStore.classList.remove("hidden");
+      actionBarStore?.classList.remove("hidden");
     } else {
-      actionBarStore.classList.add("hidden");
+      actionBarStore?.classList.add("hidden");
     }
-    actionBarConfig.classList.add("hidden");
+    actionBarConfig?.classList.add("hidden");
   } else {
-    actionBarConfig.classList.add("hidden");
-    actionBarStore.classList.add("hidden");
+    actionBarConfig?.classList.add("hidden");
+    actionBarStore?.classList.add("hidden");
   }
 }
 
@@ -261,56 +275,18 @@ function setMainTab(target) {
     btn.classList.toggle("active", btn.dataset.main === target)
   );
   Object.entries(mainSections).forEach(([key, section]) => {
-    section.classList.toggle("hidden", key !== target);
+    section?.classList.toggle("hidden", key !== target);
   });
-  if (subnav) subnav.classList.toggle("hidden", target !== "config");
   const sidebar = document.querySelector(".sidebar");
   if (sidebar && sidebar.classList.contains("open"))
     sidebar.classList.remove("open");
   updateFloatingButtons();
 }
 
-function setSubTab(id) {
-  if (!id) return;
-  subTabs.forEach((btn) =>
-    btn.classList.toggle("active", btn.dataset.tab === id)
-  );
-  document.querySelectorAll("#config-section .tab-content").forEach((panel) => {
-    const shouldShow = panel.id === id;
-    const isHidden = panel.classList.contains("hidden");
-
-    if (shouldShow) {
-      if (!isHidden) {
-        panel.style.opacity = "1";
-        return;
-      }
-      panel.classList.remove("hidden");
-      panel.style.opacity = "0";
-      requestAnimationFrame(() => {
-        panel.style.opacity = "1";
-      });
-    } else {
-      if (isHidden) return;
-      panel.style.opacity = "0";
-      setTimeout(() => {
-        panel.classList.add("hidden");
-        panel.style.opacity = "";
-      }, 180);
-    }
-  });
-  const sidebar = document.querySelector(".sidebar");
-  if (sidebar && sidebar.classList.contains("open"))
-    sidebar.classList.remove("open");
-}
-
 mainTabs.forEach((btn) =>
   btn.addEventListener("click", () => setMainTab(btn.dataset.main))
 );
-subTabs.forEach((btn) =>
-  btn.addEventListener("click", () => setSubTab(btn.dataset.tab))
-);
-setMainTab("config");
-setSubTab("tab-rcon");
+setMainTab("rcon");
 initColorControls();
 
 // Login
@@ -716,7 +692,7 @@ document
 document.getElementById("tts-test").addEventListener("click", testarVoz);
 document
   .getElementById("btn-salvar-config")
-  .addEventListener("click", salvarConfig);
+  ?.addEventListener("click", salvarConfig);
 document
   .getElementById("action-save-config")
   .addEventListener("click", salvarConfig);
