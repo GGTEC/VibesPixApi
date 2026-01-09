@@ -49,14 +49,17 @@ export function createApp(rootDir) {
     ? rawAllowedOrigins.split(",").map((s) => s.trim()).filter(Boolean)
     : ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"];
 
-  const allowNoOrigin = String(process.env.CORS_ALLOW_NO_ORIGIN || "").toLowerCase() === "true";
+  // Requests server-to-server (webhooks, curl, healthchecks) normalmente não enviam Origin.
+  // CORS é uma proteção do browser, então não faz sentido bloquear esses requests por padrão.
+  const allowNoOrigin = String(process.env.CORS_ALLOW_NO_ORIGIN || "true").toLowerCase() === "true";
 
   const corsOptions = {
     origin(origin, cb) {
       // Alguns clientes (curl, server-to-server, same-origin) não mandam Origin.
-      if (!origin) return cb(allowNoOrigin ? null : new Error("CORS: Origin ausente"), allowNoOrigin);
+      if (!origin) return cb(null, !!allowNoOrigin);
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error(`CORS: Origin não permitido (${origin})`), false);
+      // Não estoura erro (500). Apenas não aplica CORS para origens não permitidas.
+      return cb(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
