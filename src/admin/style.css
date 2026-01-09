@@ -288,6 +288,117 @@ body {
 	border-radius: var(--radius);
 }
 
+.metrics-summary {
+	margin-top: 2px;
+	border: 1px solid rgba(255,255,255,0.08);
+	background: rgba(0,0,0,0.16);
+	border-radius: var(--radius);
+	padding: 14px;
+}
+
+.metrics-cards {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.metric-card {
+	background: var(--card);
+	border: 1px solid rgba(255,255,255,0.08);
+	border-radius: 14px;
+	padding: 12px;
+	min-height: 72px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 6px;
+}
+
+.metric-label {
+	color: var(--muted);
+	font-size: 12px;
+	letter-spacing: 0.2px;
+}
+
+.metric-value {
+	font-weight: 700;
+	font-size: 18px;
+	letter-spacing: 0.2px;
+}
+
+.metric-sub {
+	margin-top: 10px;
+	color: var(--muted);
+	font-size: 12px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.metric-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	border: 1px solid rgba(255,255,255,0.10);
+	background: rgba(255,255,255,0.04);
+}
+
+.purchases-table {
+	border: 1px solid rgba(255,255,255,0.08);
+	background: rgba(0,0,0,0.16);
+	border-radius: var(--radius);
+	overflow: auto;
+	max-height: 34vh;
+}
+
+.purchase-row {
+	display: grid;
+	grid-template-columns: 170px 130px 1fr 120px 1fr;
+	gap: 10px;
+	padding: 10px 12px;
+	border-bottom: 1px solid rgba(255,255,255,0.06);
+	align-items: center;
+	font-size: 13px;
+}
+
+.purchase-row:last-child { border-bottom: none; }
+
+.purchase-head {
+	position: sticky;
+	top: 0;
+	background: rgba(0,0,0,0.35);
+	backdrop-filter: blur(10px);
+	font-weight: 700;
+	color: var(--text);
+	z-index: 2;
+}
+
+.purchase-cell {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.purchase-mono {
+	font-family: "Fira Code", ui-monospace, monospace;
+}
+
+.purchase-right { text-align: right; }
+
+.purchase-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: rgba(0,224,255,0.10);
+	border: 1px solid rgba(0,224,255,0.18);
+	color: var(--text);
+	font-size: 12px;
+}
+
 .admin-title { margin: 0; font-size: 18px; font-weight: 700; }
 
 .admin-subtitle {
@@ -356,28 +467,32 @@ body {
 /* Scrollbars (tema glass) */
 .sidebar,
 .content,
-.admin-logs {
+.admin-logs,
+.purchases-table {
 	scrollbar-width: thin;
 	scrollbar-color: var(--accent) var(--card);
 }
 
 .sidebar::-webkit-scrollbar,
 .content::-webkit-scrollbar,
-.admin-logs::-webkit-scrollbar {
+.admin-logs::-webkit-scrollbar,
+.purchases-table::-webkit-scrollbar {
 	width: 10px;
 	height: 10px;
 }
 
 .sidebar::-webkit-scrollbar-track,
 .content::-webkit-scrollbar-track,
-.admin-logs::-webkit-scrollbar-track {
+.admin-logs::-webkit-scrollbar-track,
+.purchases-table::-webkit-scrollbar-track {
 	background: var(--card);
 	border-radius: 999px;
 }
 
 .sidebar::-webkit-scrollbar-thumb,
 .content::-webkit-scrollbar-thumb,
-.admin-logs::-webkit-scrollbar-thumb {
+.admin-logs::-webkit-scrollbar-thumb,
+.purchases-table::-webkit-scrollbar-thumb {
 	background: linear-gradient(180deg, var(--accent), var(--accent-2));
 	border-radius: 999px;
 	border: 2px solid var(--card);
@@ -385,8 +500,15 @@ body {
 
 .sidebar::-webkit-scrollbar-thumb:hover,
 .content::-webkit-scrollbar-thumb:hover,
-.admin-logs::-webkit-scrollbar-thumb:hover {
+.admin-logs::-webkit-scrollbar-thumb:hover,
+.purchases-table::-webkit-scrollbar-thumb:hover {
 	filter: brightness(1.08);
+}
+
+@media (max-width: 960px) {
+	.metrics-cards { grid-template-columns: 1fr; }
+	.purchase-row { grid-template-columns: 160px 120px 1fr; }
+	.purchase-row .purchase-hide-mobile { display: none; }
 }
 
 @media (max-width: 960px) {

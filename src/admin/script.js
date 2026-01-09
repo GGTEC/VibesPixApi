@@ -121,6 +121,111 @@ function formatPurchaseLine(p) {
   return `${ts} | ${money} | ${username} | ${src}${nsu ? ` | ${nsu}` : ""}${msg ? ` | ${msg}` : ""}`;
 }
 
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (typeof text === "string") node.textContent = text;
+  return node;
+}
+
+function toPtBrDateTime(isoLike) {
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return isoLike ? String(isoLike) : "—";
+  return d.toLocaleString("pt-BR");
+}
+
+function calcDaysInclusive(fromIso, toIso) {
+  const a = new Date(fromIso);
+  const b = new Date(toIso);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
+  const ms = Math.abs(b.getTime() - a.getTime());
+  return Math.floor(ms / (24 * 60 * 60 * 1000)) + 1;
+}
+
+function renderMetricsSummary(resp) {
+  if (!elMetricsResult) return;
+  elMetricsResult.innerHTML = "";
+
+  const count = Number(resp?.count) || 0;
+  const totalValue = Number(resp?.totalValue) || 0;
+  const avg = count > 0 ? totalValue / count : 0;
+  const days = calcDaysInclusive(resp?.from, resp?.to);
+
+  const cards = el("div", "metrics-cards");
+  const c1 = el("div", "metric-card");
+  c1.appendChild(el("div", "metric-label", "Total recebido"));
+  c1.appendChild(el("div", "metric-value", formatCurrencyBRL(totalValue)));
+
+  const c2 = el("div", "metric-card");
+  c2.appendChild(el("div", "metric-label", "Transações"));
+  c2.appendChild(el("div", "metric-value", String(count)));
+
+  const c3 = el("div", "metric-card");
+  c3.appendChild(el("div", "metric-label", "Ticket médio"));
+  c3.appendChild(el("div", "metric-value", formatCurrencyBRL(avg)));
+
+  cards.appendChild(c1);
+  cards.appendChild(c2);
+  cards.appendChild(c3);
+  elMetricsResult.appendChild(cards);
+
+  const sub = el("div", "metric-sub");
+  sub.appendChild(el("span", "metric-pill", `Usuário: ${resp?.user || "—"}`));
+  sub.appendChild(el("span", "metric-pill", `De: ${toPtBrDateTime(resp?.from)}`));
+  sub.appendChild(el("span", "metric-pill", `Até: ${toPtBrDateTime(resp?.to)}`));
+  if (days != null) sub.appendChild(el("span", "metric-pill", `Dias: ${days}`));
+  if (resp?.truncated) sub.appendChild(el("span", "metric-pill", "Lista truncada (limite atingido)"));
+  elMetricsResult.appendChild(sub);
+}
+
+function renderPurchasesTable(purchases) {
+  if (!elMetricsPurchases) return;
+  elMetricsPurchases.innerHTML = "";
+
+  const head = el("div", "purchase-row purchase-head");
+  head.appendChild(el("div", "purchase-cell", "Data/Hora"));
+  head.appendChild(el("div", "purchase-cell purchase-right", "Valor"));
+  head.appendChild(el("div", "purchase-cell", "Usuário"));
+  const srcHead = el("div", "purchase-cell purchase-hide-mobile", "Fonte");
+  head.appendChild(srcHead);
+  const msgHead = el("div", "purchase-cell purchase-hide-mobile", "Mensagem/NSU");
+  head.appendChild(msgHead);
+  elMetricsPurchases.appendChild(head);
+
+  const arr = Array.isArray(purchases) ? purchases : [];
+  if (!arr.length) {
+    const row = el("div", "purchase-row");
+    row.appendChild(el("div", "purchase-cell purchase-mono", "—"));
+    row.appendChild(el("div", "purchase-cell purchase-right", formatCurrencyBRL(0)));
+    row.appendChild(el("div", "purchase-cell", "Sem compras no período"));
+    row.appendChild(el("div", "purchase-cell purchase-hide-mobile", "—"));
+    row.appendChild(el("div", "purchase-cell purchase-hide-mobile", "—"));
+    elMetricsPurchases.appendChild(row);
+    return;
+  }
+
+  for (const p of arr) {
+    const row = el("div", "purchase-row");
+    row.appendChild(el("div", "purchase-cell purchase-mono", toPtBrDateTime(p?.createdAt)));
+    row.appendChild(el("div", "purchase-cell purchase-right purchase-mono", formatCurrencyBRL(p?.totalValue)));
+
+    const u = p?.username ? String(p.username) : "—";
+    row.appendChild(el("div", "purchase-cell", u));
+
+    const src = p?.source ? String(p.source) : "—";
+    const srcCell = el("div", "purchase-cell purchase-hide-mobile");
+    srcCell.appendChild(el("span", "purchase-badge", src));
+    row.appendChild(srcCell);
+
+    const nsu = p?.order_nsu ? String(p.order_nsu) : "";
+    const msg = p?.overlayMessage ? String(p.overlayMessage) : (p?.ttsText ? String(p.ttsText) : "");
+    const info = [nsu && `NSU: ${nsu}`, msg].filter(Boolean).join(" · ") || "—";
+    row.appendChild(el("div", "purchase-cell purchase-hide-mobile", info));
+
+    elMetricsPurchases.appendChild(row);
+  }
+}
+
 function bucketByDay(purchases) {
   const map = new Map();
   for (const p of Array.isArray(purchases) ? purchases : []) {
@@ -451,13 +556,13 @@ elMetricsForm?.addEventListener("submit", async (e) => {
     if (elMetricsResult) {
       elMetricsResult.hidden = false;
       elMetricsResult.classList.remove("admin-error");
-      elMetricsResult.textContent = JSON.stringify(out, null, 2);
+      renderMetricsSummary({ ...resp, ...out });
     }
 
     const purchases = Array.isArray(resp?.purchases) ? resp.purchases : [];
     if (elMetricsPurchases) {
       elMetricsPurchases.hidden = false;
-      elMetricsPurchases.textContent = purchases.map(formatPurchaseLine).join("\n");
+      renderPurchasesTable(purchases);
     }
 
     if (elMetricsChart) {
