@@ -51,7 +51,7 @@ export function createApp(rootDir) {
 
   const allowNoOrigin = String(process.env.CORS_ALLOW_NO_ORIGIN || "").toLowerCase() === "true";
 
-  app.use(cors({
+  const corsOptions = {
     origin(origin, cb) {
       // Alguns clientes (curl, server-to-server, same-origin) não mandam Origin.
       if (!origin) return cb(allowNoOrigin ? null : new Error("CORS: Origin ausente"), allowNoOrigin);
@@ -62,10 +62,13 @@ export function createApp(rootDir) {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 600
-  }));
+  };
+
+  app.use(cors(corsOptions));
 
   // Responde preflight de forma consistente.
-  app.options("*", cors());
+  // Obs: em algumas versões (express/path-to-regexp), "*" quebra. Use regex.
+  app.options(/.*/, cors(corsOptions));
   app.use(express.json({ limit: "2mb" }));
   app.use(bodyParser.json());
 
