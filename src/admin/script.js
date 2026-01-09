@@ -51,6 +51,7 @@ const elSelectedUserLabel = document.getElementById("selectedUserLabel");
 const elTestProductForm = document.getElementById("testProductForm");
 const elTestProductBtn = document.getElementById("testProductBtn");
 const elTestProductResult = document.getElementById("testProductResult");
+const elUserPanel = document.getElementById("userPanel");
 const elProductOptions = document.getElementById("productOptions");
 const elVoiceOptions = document.getElementById("voiceOptions");
 
@@ -60,6 +61,40 @@ function setSelectedUser(user) {
   selectedUser = user || null;
   if (elSelectedUserLabel) elSelectedUserLabel.textContent = selectedUser || "—";
   if (elTestProductBtn) elTestProductBtn.disabled = !selectedUser;
+
+  if (elUserPanel) elUserPanel.hidden = !selectedUser;
+
+  // Ao selecionar um usuário, reabre as seções por padrão.
+  if (selectedUser) {
+    for (const el of document.querySelectorAll("[data-collapsible]")) {
+      el.dataset.collapsed = "false";
+      const btn = el.querySelector(".collapsible-toggle");
+      if (btn) btn.setAttribute("aria-expanded", "true");
+    }
+  }
+
+  if (!selectedUser) {
+    if (elSelectedTitle) elSelectedTitle.textContent = "Logs";
+    if (elLogs) elLogs.textContent = "";
+    if (elTestProductResult) elTestProductResult.hidden = true;
+  }
+}
+
+function initCollapsibles() {
+  for (const el of document.querySelectorAll("[data-collapsible]")) {
+    // estado inicial: expandido
+    if (!el.dataset.collapsed) el.dataset.collapsed = "false";
+
+    const btn = el.querySelector(".collapsible-toggle");
+    if (!btn) continue;
+
+    btn.addEventListener("click", () => {
+      const collapsed = el.dataset.collapsed === "true";
+      const next = !collapsed;
+      el.dataset.collapsed = next ? "true" : "false";
+      btn.setAttribute("aria-expanded", next ? "false" : "true");
+    });
+  }
 }
 
 function fillDatalist(el, values) {
@@ -173,6 +208,7 @@ async function init() {
   try {
     const me = await api("/admin/api/me");
     showPanel(me.username);
+    initCollapsibles();
     await loadUsers();
   } catch {
     showLogin();

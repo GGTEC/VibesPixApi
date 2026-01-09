@@ -37,29 +37,42 @@
         <button id="logoutBtn" class="btn-secondary admin-logout" type="button">Sair</button>
       </aside>
       <section class="content">
-        <div class="panel">
+        <div id="userPanel" class="panel" hidden>
           <div class="card admin-card">
             <h2 id="selectedUserTitle" class="admin-title">Logs</h2>
-            <div class="section">
-              <h3 class="admin-subtitle">Teste de produto</h3>
-              <div class="admin-hint">Usuário selecionado: <span id="selectedUserLabel" class="pill">—</span></div>
-              <form id="testProductForm" class="admin-form">
-                <div class="admin-form-row">
-                  <input class="input" name="productId" placeholder="productId (ex: vip)" list="productOptions" required />
-                  <datalist id="productOptions"></datalist>
-                  <input class="input" name="quantity" type="number" min="1" step="1" value="1" />
-                </div>
-                <input class="input" name="username" placeholder="username (opcional)" />
-                <input class="input" name="ttsText" placeholder="ttsText (opcional)" />
-                <label class="admin-check"><input type="checkbox" name="simulateOverlay" checked /> Simular overlay + TTS</label>
-                <input class="input" name="ttsVoice" placeholder="ttsVoice (opcional)" list="voiceOptions" />
-                <datalist id="voiceOptions"></datalist>
-                <button id="testProductBtn" class="btn-primary" type="submit" disabled>Testar produto</button>
-              </form>
-              <pre id="testProductResult" class="admin-result" hidden></pre>
+
+            <div class="section collapsible" data-collapsible>
+              <button class="collapsible-toggle" type="button" aria-expanded="true" aria-controls="testSectionBody">
+                <span class="collapsible-title">Teste de produto</span>
+                <span class="collapsible-icon" aria-hidden="true"></span>
+              </button>
+              <div id="testSectionBody" class="collapsible-body">
+                <div class="admin-hint">Usuário selecionado: <span id="selectedUserLabel" class="pill">—</span></div>
+                <form id="testProductForm" class="admin-form">
+                  <div class="admin-form-row">
+                    <input class="input" name="productId" placeholder="productId (ex: vip)" list="productOptions" required />
+                    <datalist id="productOptions"></datalist>
+                    <input class="input" name="quantity" type="number" min="1" step="1" value="1" />
+                  </div>
+                  <input class="input" name="username" placeholder="username (opcional)" />
+                  <input class="input" name="ttsText" placeholder="ttsText (opcional)" />
+                  <label class="admin-check"><input type="checkbox" name="simulateOverlay" checked /> Simular overlay + TTS</label>
+                  <input class="input" name="ttsVoice" placeholder="ttsVoice (opcional)" list="voiceOptions" />
+                  <datalist id="voiceOptions"></datalist>
+                  <button id="testProductBtn" class="btn-primary" type="submit" disabled>Testar produto</button>
+                </form>
+                <pre id="testProductResult" class="admin-result" hidden></pre>
+              </div>
             </div>
-            <div class="section">
-              <pre id="logs" class="admin-logs"></pre>
+
+            <div class="section collapsible" data-collapsible>
+              <button class="collapsible-toggle" type="button" aria-expanded="true" aria-controls="logsSectionBody">
+                <span class="collapsible-title">Logs</span>
+                <span class="collapsible-icon" aria-hidden="true"></span>
+              </button>
+              <div id="logsSectionBody" class="collapsible-body">
+                <pre id="logs" class="admin-logs"></pre>
+              </div>
             </div>
           </div>
         </div>
