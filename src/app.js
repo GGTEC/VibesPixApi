@@ -42,7 +42,30 @@ export function createApp(rootDir) {
   const app = express();
   // Rodando atrás de proxy (Nginx): respeita X-Forwarded-* (ex.: protocolo HTTPS externo)
   app.set("trust proxy", true);
-  app.use(cors({ origin: true, credentials: true }));
+
+  // CORS: com credentials, não pode ser "*". Use allowlist por ambiente.
+  const rawAllowedOrigins = String(process.env.CORS_ORIGINS || "").trim();
+  const allowedOrigins = rawAllowedOrigins
+    ? rawAllowedOrigins.split(",").map((s) => s.trim()).filter(Boolean)
+    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"];
+
+  const allowNoOrigin = String(process.env.CORS_ALLOW_NO_ORIGIN || "").toLowerCase() === "true";
+
+  app.use(cors({
+    origin(origin, cb) {
+      // Alguns clientes (curl, server-to-server, same-origin) não mandam Origin.
+      if (!origin) return cb(allowNoOrigin ? null : new Error("CORS: Origin ausente"), allowNoOrigin);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`CORS: Origin não permitido (${origin})`), false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 600
+  }));
+
+  // Responde preflight de forma consistente.
+  app.options("*", cors());
   app.use(express.json({ limit: "2mb" }));
   app.use(bodyParser.json());
 
