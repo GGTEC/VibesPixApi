@@ -240,8 +240,8 @@ body {
 
 /* Métricas (mesmo padrão do /admin, adaptado ao tema do painel) */
 .metrics-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+	grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 12px;
 }
