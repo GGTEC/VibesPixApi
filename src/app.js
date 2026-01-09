@@ -53,6 +53,29 @@ export function createApp(rootDir) {
   // CORS é uma proteção do browser, então não faz sentido bloquear esses requests por padrão.
   const allowNoOrigin = String(process.env.CORS_ALLOW_NO_ORIGIN || "true").toLowerCase() === "true";
 
+  // Loga a configuração efetiva no startup para diagnosticar envs.
+  try {
+    const nodeEnv = String(process.env.NODE_ENV || "").trim() || "(unset)";
+    const usingFallbackList = !rawAllowedOrigins;
+    const msg = {
+      nodeEnv,
+      allowNoOrigin,
+      originsCount: allowedOrigins.length,
+      origins: allowedOrigins,
+      source: usingFallbackList ? "fallback-localhost" : "env:CORS_ORIGINS"
+    };
+
+    console.info("[CORS] config", msg);
+    logEvent(rootDir, { level: "info", user: null, message: `cors_config ${JSON.stringify(msg)}` });
+
+    if (nodeEnv === "production" && usingFallbackList) {
+      console.warn("[CORS] NODE_ENV=production e CORS_ORIGINS não definido; usando fallback localhost");
+      logEvent(rootDir, { level: "warn", user: null, message: "cors_config_warning production_without_CORS_ORIGINS" });
+    }
+  } catch {
+    // ignore
+  }
+
   const corsOptions = {
     origin(origin, cb) {
       // Alguns clientes (curl, server-to-server, same-origin) não mandam Origin.
